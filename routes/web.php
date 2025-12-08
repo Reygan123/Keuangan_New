@@ -58,8 +58,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::resource('penjualans', TransaksiPenjualanController::class);
     Route::resource('pembelians', TransaksiPembelianController::class);
-    Route::get('/produksi/create', [TransaksiProduksiController::class, 'create'])->name('produksi.create_full');
-    Route::post('/produksi/store', [TransaksiProduksiController::class, 'store'])->name('produksi.store');
+    Route::resource('produksi', TransaksiProduksiController::class)->only(['create', 'store']);
 
     Route::prefix('kasbank/{tipe}')->name('kasbank.')->group(function () {
         Route::get('/', [TransaksiKasBankController::class, 'index'])->name('index');

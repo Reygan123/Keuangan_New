@@ -43,7 +43,7 @@
                             <td class="hidden lg:table-cell px-4 py-3 text-slate-400 truncate max-w-xs">{{ $pelanggan->alamat }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-center gap-2 flex-wrap">
-                                    <button onclick="editPelanggan({{ $pelanggan }})" class="px-3 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700 transition">Edit</button>
+                                    <button onclick="editPelanggan({ $pelanggan })" class="px-3 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700 transition">Edit</button>
                                     <form action="{{ route('admin.pelanggans.destroy', $pelanggan->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus?')" class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -63,35 +63,37 @@
 </div>
 
 <dialog id="addModal" class="rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2 bg-slate-800 border border-slate-700 shadow-xl max-h-screen overflow-y-auto">
-    <form method="POST" action="{{ route('admin.pelanggans.store') }}" class="space-y-4">
-        @csrf
-        <h2 class="text-lg md:text-xl font-semibold text-slate-100 mb-4">Tambah Pelanggan</h2>
-
-        <div>
-            <label class="block text-sm text-slate-300 mb-1">Nama</label>
-            <input name="nama" placeholder="Nama" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500" required>
-        </div>
-
-        <div>
-            <label class="block text-sm text-slate-300 mb-1">Email</label>
-            <input name="email" placeholder="Email" type="email" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500">
-        </div>
-
-        <div>
-            <label class="block text-sm text-slate-300 mb-1">Telepon</label>
-            <input name="telepon" placeholder="Telepon" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500">
-        </div>
-
-        <div>
-            <label class="block text-sm text-slate-300 mb-1">Alamat</label>
-            <textarea name="alamat" placeholder="Alamat" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none" rows="3"></textarea>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-4">
-            <button type="button" onclick="addModal.close()" class="px-4 py-2 text-sm bg-slate-700 text-slate-200 rounded hover:bg-slate-600 transition">Batal</button>
-            <button type="submit" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">Simpan</button>
-        </div>
-    </form>
+    <!-- <div class="rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2 bg-slate-800 border border-slate-700 shadow-xl max-h-screen overflow-y-auto"> -->
+        <form method="POST" action="{{ route('admin.pelanggans.store') }}" class="space-y-4">
+            @csrf
+            <h2 class="text-lg md:text-xl font-semibold text-slate-100 mb-4">Tambah Pelanggan</h2>
+    
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Nama</label>
+                <input name="nama" placeholder="Nama" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500" required>
+            </div>
+    
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Email</label>
+                <input name="email" placeholder="Email" type="email" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            </div>
+    
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Telepon</label>
+                <input name="telepon" placeholder="Telepon" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            </div>
+    
+            <div>
+                <label class="block text-sm text-slate-300 mb-1">Alamat</label>
+                <textarea name="alamat" placeholder="Alamat" class="w-full px-3 py-2 text-sm bg-slate-700 text-slate-100 border border-slate-600 rounded placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none" rows="3"></textarea>
+            </div>
+    
+            <div class="flex justify-end gap-2 pt-4">
+                <button type="button" onclick="addModal.close()" class="px-4 py-2 text-sm bg-slate-700 text-slate-200 rounded hover:bg-slate-600 transition">Batal</button>
+                <button type="submit" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">Simpan</button>
+            </div>
+        </form>
+    <!-- </div> -->
 </dialog>
 
 <dialog id="editModal" class="rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2 bg-slate-800 border border-slate-700 shadow-xl max-h-screen overflow-y-auto">

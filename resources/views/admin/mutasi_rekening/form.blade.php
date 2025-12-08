@@ -39,7 +39,7 @@
                                 <option value="">-- Pilih Akun Asal --</option>
                                 @foreach ($kasBankAkun as $akun)
                                     <option value="{{ $akun->id }}" @if (old('akun_asal_id', isset($mutasi) ? $mutasi->akun_asal_id : '') == $akun->id) selected @endif>
-                                        {{ $akun->name }} ({{ $akun->kode ?? '-' }})
+                                        {{ $akun->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -51,7 +51,7 @@
                                 <option value="">-- Pilih Akun Tujuan --</option>
                                 @foreach ($kasBankAkun as $akun)
                                     <option value="{{ $akun->id }}" @if (old('akun_tujuan_id', isset($mutasi) ? $mutasi->akun_tujuan_id : '') == $akun->id) selected @endif>
-                                        {{ $akun->name }} ({{ $akun->kode ?? '-' }})
+                                        {{ $akun->name }}
                                     </option>
                                 @endforeach
                             </select>

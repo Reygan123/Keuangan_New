@@ -193,7 +193,7 @@
                 <div class="mt-1 space-y-1 ml-6 border-l-2 border-slate-700 pl-2">
                     <a href="{{ route('admin.pembelians.index', 'penerimaan') }}"
                         class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Pembelian</a>
-                    <a href="{{ route('admin.produksi.create_full', 'pengeluaran') }}"
+                    <a href="{{ route('admin.produksi.create', 'pengeluaran') }}"
                         class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Produksi</a>
                 </div>
             </details>

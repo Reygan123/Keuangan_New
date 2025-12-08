@@ -80,7 +80,7 @@
                             <tr class="hover:bg-slate-700/30 transition-colors data-row"
                                 data-search="{{ strtolower($akun->name . ' ' . $akun->id) }}"
                                 data-klasifikasi="{{ $akun->klasifikasi }}" data-aktivitas="{{ $akun->aktivitas_kas }}">
-                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">{{ $akun->id }}</td>
+                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">{{ $loop->iteration }}</td>
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-100 font-medium">{{ $akun->name }}</td>
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">
                                     {{ number_format($akun->saldo, 0, ',', '.') }}</td>
@@ -111,7 +111,7 @@
                                     {{ $akun->nama_kelompok ?? '-' }}</td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex justify-center gap-2 flex-wrap">
-                                        <button onclick="editAkun({{ $akun }})"
+                                        <button onclick="editAkun({ $akun })"
                                             class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-xs rounded transition-colors">
                                             Edit
                                         </button>
@@ -227,12 +227,12 @@
                         required>
                 </div>
 
-                <div>
+                {{-- <div>
                     <label class="block text-xs font-medium text-slate-300 mb-2">Saldo</label>
                     <input name="saldo" id="editSaldo" type="number" step="0.01"
                         class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                         required>
-                </div>
+                </div> --}}
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-2">Klasifikasi</label>
@@ -344,7 +344,7 @@
 
             function editAkun(data) {
                 document.getElementById('editName').value = data.name;
-                document.getElementById('editSaldo').value = data.saldo;
+                // document.getElementById('editSaldo').value = data.saldo;
                 document.getElementById('editKlasifikasi').value = data.klasifikasi;
                 document.getElementById('editAktivitasKas').value = data.aktivitas_kas;
                 document.getElementById('editNamaKelompok').value = data.nama_kelompok;

@@ -50,7 +50,6 @@ class MutasiRekening extends Model
         // Mencari semua jurnal yang memiliki referensi ke ID mutasi ini
         // dan referensi ID grup jurnal yang sama.
         return $this->hasMany(JurnalUmum::class, 'referensi_transaksi_id')
-                    ->where('referensi_transaksi_tipe', get_class($this))
-                    ->where('jurnal_referensi_id', $this->jurnal_referensi_id);
+                    ->where('referensi_transaksi_tipe', get_class($this));
     }
 }

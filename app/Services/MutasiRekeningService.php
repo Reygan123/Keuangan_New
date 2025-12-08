@@ -6,6 +6,7 @@ use App\Models\MutasiRekening;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class MutasiRekeningService
 {
@@ -22,9 +23,8 @@ class MutasiRekeningService
             'deskripsi' => $deskripsi,
             'debit' => $isDebit ? $jumlah : 0,
             'kredit' => $isDebit ? 0 : $jumlah,
-            'referensi_transaksi_id' => $referensi->id,
             'referensi_transaksi_tipe' => $referensiClass,
-            'jurnal_referensi_id' => $jurnalReferensiId, // ID untuk mengelompokkan 2 entri
+            'referensi_transaksi_id' => $jurnalReferensiId, // ID untuk mengelompokkan 2 entri
         ]);
 
         // Logika update saldo akun yang sama dengan di TransaksiPembelianService.php
@@ -79,13 +79,14 @@ class MutasiRekeningService
     // ----------------------------------------------------------------------
     public function reverseJurnal(MutasiRekening $mutasi): void
     {
-        // Ambil SEMUA jurnal yang terkait dengan Mutasi ini
-        $jurnals = JurnalUmum::where('referensi_transaksi_id', $mutasi->id)
-                             ->where('referensi_transaksi_tipe', get_class($mutasi))
-                             ->where('jurnal_referensi_id', $mutasi->jurnal_referensi_id)
-                             ->get();
+        Log::info('Mencari jurnal untuk mutasi ID: ' . $mutasi->id);
+        Log::info('Class name: ' . MutasiRekening::class);
 
-        $referensiId = JurnalUmum::max('jurnal_referensi_id') + 1;
+        $jurnals = JurnalUmum::where('referensi_transaksi_id', $mutasi->id)
+            ->where('referensi_transaksi_tipe', MutasiRekening::class)
+            ->get();
+
+        Log::info('Jumlah jurnal ditemukan: ' . $jurnals->count());
 
         foreach ($jurnals as $jurnal) {
             $akun = Akun::find($jurnal->akun_id);
@@ -93,18 +94,23 @@ class MutasiRekeningService
 
             $jumlah = $jurnal->debit + $jurnal->kredit;
 
-            // Balik Tipe: Debit jadi Kredit, Kredit jadi Debit
-            $type = ($jurnal->debit > 0) ? 'KREDIT' : 'DEBIT';
-            $deskripsi = "Pembalikan Mutasi Rekening #" . $mutasi->id . " - " . $jurnal->deskripsi;
+            // Balik saldo langsung tanpa membuat jurnal pembalik
+            $multiplier = 0;
+            if ($jurnal->debit > 0) {
+                // Jurnal asli DEBIT, balik dengan mengurangi
+                $multiplier = (in_array($akun->klasifikasi, ['ASET', 'BEBAN'])) ? -1 : 1;
+            } else {
+                // Jurnal asli KREDIT, balik dengan mengurangi
+                $multiplier = (in_array($akun->klasifikasi, ['KEWAJIBAN', 'PENDAPATAN', 'EKUITAS'])) ? -1 : 1;
+            }
 
-            // Catat jurnal pembalik (Jurnal Reversal)
-            $this->catatJurnal($mutasi, $akun, $jumlah, $type, $deskripsi, $referensiId);
+            $akun->saldo = (float)$akun->saldo + ($jumlah * $multiplier);
+            $akun->save();
         }
 
-        // Hapus Jurnal Lama dan Jurnal Reversal yang baru dibuat
-        // agar tidak mengganggu laporan dan siap ditimpa dengan data update
-        JurnalUmum::whereIn('jurnal_referensi_id', [$mutasi->jurnal_referensi_id, $referensiId])
-                  ->where('referensi_transaksi_tipe', get_class($mutasi))
-                  ->delete();
+        // Hapus Jurnal Lama
+        JurnalUmum::where('referensi_transaksi_id', $mutasi->id)
+            ->where('referensi_transaksi_tipe', MutasiRekening::class) // ← PERBAIKAN: gunakan class name langsung
+            ->delete();
     }
 }
