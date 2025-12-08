@@ -9,7 +9,7 @@ class KategoriHpp extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'kategori'];
+    protected $fillable = ['usaha_id','name', 'kategori'];
 
     public function tambahans()
     {
@@ -19,5 +19,10 @@ class KategoriHpp extends Model
     public function products()
     {
         return $this->hasMany(Product::class, 'kategori_hpp_id');
+    }
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
     }
 }

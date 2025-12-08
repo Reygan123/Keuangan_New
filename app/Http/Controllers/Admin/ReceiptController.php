@@ -5,40 +5,83 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Receipt;
 use App\Models\Transaksi;
+use App\Models\Usaha;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ReceiptController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $receipts = Receipt::with(['transaksi.pelanggan', 'transaksi.supplier'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $currentUser = Auth::user();
 
-        return view('admin.receipts.index', compact('receipts'));
+        $selectedUsahaId = $request->get('usaha_id');
+        $currentUsaha = null;
+
+        if ($selectedUsahaId) {
+            $currentUsaha = $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first();
+        } else {
+            $currentUsaha = $currentUser->usahas()->first();
+        }
+
+        $usahas = $currentUser->usahas()->get();
+
+        if (!$currentUsaha) {
+            $receipts = collect();
+        } else {
+            $receipts = Receipt::with(['transaksi.pelanggan', 'transaksi.supplier'])
+                ->where('usaha_id', $currentUsaha->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate(15);
+        }
+
+        return view('admin.receipts.index', compact('receipts', 'usahas', 'currentUsaha'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(Request $request)
     {
-        $transaksis = Transaksi::with(['pelanggan', 'supplier', 'detailProduks'])
-            ->whereDoesntHave('receipt')
-            ->get();
+        $currentUser = Auth::user();
 
-        return view('admin.receipts.create', compact('transaksis'));
+        $selectedUsahaId = $request->get('usaha_id');
+        $currentUsaha = null;
+
+        if ($selectedUsahaId) {
+            $currentUsaha = $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first();
+        } else {
+            $currentUsaha = $currentUser->usahas()->first();
+        }
+
+        $usahas = $currentUser->usahas()->get();
+
+        if (!$currentUsaha) {
+            $transaksis = collect();
+        } else {
+            $transaksis = Transaksi::with(['pelanggan', 'supplier', 'detailProduks'])
+                ->where('usaha_id', $currentUsaha->id)
+                ->whereDoesntHave('receipt')
+                ->get();
+        }
+
+        return view('admin.receipts.create', compact('transaksis', 'usahas', 'currentUsaha'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        $currentUser = Auth::user();
+        $selectedUsahaId = $request->get('usaha_id');
+        $currentUsaha = null;
+
+        if ($selectedUsahaId) {
+            $currentUsaha = $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first();
+        } else {
+            $currentUsaha = $currentUser->usahas()->first();
+        }
+
+        if (!$currentUsaha) {
+            return back()->with('error', 'Pilih usaha terlebih dahulu')->withInput();
+        }
+
         $validated = $request->validate([
             'transaksi_id' => 'required|exists:transaksis,id',
             'nomor_receipt' => 'required|string|unique:receipts,nomor_receipt',
@@ -47,12 +90,18 @@ class ReceiptController extends Controller
             'kembalian' => 'required|numeric|min:0'
         ]);
 
-        // Validasi jumlah dibayar harus >= jumlah transaksi
         $transaksi = Transaksi::findOrFail($validated['transaksi_id']);
+
+        if ($transaksi->usaha_id != $currentUsaha->id) {
+            return back()->with('error', 'Transaksi tidak tersedia untuk usaha ini')->withInput();
+        }
+
         if ($validated['jumlah_dibayar'] < $transaksi->jumlah) {
             return back()->with('error', 'Jumlah dibayar tidak boleh kurang dari total transaksi.')
                 ->withInput();
         }
+
+        $validated['usaha_id'] = $currentUsaha->id;
 
         try {
             DB::beginTransaction();
@@ -61,7 +110,7 @@ class ReceiptController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.receipts.index')
+            return redirect()->route('admin.receipts.index', ['usaha_id' => $currentUsaha->id])
                 ->with('success', 'Receipt berhasil dibuat.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -70,11 +119,14 @@ class ReceiptController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Receipt $receipt)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $receipt->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
         $receipt->load([
             'transaksi.pelanggan',
             'transaksi.supplier',
@@ -87,26 +139,36 @@ class ReceiptController extends Controller
         return view('admin.receipts.show', compact('receipt'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Receipt $receipt)
+    public function edit(Receipt $receipt, Request $request)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $receipt->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $currentUsaha = Usaha::find($receipt->usaha_id);
+        $usahas = $currentUser->usahas()->get();
+
         $transaksis = Transaksi::with(['pelanggan', 'supplier'])
+            ->where('usaha_id', $receipt->usaha_id)
             ->where(function($query) use ($receipt) {
                 $query->whereDoesntHave('receipt')
                     ->orWhere('id', $receipt->transaksi_id);
             })
             ->get();
 
-        return view('admin.receipts.edit', compact('receipt', 'transaksis'));
+        return view('admin.receipts.edit', compact('receipt', 'transaksis', 'usahas', 'currentUsaha'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Receipt $receipt)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $receipt->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
         $validated = $request->validate([
             'transaksi_id' => 'required|exists:transaksis,id',
             'nomor_receipt' => 'required|string|unique:receipts,nomor_receipt,' . $receipt->id,
@@ -115,8 +177,12 @@ class ReceiptController extends Controller
             'kembalian' => 'required|numeric|min:0'
         ]);
 
-        // Validasi jumlah dibayar
         $transaksi = Transaksi::findOrFail($validated['transaksi_id']);
+
+        if ($transaksi->usaha_id != $receipt->usaha_id) {
+            return back()->with('error', 'Transaksi tidak tersedia untuk usaha ini')->withInput();
+        }
+
         if ($validated['jumlah_dibayar'] < $transaksi->jumlah) {
             return back()->with('error', 'Jumlah dibayar tidak boleh kurang dari total transaksi.')
                 ->withInput();
@@ -129,7 +195,7 @@ class ReceiptController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.receipts.index')
+            return redirect()->route('admin.receipts.index', ['usaha_id' => $receipt->usaha_id])
                 ->with('success', 'Receipt berhasil diupdate.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -138,30 +204,45 @@ class ReceiptController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Receipt $receipt)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $receipt->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
         try {
             $receipt->delete();
 
-            return redirect()->route('admin.receipts.index')
+            return redirect()->route('admin.receipts.index', ['usaha_id' => $receipt->usaha_id])
                 ->with('success', 'Receipt berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus receipt: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Generate nomor receipt otomatis
-     */
-    public function generateNomorReceipt()
+    public function generateNomorReceipt(Request $request)
     {
+        $currentUser = Auth::user();
+        $selectedUsahaId = $request->get('usaha_id');
+        $currentUsaha = null;
+
+        if ($selectedUsahaId) {
+            $currentUsaha = $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first();
+        } else {
+            $currentUsaha = $currentUser->usahas()->first();
+        }
+
+        if (!$currentUsaha) {
+            return response()->json(['nomor_receipt' => 'PILIH-USAH']);
+        }
+
         $prefix = 'RCP';
         $date = date('Ymd');
 
         $lastReceipt = Receipt::whereDate('created_at', today())
+            ->where('usaha_id', $currentUsaha->id)
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -177,11 +258,14 @@ class ReceiptController extends Controller
         ]);
     }
 
-    /**
-     * Print receipt
-     */
     public function print(Receipt $receipt)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $receipt->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
         $receipt->load([
             'transaksi.pelanggan',
             'transaksi.supplier',
@@ -191,13 +275,16 @@ class ReceiptController extends Controller
         return view('admin.receipts.print', compact('receipt'));
     }
 
-    /**
-     * Get transaksi details untuk auto-fill
-     */
     public function getTransaksiDetails($id)
     {
         $transaksi = Transaksi::with(['pelanggan', 'supplier', 'detailProduks.produk'])
             ->findOrFail($id);
+
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $transaksi->usaha_id)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         return response()->json([
             'jumlah' => $transaksi->jumlah,

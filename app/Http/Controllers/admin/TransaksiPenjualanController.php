@@ -9,36 +9,63 @@ use App\Models\Pelanggan;
 use App\Models\Akun;
 use App\Models\Product;
 use App\Models\TransaksiDetailProduk;
+use App\Models\Usaha;
 use App\Services\TransaksiPenjualanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class TransaksiPenjualanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $transaksis = Transaksi::whereHas('label', function ($q) {
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+
+        $transaksisQuery = Transaksi::whereHas('label', function ($q) {
             $q->where('tipe_utama', 'PENJUALAN');
-        })->with(['label', 'pelanggan', 'detailProduks'])->latest()->get();
-        return view('admin.penjualans.index', compact('transaksis'));
+        })->with(['label', 'pelanggan', 'detailProduks']);
+
+        if ($selectedUsahaId) {
+            session(['current_usaha_id' => $selectedUsahaId]);
+            $transaksisQuery->where('usaha_id', $selectedUsahaId);
+        } else {
+            $transaksisQuery->where('usaha_id', -1);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $transaksisQuery->whereHas('pelanggan', function ($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->has('start_date') && $request->start_date) {
+            $transaksisQuery->where('tanggal', '>=', $request->start_date);
+        }
+
+        if ($request->has('end_date') && $request->end_date) {
+            $transaksisQuery->where('tanggal', '<=', $request->end_date);
+        }
+
+        $transaksis = $transaksisQuery->latest()->get();
+
+        return view('admin.penjualans.index', compact('transaksis', 'usahas', 'selectedUsahaId'));
     }
 
-    /**
-     * Memvalidasi ketersediaan stok produk.
-     */
-    protected function validateStock(array $productIds, array $quantities, ?Transaksi $currentTransaction = null)
+    protected function validateStock(array $productIds, array $quantities, ?Transaksi $currentTransaction = null, $usahaId)
     {
-        $products = Product::whereIn('id', $productIds)->pluck('stok', 'id');
-        $adjustment = []; // Kuantitas yang dikembalikan dari transaksi lama (jika update)
+        $products = Product::whereIn('id', $productIds)
+            ->where('usaha_id', $usahaId)
+            ->pluck('stok', 'id');
 
-        // Jika ini operasi UPDATE, hitung kembali kuantitas yang dijual sebelumnya
+        $adjustment = [];
+
         if ($currentTransaction) {
             $currentDetails = $currentTransaction->detailProduks()->pluck('kuantitas', 'product_id');
-            // Tambahkan kembali kuantitas lama ke stok untuk perhitungan yang akurat
             foreach ($currentDetails as $pid => $qty) {
                 if (isset($products[$pid])) {
-                    // Penyesuaian: stok asli + kuantitas yang dijual di transaksi ini sebelumnya
                     $adjustment[$pid] = $qty;
                 }
             }
@@ -49,12 +76,9 @@ class TransaksiPenjualanController extends Controller
             $currentStock = (float)($products[$pid] ?? 0);
             $previousQty = (float)($adjustment[$pid] ?? 0);
 
-            // Stok yang tersedia untuk transaksi BARU/UPDATE:
-            // (Stok saat ini di DB) + (Kuantitas yang dikembalikan dari transaksi lama ini)
             $availableStock = $currentStock + $previousQty;
 
             if ($availableStock < $requiredQty) {
-                // Jika stok yang tersedia kurang dari yang diminta
                 $productName = Product::find($pid)->nama ?? 'Produk Tidak Ditemukan';
                 throw ValidationException::withMessages([
                     'kuantitas.' . $idx => "Stok untuk produk '{$productName}' tidak mencukupi. Tersedia: {$availableStock}, Diminta: {$requiredQty}."
@@ -63,17 +87,39 @@ class TransaksiPenjualanController extends Controller
         }
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $labels = LabelTransaksi::where('tipe_utama', 'PENJUALAN')->get();
-        $pelanggans = Pelanggan::all();
-        $akuns = Akun::all();
-        $products = Product::all();
-        return view('admin.penjualans.create', compact('labels', 'pelanggans', 'akuns', 'products'));
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+
+        if (!$selectedUsahaId && $usahas->count() > 0) {
+            $selectedUsahaId = $usahas->first()->id;
+        }
+
+        $labels = LabelTransaksi::where('tipe_utama', 'PENJUALAN')
+            ->where('usaha_id', $selectedUsahaId)
+            ->get();
+        $pelanggans = Pelanggan::where('usaha_id', $selectedUsahaId)->get();
+        $akuns = Akun::where('usaha_id', $selectedUsahaId)->get();
+        $products = Product::where('usaha_id', $selectedUsahaId)->get();
+
+        return view('admin.penjualans.create', compact('labels', 'pelanggans', 'akuns', 'products', 'usahas', 'selectedUsahaId'));
     }
 
     public function store(Request $request)
     {
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+        $currentUser = Auth::user();
+
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.penjualans.index')->with('error', 'Usaha tidak dipilih');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
+            return redirect()->route('admin.penjualans.index')->with('error', 'Anda tidak memiliki akses ke usaha ini');
+        }
+
         $request->validate([
             'label_id' => 'required|exists:label_transaksis,id',
             'pelanggan_id' => 'nullable|exists:pelanggans,id',
@@ -88,10 +134,9 @@ class TransaksiPenjualanController extends Controller
             'harga_satuan.*' => 'required|numeric|min:0'
         ]);
 
-        // Panggil validasi stok sebelum memulai transaksi
-        $this->validateStock($request->product_id, $request->kuantitas);
+        $this->validateStock($request->product_id, $request->kuantitas, null, $selectedUsahaId);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $selectedUsahaId) {
             $total = 0;
             $transaksi = Transaksi::create([
                 'label_id' => $request->label_id,
@@ -99,8 +144,9 @@ class TransaksiPenjualanController extends Controller
                 'supplier_id' => null,
                 'akun_payment_id' => $request->akun_payment_id,
                 'tanggal' => $request->tanggal,
-                'jumlah' => 0, // Akan diupdate nanti
+                'jumlah' => 0,
                 'keterangan' => $request->keterangan,
+                'usaha_id' => $selectedUsahaId,
             ]);
 
             $productIds = $request->product_id;
@@ -124,27 +170,48 @@ class TransaksiPenjualanController extends Controller
             app(TransaksiPenjualanService::class)->prosesPenjualan($transaksi);
         });
 
-        return redirect()->route('admin.penjualans.index')->with('success', 'Transaksi penjualan berhasil ditambahkan');
+        return redirect()->route('admin.penjualans.index', ['usaha_id' => $selectedUsahaId])->with('success', 'Transaksi penjualan berhasil ditambahkan');
     }
 
     public function show(Transaksi $penjualan)
     {
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $penjualan->load(['label', 'pelanggan', 'detailProduks.product', 'akunPayment']);
         return view('admin.penjualans.show', compact('penjualan'));
     }
 
     public function edit(Transaksi $penjualan)
     {
-        $labels = LabelTransaksi::where('tipe_utama', 'PENJUALAN')->get();
-        $pelanggans = Pelanggan::all();
-        $akuns = Akun::all();
-        $products = Product::all();
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
+            abort(403);
+        }
+
+        $labels = LabelTransaksi::where('tipe_utama', 'PENJUALAN')
+            ->where('usaha_id', $penjualan->usaha_id)
+            ->get();
+        $pelanggans = Pelanggan::where('usaha_id', $penjualan->usaha_id)->get();
+        $akuns = Akun::where('usaha_id', $penjualan->usaha_id)->get();
+        $products = Product::where('usaha_id', $penjualan->usaha_id)->get();
         $penjualan->load('detailProduks');
-        return view('admin.penjualans.edit', compact('penjualan', 'labels', 'pelanggans', 'akuns', 'products'));
+
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $penjualan->usaha_id;
+
+        return view('admin.penjualans.edit', compact('penjualan', 'labels', 'pelanggans', 'akuns', 'products', 'usahas', 'selectedUsahaId'));
     }
 
-        public function update(Request $request, Transaksi $penjualan)
+    public function update(Request $request, Transaksi $penjualan)
     {
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $request->validate([
             'label_id' => 'required|exists:label_transaksis,id',
             'pelanggan_id' => 'nullable|exists:pelanggans,id',
@@ -159,7 +226,7 @@ class TransaksiPenjualanController extends Controller
             'harga_satuan.*' => 'required|numeric|min:0'
         ]);
 
-        $this->validateStock($request->product_id, $request->kuantitas, $penjualan);
+        $this->validateStock($request->product_id, $request->kuantitas, $penjualan, $penjualan->usaha_id);
 
         DB::transaction(function () use ($request, $penjualan) {
             $service = app(TransaksiPenjualanService::class);
@@ -200,11 +267,16 @@ class TransaksiPenjualanController extends Controller
             $service->prosesPenjualan($penjualan);
         });
 
-        return redirect()->route('admin.penjualans.index')->with('success', 'Transaksi penjualan berhasil diperbarui');
+        return redirect()->route('admin.penjualans.index', ['usaha_id' => $penjualan->usaha_id])->with('success', 'Transaksi penjualan berhasil diperbarui');
     }
 
     public function destroy(Transaksi $penjualan)
     {
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
+            abort(403);
+        }
+
         DB::transaction(function () use ($penjualan) {
             $service = app(TransaksiPenjualanService::class);
             $service->reverseJurnal($penjualan);
@@ -214,6 +286,6 @@ class TransaksiPenjualanController extends Controller
             $penjualan->delete();
         });
 
-        return redirect()->route('admin.penjualans.index')->with('success', 'Transaksi penjualan berhasil dihapus');
+        return redirect()->route('admin.penjualans.index', ['usaha_id' => $penjualan->usaha_id])->with('success', 'Transaksi penjualan berhasil dihapus');
     }
 }

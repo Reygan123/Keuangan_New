@@ -29,6 +29,7 @@ return new class extends Migration
             'pembayaran_dimuka',
             'pelanggans',
             'suppliers',
+            'mutasi_rekening'
         ];
 
         foreach ($tables_to_modify as $table) {

@@ -22,7 +22,8 @@ class JurnalUmum extends Model
         'referensi_transaksi_id',
         'referensi_transaksi_tipe',
         'sumber_log_type',
-        'sumber_log_id'
+        'sumber_log_id',
+        'usaha_id'
     ];
 
     public function akun(): BelongsTo
@@ -43,5 +44,10 @@ class JurnalUmum extends Model
     public function sumberAmortisasi()
     {
         return $this->belongsTo(AmortisasiLog::class, 'sumber_log_id')->where('sumber_log_type', 'amortisasi');
+    }
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
     }
 }

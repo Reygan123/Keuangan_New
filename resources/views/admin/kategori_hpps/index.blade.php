@@ -21,8 +21,16 @@
 
     <form action="{{ route('admin.kategori_hpps.index') }}" method="GET" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4 mb-6">
         <div class="flex flex-col sm:flex-row gap-3">
-            <div class="flex-1">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari kategori HPP atau kategori..." class="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
+            <div class="flex-1 flex gap-3">
+                @if(count($usahas) > 1)
+                <select name="usaha_id" class="bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all min-w-[180px]">
+                    <option value="">Semua Usaha</option>
+                    @foreach($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                    @endforeach
+                </select>
+                @endif
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari kategori HPP atau kategori..." class="flex-1 bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors duration-200">
@@ -42,6 +50,9 @@
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold text-slate-200">Kategori HPP</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-200">Kategori</th>
+                        @if(count($usahas) > 1)
+                        <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Usaha</th>
+                        @endif
                         <th class="px-4 py-3 text-center font-semibold text-slate-200">Aksi</th>
                     </tr>
                 </thead>
@@ -50,6 +61,9 @@
                         <tr class="hover:bg-slate-700/30 transition-colors duration-150">
                             <td class="px-4 py-3 font-medium text-white">{{ $item->name }}</td>
                             <td class="px-4 py-3 text-slate-300 text-xs md:text-sm">{{ $item->kategori }}</td>
+                            @if(count($usahas) > 1)
+                            <td class="px-4 py-3 text-slate-300 text-xs md:text-sm hidden lg:table-cell">{{ $item->usaha->nama ?? '-' }}</td>
+                            @endif
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('admin.kategori_hpps.edit', $item) }}" class="text-blue-400 hover:text-blue-300 text-xs md:text-sm font-medium transition-colors duration-150">
@@ -68,7 +82,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-4 py-8 text-center text-slate-400">
+                            <td colspan="{{ count($usahas) > 1 ? 4 : 3 }}" class="px-4 py-8 text-center text-slate-400">
                                 <p class="text-sm">Belum ada kategori HPP yang dibuat.</p>
                             </td>
                         </tr>

@@ -11,11 +11,16 @@ class Receipt extends Model
 
     protected $fillable = [
         'transaksi_id', 'nomor_receipt', 'mesin_kasir_id',
-        'jumlah_dibayar', 'kembalian'
+        'jumlah_dibayar', 'kembalian', 'usaha_id'
     ];
 
     public function transaksi()
     {
         return $this->belongsTo(Transaksi::class, 'transaksi_id');
+    }
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
     }
 }

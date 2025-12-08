@@ -44,6 +44,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('usahas', UsahaController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('usahas/{usaha}/edit', [UsahaController::class, 'edit'])->name('admin.usahas.edit');
+
     Route::resource('pelanggans', PelangganController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('label_transaksis', LabelTransaksiController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -51,10 +53,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('akuns', AkunController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::resource('aturan_automations', AturanAutomationController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('aturan-automations-by-usaha', [AturanAutomationController::class, 'getDataByUsaha'])->name('admin.aturan-automations-by-usaha');
 
     Route::resource('kategori_hpps', KategoriHppController::class);
     Route::resource('kategori_hpp_tambahan', KategoriHppTambahanController::class);
+    Route::get('kategori-hpp-by-usaha', [KategoriHppTambahanController::class, 'getKategoriHppByUsaha'])->name('admin.kategori-hpp-by-usaha');
+
     Route::resource('products', ProductController::class);
+    Route::get('kategori-hpp-by-usaha-product', [ProductController::class, 'getKategoriHppByUsaha'])->name('admin.kategori-hpp-by-usaha-product');
 
     Route::resource('penjualans', TransaksiPenjualanController::class);
     Route::resource('pembelians', TransaksiPembelianController::class);

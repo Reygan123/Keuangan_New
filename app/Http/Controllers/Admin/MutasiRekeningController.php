@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Akun;
 use App\Models\MutasiRekening;
+use App\Models\Usaha;
 use App\Services\MutasiRekeningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class MutasiRekeningController extends Controller
 {
@@ -19,52 +21,80 @@ class MutasiRekeningController extends Controller
         $this->mutasiService = $mutasiService;
     }
 
-    // Ambil akun Kas/Bank yang dibutuhkan
-    private function getKasBankAkun()
+    private function getKasBankAkun($usahaId)
     {
-        return Akun::where('klasifikasi', 'ASET')
-            // ->where(function ($query) {
-            //     $query->where('name', 'like', '%kas%')
-            //         ->orWhere('name', 'like', '%bank%')
-            //         ->orWhere('name', 'like', '%bca%')
-            //         ->orWhere('name', 'like', '%bri%')
-            //         ->orWhere('name', 'like', '%mandiri%');
-            // })
+        return Akun::where('usaha_id', $usahaId)
+            ->where('klasifikasi', 'ASET')
             ->get();
     }
 
-    // Ambil ID referensi Jurnal baru (digunakan saat create)
-    private function getNewJurnalReferensiId()
+    public function index(Request $request)
     {
-        return \App\Models\JurnalUmum::max('referensi_transaksi_id') + 1;
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+
+        $mutasiQuery = MutasiRekening::with(['akunAsal', 'akunTujuan']);
+
+        if ($selectedUsahaId) {
+            session(['current_usaha_id' => $selectedUsahaId]);
+            $mutasiQuery->where('usaha_id', $selectedUsahaId);
+        } else {
+            $mutasiQuery->where('usaha_id', -1);
+        }
+
+        if ($request->has('tanggal_dari') && $request->tanggal_dari) {
+            $mutasiQuery->where('tanggal', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->has('tanggal_sampai') && $request->tanggal_sampai) {
+            $mutasiQuery->where('tanggal', '<=', $request->tanggal_sampai);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $mutasiQuery->whereHas('akunAsal', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            })->orWhereHas('akunTujuan', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $mutasi = $mutasiQuery->orderBy('tanggal', 'desc')->paginate(15);
+
+        return view('admin.mutasi_rekening.index', compact('mutasi', 'usahas', 'selectedUsahaId'));
     }
 
-    // ----------------------------------------------------
-    // INDEX (Read)
-    // ----------------------------------------------------
-    public function index()
+    public function create(Request $request)
     {
-        $mutasi = MutasiRekening::with(['akunAsal', 'akunTujuan'])
-            ->orderBy('tanggal', 'desc')
-            ->paginate(15);
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
 
-        return view('admin.mutasi_rekening.index', compact('mutasi'));
+        if (!$selectedUsahaId && $usahas->count() > 0) {
+            $selectedUsahaId = $usahas->first()->id;
+        }
+
+        $kasBankAkun = collect();
+        if ($selectedUsahaId) {
+            $kasBankAkun = $this->getKasBankAkun($selectedUsahaId);
+        }
+
+        return view('admin.mutasi_rekening.form', compact('kasBankAkun', 'usahas', 'selectedUsahaId'));
     }
 
-    // ----------------------------------------------------
-    // CREATE
-    // ----------------------------------------------------
-    public function create()
-    {
-        $kasBankAkun = $this->getKasBankAkun();
-        return view('admin.mutasi_rekening.form', compact('kasBankAkun'));
-    }
-
-    // ----------------------------------------------------
-    // STORE (Create + Akuntansi)
-    // ----------------------------------------------------
     public function store(Request $request)
     {
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+        $currentUser = Auth::user();
+
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.mutasi_rekening.index')->with('error', 'Usaha tidak dipilih');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
+            return redirect()->route('admin.mutasi_rekening.index')->with('error', 'Anda tidak memiliki akses ke usaha ini');
+        }
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'akun_asal_id' => 'required|exists:akuns,id|different:akun_tujuan_id',
@@ -73,28 +103,37 @@ class MutasiRekeningController extends Controller
             'deskripsi' => 'nullable|string|max:255',
         ], ['akun_asal_id.different' => 'Akun Asal dan Akun Tujuan tidak boleh sama.']);
 
+        $validated['usaha_id'] = $selectedUsahaId;
+
         DB::transaction(function () use ($validated) {
             $mutasi = MutasiRekening::create($validated);
             $this->mutasiService->prosesMutasi($mutasi);
         });
 
-        return redirect()->route('admin.mutasi_rekening.index')->with('success', 'Mutasi Rekening berhasil ditambahkan.');
+        return redirect()->route('admin.mutasi_rekening.index', ['usaha_id' => $selectedUsahaId])->with('success', 'Mutasi Rekening berhasil ditambahkan.');
     }
 
-    // ----------------------------------------------------
-    // EDIT
-    // ----------------------------------------------------
     public function edit(MutasiRekening $mutasi)
     {
-        $kasBankAkun = $this->getKasBankAkun();
-        return view('admin.mutasi_rekening.form', compact('mutasi', 'kasBankAkun'));
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $mutasi->usaha_id)->exists()) {
+            abort(403);
+        }
+
+        $kasBankAkun = $this->getKasBankAkun($mutasi->usaha_id);
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $mutasi->usaha_id;
+
+        return view('admin.mutasi_rekening.form', compact('mutasi', 'kasBankAkun', 'usahas', 'selectedUsahaId'));
     }
 
-    // ----------------------------------------------------
-    // UPDATE (Update + Akuntansi)
-    // ----------------------------------------------------
     public function update(Request $request, MutasiRekening $mutasi)
     {
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $mutasi->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'akun_asal_id' => 'required|exists:akuns,id|different:akun_tujuan_id',
@@ -104,33 +143,28 @@ class MutasiRekeningController extends Controller
         ], ['akun_asal_id.different' => 'Akun Asal dan Akun Tujuan tidak boleh sama.']);
 
         DB::transaction(function () use ($validated, $mutasi) {
-            // 1. Balik Jurnal Lama (Reversal dan Penghapusan)
             $this->mutasiService->reverseJurnal($mutasi);
-
-            // 2. Update data Mutasi
             $mutasi->update($validated);
-
-            // 3. Buat Jurnal Baru
             $this->mutasiService->prosesMutasi($mutasi);
         });
 
-        return redirect()->route('admin.mutasi_rekening.index')->with('success', 'Mutasi Rekening berhasil diperbarui.');
+        return redirect()->route('admin.mutasi_rekening.index', ['usaha_id' => $mutasi->usaha_id])->with('success', 'Mutasi Rekening berhasil diperbarui.');
     }
 
-    // ----------------------------------------------------
-    // DESTROY (Delete + Akuntansi)
-    // ----------------------------------------------------
     public function destroy($id)
     {
-        // Debug dulu
         Log::info('Destroy called with parameter:', ['id' => $id]);
 
-        // Cari manual
         $mutasi = MutasiRekening::find($id);
 
         if (!$mutasi) {
             Log::error('Mutasi not found with ID: ' . $id);
             return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $mutasi->usaha_id)->exists()) {
+            abort(403);
         }
 
         Log::info('Mutasi found:', $mutasi->toArray());
@@ -140,6 +174,6 @@ class MutasiRekeningController extends Controller
             $mutasi->delete();
         });
 
-        return redirect()->route('admin.mutasi_rekening.index')->with('success', 'Mutasi Rekening berhasil dihapus.');
+        return redirect()->route('admin.mutasi_rekening.index', ['usaha_id' => $mutasi->usaha_id])->with('success', 'Mutasi Rekening berhasil dihapus.');
     }
 }

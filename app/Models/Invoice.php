@@ -11,11 +11,16 @@ class Invoice extends Model
 
     protected $fillable = [
         'transaksi_id', 'nomor_invoice', 'tanggal_jatuh_tempo',
-        'jumlah_pajak', 'terms_pembayaran', 'status_invoice'
+        'jumlah_pajak', 'terms_pembayaran', 'status_invoice', 'usaha_id'
     ];
 
     public function transaksi()
     {
         return $this->belongsTo(Transaksi::class, 'transaksi_id');
+    }
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
     }
 }

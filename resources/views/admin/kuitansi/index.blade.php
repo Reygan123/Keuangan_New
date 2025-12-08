@@ -5,12 +5,21 @@
     <div class="p-4 md:p-6 lg:p-8">
         <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Daftar Kuitansi</h1>
-            <a href="{{ route('admin.kuitansi.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Buat Kuitansi Baru
-            </a>
+            <div class="flex gap-2">
+                @if($usahas->count() > 1)
+                <select id="usahaFilter" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" onchange="filterByUsaha()">
+                    @foreach($usahas as $usahaItem)
+                    <option value="{{ $usahaItem->id }}" {{ $currentUsaha && $currentUsaha->id == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
+                    @endforeach
+                </select>
+                @endif
+                <a href="{{ route('admin.kuitansi.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Buat Kuitansi Baru
+                </a>
+            </div>
         </div>
 
         <div class="mb-6 flex gap-3">
@@ -18,6 +27,7 @@
             <button onclick="resetFilters()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Reset</button>
         </div>
 
+        @if($kuitansis->count() > 0)
         <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -73,10 +83,29 @@
                 </table>
             </div>
         </div>
+        @else
+        <div class="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center">
+            <svg class="w-12 h-12 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-slate-400 mb-2">Tidak ada kuitansi</p>
+            <a href="{{ route('admin.kuitansi.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Buat Kuitansi Baru
+            </a>
+        </div>
+        @endif
     </div>
 </div>
 
 <script>
+function filterByUsaha() {
+    const usahaId = document.getElementById('usahaFilter').value;
+    window.location.href = '{{ route("admin.kuitansi.index") }}?usaha_id=' + usahaId;
+}
+
 function resetFilters() {
     document.getElementById('searchInput').value = '';
     filterRows();

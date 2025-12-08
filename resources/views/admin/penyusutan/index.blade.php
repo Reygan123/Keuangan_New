@@ -9,12 +9,15 @@
                 <p class="text-xs sm:text-sm text-slate-400 mt-1">Kelola data aset tetap dan proses penyusutan bulanan</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
-                <a href="{{ route('admin.penyusutan.create') }}" class="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                @if($selectedUsahaId)
+                <a href="{{ route('admin.penyusutan.create', ['usaha_id' => $selectedUsahaId]) }}" class="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Tambah Aset
                 </a>
+                @endif
                 <form method="POST" action="{{ route('admin.penyusutan.proses') }}" class="inline-flex gap-2">
                     @csrf
+                    <input type="hidden" name="usaha_id" value="{{ $selectedUsahaId }}">
                     <input type="month" name="bulan" class="px-3 py-2 text-xs sm:text-sm bg-slate-800 border border-slate-700 text-white rounded-lg focus:outline-none focus:border-blue-500" value="{{ now()->format('Y-m') }}">
                     <button type="submit" class="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -26,11 +29,18 @@
 
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-3 sm:p-4 mb-6">
             <div class="flex flex-col sm:flex-row gap-3">
+                <select name="usaha_id" onchange="window.location.href='{{ route('admin.penyusutan.index') }}?usaha_id=' + this.value" class="flex-1 px-3 py-2 text-xs sm:text-sm bg-slate-700/50 border border-slate-600/50 text-white rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
+                    <option value="">-- Pilih Usaha --</option>
+                    @foreach($usahas as $usaha)
+                    <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                    @endforeach
+                </select>
                 <input type="text" id="searchInput" placeholder="Cari nama aset..." class="flex-1 px-3 py-2 text-xs sm:text-sm bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
                 <button onclick="document.getElementById('searchInput').value=''; filterTable();" class="px-3 py-2 text-xs sm:text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">Reset</button>
             </div>
         </div>
 
+        @if($selectedUsahaId)
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-xs sm:text-sm">
@@ -81,6 +91,12 @@
         @if($asetTetap->isEmpty())
         <div class="mt-6 text-center py-12">
             <p class="text-slate-400">Belum ada data aset tetap</p>
+        </div>
+        @endif
+
+        @else
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-8 text-center">
+            <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk melihat data aset tetap</p>
         </div>
         @endif
     </div>

@@ -10,6 +10,25 @@
     <form action="{{ route('admin.kategori_hpps.store') }}" method="POST" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-6 shadow-lg">
         @csrf
 
+        @if(count($usahas) > 1)
+        <div class="mb-5">
+            <label for="usaha_id" class="block text-sm font-medium text-slate-200 mb-2">Usaha</label>
+            <select name="usaha_id" id="usaha_id" required class="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all @error('usaha_id') border-red-500 @enderror">
+                <option value="">-- Pilih Usaha --</option>
+                @foreach ($usahas as $usaha)
+                    <option value="{{ $usaha->id }}" {{ old('usaha_id') == $usaha->id ? 'selected' : '' }}>
+                        {{ $usaha->nama }}
+                    </option>
+                @endforeach
+            </select>
+            @error('usaha_id')
+                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        @else
+        <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+        @endif
+
         <div class="mb-5">
             <label for="name" class="block text-sm font-medium text-slate-200 mb-2">Kategori HPP</label>
             <input type="text" name="name" id="name" value="{{ old('name') }}" required placeholder="Contoh: Makanan Berat"

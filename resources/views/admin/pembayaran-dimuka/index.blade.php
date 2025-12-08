@@ -14,14 +14,39 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-            <a href="{{ route('admin.pembayaran-dimuka.create') }}" class="lg:col-span-1 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                Tambah Pembayaran
-            </a>
+        @if ($message = Session::get('error'))
+            <div class="mb-4 bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg text-sm">
+                {{ $message }}
+            </div>
+        @endif
 
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4 mb-6">
+            <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-slate-400 text-xs font-semibold mb-1">Pilih Usaha</label>
+                    <select name="usaha_id" onchange="document.getElementById('filterForm').submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        <option value="">-- Pilih Usaha --</option>
+                        @foreach($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    @if($selectedUsahaId)
+                    <a href="{{ route('admin.pembayaran-dimuka.create', ['usaha_id' => $selectedUsahaId]) }}" class="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Tambah Pembayaran
+                    </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+
+        @if($selectedUsahaId)
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
             <form method="POST" action="{{ route('admin.pembayaran-dimuka.proses') }}" class="lg:col-span-3 flex gap-2">
                 @csrf
+                <input type="hidden" name="usaha_id" value="{{ $selectedUsahaId }}">
                 <input type="month" name="bulan" value="{{ now()->format('Y-m') }}" class="flex-1 bg-slate-800/50 border border-slate-700/60 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
                     Proses Amortisasi
@@ -93,6 +118,11 @@
                 </table>
             </div>
         </div>
+        @else
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-8 text-center">
+            <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk melihat pembayaran di muka</p>
+        </div>
+        @endif
     </div>
 </div>
 @endsection

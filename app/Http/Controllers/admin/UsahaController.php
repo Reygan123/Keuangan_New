@@ -5,20 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Usaha;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UsahaController extends Controller
 {
     public function index()
     {
-        $usaha = Usaha::first();
-        return view('admin.usahas.index', compact('usaha'));
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        return view('admin.usahas.index', compact('usahas'));
     }
 
     public function store(Request $request)
     {
-        if (Usaha::exists()) {
-            return redirect()->route('admin.usahas.index')->with('error', 'Hanya boleh ada 1 data usaha');
-        }
+        $currentUser = Auth::user();
 
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
@@ -32,13 +32,32 @@ class UsahaController extends Controller
             'website' => 'nullable|url|max:255',
         ]);
 
-        Usaha::create($validated);
+        $usaha = Usaha::create($validated);
+
+        $currentUser->usahas()->attach($usaha->id, ['role' => 'admin']);
 
         return redirect()->route('admin.usahas.index')->with('success', 'Usaha berhasil ditambahkan.');
     }
 
+    public function edit(Usaha $usaha)
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $usaha->id)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return view('admin.usahas.edit-modal', compact('usaha'));
+    }
+
     public function update(Request $request, Usaha $usaha)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $usaha->id)->exists()) {
+            return redirect()->route('admin.usahas.index')->with('error', 'Anda tidak memiliki akses ke usaha ini.');
+        }
+
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'alamat' => 'nullable|string|max:255',
@@ -58,7 +77,17 @@ class UsahaController extends Controller
 
     public function destroy(Usaha $usaha)
     {
-        $usaha->delete();
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $usaha->id)->exists()) {
+            return redirect()->route('admin.usahas.index')->with('error', 'Anda tidak memiliki akses ke usaha ini.');
+        }
+
+        $currentUser->usahas()->detach($usaha->id);
+
+        if ($usaha->users()->count() === 0) {
+            $usaha->delete();
+        }
 
         return redirect()->route('admin.usahas.index')->with('success', 'Usaha berhasil dihapus.');
     }

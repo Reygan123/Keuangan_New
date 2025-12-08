@@ -7,38 +7,84 @@ use App\Models\DetailAsetTetap;
 use App\Models\Penyusutan;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
+use App\Models\Usaha;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PenyusutanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $asetTetap = DetailAsetTetap::with(['akunAset', 'penyusutans'])->get();
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+
+        $asetTetapQuery = DetailAsetTetap::with(['akunAset', 'penyusutans']);
+
+        if ($selectedUsahaId) {
+            session(['current_usaha_id' => $selectedUsahaId]);
+            $asetTetapQuery->where('usaha_id', $selectedUsahaId);
+        } else {
+            $asetTetapQuery->where('usaha_id', -1);
+        }
+
+        $asetTetap = $asetTetapQuery->get();
 
         $asetTetap->each(function ($aset) {
             $aset->total_akumulasi = $aset->penyusutans ? $aset->penyusutans->sum('jumlah_penyusutan') : 0;
             $aset->nilai_buku = $aset->harga_beli - $aset->total_akumulasi;
         });
 
-        return view('admin.penyusutan.index', compact('asetTetap'));
+        return view('admin.penyusutan.index', compact('asetTetap', 'usahas', 'selectedUsahaId'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $akunAset = Akun::where('klasifikasi', 'ASET')
-            ->where('sub_klasifikasi', 'TETAP')
-            ->get();
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
 
-        $akunBeban = Akun::where('klasifikasi', 'BEBAN')->get();
-        $akunAkumulasi = Akun::where('name', 'like', '%akumulasi%')->get();
+        if (!$selectedUsahaId && $usahas->count() > 0) {
+            $selectedUsahaId = $usahas->first()->id;
+        }
 
-        return view('admin.penyusutan.create', compact('akunAset', 'akunBeban', 'akunAkumulasi'));
+        $akunAset = collect();
+        $akunBeban = collect();
+        $akunAkumulasi = collect();
+
+        if ($selectedUsahaId) {
+            $akunAset = Akun::where('klasifikasi', 'ASET')
+                ->where('sub_klasifikasi', 'TETAP')
+                ->where('usaha_id', $selectedUsahaId)
+                ->get();
+
+            $akunBeban = Akun::where('klasifikasi', 'BEBAN')
+                ->where('usaha_id', $selectedUsahaId)
+                ->get();
+
+            $akunAkumulasi = Akun::where('name', 'like', '%akumulasi%')
+                ->where('usaha_id', $selectedUsahaId)
+                ->get();
+        }
+
+        return view('admin.penyusutan.create', compact('akunAset', 'akunBeban', 'akunAkumulasi', 'usahas', 'selectedUsahaId'));
     }
 
     public function store(Request $request)
     {
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+        $currentUser = Auth::user();
+
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.penyusutan.index')->with('error', 'Usaha tidak dipilih');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
+            return redirect()->route('admin.penyusutan.index')->with('error', 'Anda tidak memiliki akses ke usaha ini');
+        }
+
         $validated = $request->validate([
             'akun_aset_id' => 'required|exists:akuns,id',
             'uraian' => 'required|string|max:255',
@@ -51,26 +97,50 @@ class PenyusutanController extends Controller
             'akun_akumulasi_id' => 'required|exists:akuns,id'
         ]);
 
+        $validated['usaha_id'] = $selectedUsahaId;
+
         DetailAsetTetap::create($validated);
 
-        return redirect()->route('admin.penyusutan.index')->with('success', 'Aset tetap berhasil ditambahkan.');
+        return redirect()->route('admin.penyusutan.index', ['usaha_id' => $selectedUsahaId])->with('success', 'Aset tetap berhasil ditambahkan.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
+        $currentUser = Auth::user();
         $aset = DetailAsetTetap::findOrFail($id);
+
+        if (!$currentUser->usahas()->where('usahas.id', $aset->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $akunAset = Akun::where('klasifikasi', 'ASET')
             ->where('sub_klasifikasi', 'TETAP')
+            ->where('usaha_id', $aset->usaha_id)
             ->get();
 
-        $akunBeban = Akun::where('klasifikasi', 'BEBAN')->get();
-        $akunAkumulasi = Akun::where('name', 'like', '%akumulasi%')->get();
+        $akunBeban = Akun::where('klasifikasi', 'BEBAN')
+            ->where('usaha_id', $aset->usaha_id)
+            ->get();
 
-        return view('admin.penyusutan.edit', compact('aset', 'akunAset', 'akunBeban', 'akunAkumulasi'));
+        $akunAkumulasi = Akun::where('name', 'like', '%akumulasi%')
+            ->where('usaha_id', $aset->usaha_id)
+            ->get();
+
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $aset->usaha_id;
+
+        return view('admin.penyusutan.edit', compact('aset', 'akunAset', 'akunBeban', 'akunAkumulasi', 'usahas', 'selectedUsahaId'));
     }
 
     public function update(Request $request, $id)
     {
+        $currentUser = Auth::user();
+        $aset = DetailAsetTetap::findOrFail($id);
+
+        if (!$currentUser->usahas()->where('usahas.id', $aset->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'akun_aset_id' => 'required|exists:akuns,id',
             'uraian' => 'required|string|max:255',
@@ -83,57 +153,70 @@ class PenyusutanController extends Controller
             'akun_akumulasi_id' => 'required|exists:akuns,id'
         ]);
 
-        $aset = DetailAsetTetap::findOrFail($id);
         $aset->update($validated);
 
-        return redirect()->route('admin.penyusutan.index')->with('success', 'Aset tetap berhasil diperbarui.');
+        return redirect()->route('admin.penyusutan.index', ['usaha_id' => $aset->usaha_id])->with('success', 'Aset tetap berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
+        $currentUser = Auth::user();
         $aset = DetailAsetTetap::findOrFail($id);
+
+        if (!$currentUser->usahas()->where('usahas.id', $aset->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $aset->delete();
 
-        return redirect()->route('admin.penyusutan.index')->with('success', 'Aset tetap berhasil dihapus.');
+        return redirect()->route('admin.penyusutan.index', ['usaha_id' => $aset->usaha_id])->with('success', 'Aset tetap berhasil dihapus.');
     }
 
     public function prosesPenyusutan(Request $request)
     {
-        // Default bulan adalah bulan yang diminta atau bulan saat ini
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+        $currentUser = Auth::user();
+
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.penyusutan.index')->with('error', 'Usaha tidak dipilih');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
+            return redirect()->route('admin.penyusutan.index')->with('error', 'Anda tidak memiliki akses ke usaha ini');
+        }
+
         $bulan = $request->input('bulan', now()->format('Y-m'));
-        // Tanggal penyusutan diambil dari akhir bulan yang dipilih
         $tanggal_penyusutan = Carbon::parse($bulan)->endOfMonth();
 
         DB::beginTransaction();
 
         try {
-            // Memuat aset dengan data penyusutan yang sudah ada
-            $asetAktif = DetailAsetTetap::with(['penyusutans'])->get();
+            $asetAktif = DetailAsetTetap::with(['penyusutans'])
+                ->where('usaha_id', $selectedUsahaId)
+                ->get();
+
             $totalPenyusutan = 0;
             $asetDiproses = 0;
-            $akunTerdampak = []; // Untuk melacak akun yang perlu dihitung ulang
+            $akunTerdampak = [];
 
             foreach ($asetAktif as $aset) {
                 if ($this->perluDisusutkan($aset, $tanggal_penyusutan)) {
                     $jumlah_penyusutan_final = $this->hitungPenyusutan($aset);
 
                     if ($jumlah_penyusutan_final > 0) {
-                        // 1. Catat Log Penyusutan
                         $penyusutan = Penyusutan::create([
                             'detail_aset_id' => $aset->id,
                             'tanggal_penyusutan' => $tanggal_penyusutan,
                             'jumlah_penyusutan' => $jumlah_penyusutan_final,
                             'akun_beban_id' => $aset->akun_beban_id,
-                            'akun_akumulasi_id' => $aset->akun_akumulasi_id
+                            'akun_akumulasi_id' => $aset->akun_akumulasi_id,
+                            'usaha_id' => $selectedUsahaId,
                         ]);
 
-                        // 2. Buat Jurnal Umum dan Recalculate Saldo
-                        $this->buatJurnalPenyusutan($penyusutan, $aset);
+                        $this->buatJurnalPenyusutan($penyusutan, $aset, $selectedUsahaId);
 
-                        // 3. Tambahkan akun ke daftar untuk memastikan recalculate jika ada banyak aset
                         $akunTerdampak[$aset->akun_beban_id] = true;
                         $akunTerdampak[$aset->akun_akumulasi_id] = true;
-
 
                         $totalPenyusutan += $jumlah_penyusutan_final;
                         $asetDiproses++;
@@ -141,25 +224,23 @@ class PenyusutanController extends Controller
                 }
             }
 
-            // PENTING: Panggil recalculate HANYA SEKALI untuk setiap Akun Terdampak
             foreach (array_keys($akunTerdampak) as $akun_id) {
-                $this->recalculateAkunSaldo($akun_id);
+                $this->recalculateAkunSaldo($akun_id, $selectedUsahaId);
             }
 
             DB::commit();
 
-            return redirect()->route('admin.penyusutan.index')
+            return redirect()->route('admin.penyusutan.index', ['usaha_id' => $selectedUsahaId])
                 ->with('success', "Penyusutan berhasil diproses. $asetDiproses aset disusutkan dengan total Rp " . number_format($totalPenyusutan, 2, ',', '.'));
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('admin.penyusutan.index')
+            return redirect()->route('admin.penyusutan.index', ['usaha_id' => $selectedUsahaId])
                 ->with('error', "Gagal memproses penyusutan: " . $e->getMessage());
         }
     }
 
     private function perluDisusutkan($aset, $tanggal_penyusutan)
     {
-        // 1. Cek duplikasi di bulan yang sama untuk aset ini
         if ($this->isPenyusutanSudahDicatat($aset, $tanggal_penyusutan)) {
             return false;
         }
@@ -167,21 +248,17 @@ class PenyusutanController extends Controller
         $tglPerolehan = Carbon::parse($aset->tgl_perolehan);
         $totalBulan = $tglPerolehan->diffInMonths($tanggal_penyusutan);
 
-        // Cek agar penyusutan tidak dilakukan di bulan perolehan
         if ($tglPerolehan->format('Y-m') === $tanggal_penyusutan->format('Y-m')) {
             return false;
         }
 
-        // 2. Cek apakah Nilai Buku sudah mencapai Nilai Sisa
         $totalAkumulasi = $aset->penyusutans ? $aset->penyusutans->sum('jumlah_penyusutan') : 0;
         $nilaiBuku = $aset->harga_beli - $totalAkumulasi;
 
         if ($nilaiBuku <= $aset->nilai_sisa) {
-            return false; // Aset sudah habis disusutkan
+            return false;
         }
 
-        // 3. Cek apakah sudah melewati umur ekonomis
-        // Menggunakan <= umur ekonomis total bulan (untuk pengecekan tambahan, meskipun Nilai Sisa harusnya mengunci)
         return $totalBulan < ($aset->umur_ekonomis * 12);
     }
 
@@ -198,22 +275,18 @@ class PenyusutanController extends Controller
         $totalAkumulasi = $aset->penyusutans ? $aset->penyusutans->sum('jumlah_penyusutan') : 0;
         $nilaiBuku = $aset->harga_beli - $totalAkumulasi;
 
-        // Perhitungan Garis Lurus Per Bulan
         $hargaPenyusutan = $aset->harga_beli - $aset->nilai_sisa;
         $penyusutanBulanan = $hargaPenyusutan / ($aset->umur_ekonomis * 12);
 
-        // PENTING: Penyesuaian bulan terakhir agar tidak melewati Nilai Sisa (rounding/bulan penuh)
         if ($nilaiBuku - $penyusutanBulanan < $aset->nilai_sisa) {
-            // Ambil selisih yang tersisa (Nilai Buku Saat Ini - Nilai Sisa)
             $penyusutanBulanan = $nilaiBuku - $aset->nilai_sisa;
         }
 
-        return round($penyusutanBulanan, 2); // Pembulatan 2 desimal
+        return round($penyusutanBulanan, 2);
     }
 
-    private function buatJurnalPenyusutan($penyusutan, $aset)
+    private function buatJurnalPenyusutan($penyusutan, $aset, $usahaId)
     {
-        // Jurnal 1: Debit Beban Penyusutan
         JurnalUmum::create([
             'akun_id' => $penyusutan->akun_beban_id,
             'tanggal_transaksi' => $penyusutan->tanggal_penyusutan,
@@ -223,10 +296,10 @@ class PenyusutanController extends Controller
             'referensi_transaksi_id' => $penyusutan->id,
             'referensi_transaksi_tipe' => 'penyusutan',
             'sumber_log_type' => 'penyusutan',
-            'sumber_log_id' => $penyusutan->id
+            'sumber_log_id' => $penyusutan->id,
+            'usaha_id' => $usahaId,
         ]);
 
-        // Jurnal 2: Kredit Akumulasi Penyusutan
         JurnalUmum::create([
             'akun_id' => $penyusutan->akun_akumulasi_id,
             'tanggal_transaksi' => $penyusutan->tanggal_penyusutan,
@@ -236,18 +309,27 @@ class PenyusutanController extends Controller
             'referensi_transaksi_id' => $penyusutan->id,
             'referensi_transaksi_tipe' => 'penyusutan',
             'sumber_log_type' => 'penyusutan',
-            'sumber_log_id' => $penyusutan->id
+            'sumber_log_id' => $penyusutan->id,
+            'usaha_id' => $usahaId,
         ]);
-
     }
 
-    private function recalculateAkunSaldo($akunId)
+    private function recalculateAkunSaldo($akunId, $usahaId)
     {
-        $akun = Akun::find($akunId);
+        $akun = Akun::where('id', $akunId)
+            ->where('usaha_id', $usahaId)
+            ->first();
+
         if (!$akun) return;
 
-        $totalDebit = JurnalUmum::where('akun_id', $akunId)->sum('debit');
-        $totalKredit = JurnalUmum::where('akun_id', $akunId)->sum('kredit');
+        $totalDebit = JurnalUmum::where('akun_id', $akunId)
+            ->where('usaha_id', $usahaId)
+            ->sum('debit');
+
+        $totalKredit = JurnalUmum::where('akun_id', $akunId)
+            ->where('usaha_id', $usahaId)
+            ->sum('kredit');
+
         $saldoAwal = $akun->saldo_awal ?? 0;
 
         if (in_array($akun->klasifikasi, ['ASET', 'BEBAN'])) {
@@ -263,7 +345,13 @@ class PenyusutanController extends Controller
 
     public function riwayat($id)
     {
+        $currentUser = Auth::user();
         $aset = DetailAsetTetap::with(['penyusutans.akunBeban', 'penyusutans.akunAkumulasi'])->findOrFail($id);
+
+        if (!$currentUser->usahas()->where('usahas.id', $aset->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $riwayat = $aset->penyusutans;
 
         return view('admin.penyusutan.riwayat', compact('aset', 'riwayat'));

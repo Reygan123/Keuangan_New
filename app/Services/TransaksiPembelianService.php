@@ -27,6 +27,7 @@ class TransaksiPembelianService
             'kredit' => $isDebit ? 0 : $jumlah,
             'referensi_transaksi_id' => $transaksi->id,
             'referensi_transaksi_tipe' => get_class($transaksi),
+            'usaha_id' => $transaksi->usaha_id,
         ]);
 
         $multiplier = 0;
@@ -53,6 +54,7 @@ class TransaksiPembelianService
     {
         $jurnals = JurnalUmum::where('referensi_transaksi_id', $transaksi->id)
             ->where('referensi_transaksi_tipe', get_class($transaksi))
+            ->where('usaha_id', $transaksi->usaha_id)
             ->get();
 
         foreach ($jurnals as $jurnal) {
@@ -69,6 +71,7 @@ class TransaksiPembelianService
 
         JurnalUmum::where('referensi_transaksi_id', $transaksi->id)
             ->where('referensi_transaksi_tipe', get_class($transaksi))
+            ->where('usaha_id', $transaksi->usaha_id)
             ->delete();
     }
 
@@ -121,14 +124,16 @@ class TransaksiPembelianService
                 'tanggal_jatuh_tempo' => Carbon::parse($transaksi->tanggal)->addDays(30),
                 'jumlah_pajak' => 0,
                 'terms_pembayaran' => '30 hari',
-                'status_invoice' => 'unpaid'
+                'status_invoice' => 'unpaid',
+                'usaha_id' => $transaksi->usaha_id,
             ]);
         } else {
             Nota::create([
                 'transaksi_id' => $transaksi->id,
                 'nomor_nota' => $this->generateNomorDokumen('NOTA-PBL'),
                 'jenis_nota' => 'pembelian',
-                'is_tunai' => true
+                'is_tunai' => true,
+                'usaha_id' => $transaksi->usaha_id,
             ]);
 
             Kuitansi::create([
@@ -137,7 +142,8 @@ class TransaksiPembelianService
                 'tanggal_pembayaran' => $transaksi->tanggal,
                 'metode_pembayaran' => 'transfer',
                 'jumlah_dibayar' => $transaksi->jumlah,
-                'tanda_tangan_penerima' => 'Supplier'
+                'tanda_tangan_penerima' => 'Supplier',
+                'usaha_id' => $transaksi->usaha_id,
             ]);
         }
     }
@@ -148,13 +154,17 @@ class TransaksiPembelianService
             $transaksi->load(['detailProduks.product', 'akunPayment', 'label']);
 
             $total = (float) $transaksi->jumlah;
-            $aturan = AturanAutomation::where('label_id', $transaksi->label_id)->first();
+            $aturan = AturanAutomation::where('label_id', $transaksi->label_id)
+                ->where('usaha_id', $transaksi->usaha_id)
+                ->first();
 
             if (!$aturan) {
                 throw new \Exception("Aturan Automation untuk label ID {$transaksi->label_id} tidak ditemukan.");
             }
 
-            $akunDebit = Akun::find($aturan->akun_debit_id);
+            $akunDebit = Akun::where('id', $aturan->akun_debit_id)
+                ->where('usaha_id', $transaksi->usaha_id)
+                ->first();
             $akunKreditFinal = $transaksi->akunPayment;
 
             if (!$akunDebit || !$akunKreditFinal) {

@@ -5,7 +5,7 @@
     <div class="p-4 md:p-6 lg:p-8">
         <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Daftar Invoice</h1>
-            <a href="{{ route('admin.invoices.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+            <a href="{{ route('admin.invoices.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -27,6 +27,18 @@
             </div>
         @endif
 
+        <div class="mb-4 flex flex-col sm:flex-row gap-3">
+            @if($usahas->count() > 1)
+            <div>
+                <select id="usahaFilter" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" onchange="filterByUsaha()">
+                    @foreach($usahas as $usahaItem)
+                    <option value="{{ $usahaItem->id }}" {{ $currentUsaha && $currentUsaha->id == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+        </div>
+
         <div class="mb-6 flex flex-col sm:flex-row gap-3">
             <div class="flex-1">
                 <input type="text" id="searchInput" placeholder="Cari nomor invoice..." class="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 placeholder-slate-500">
@@ -41,6 +53,7 @@
             <button onclick="resetFilters()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Reset</button>
         </div>
 
+        @if($invoices->count() > 0)
         <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -129,10 +142,30 @@
             </div>
             @endif
         </div>
+        @else
+        <div class="bg-slate-800 rounded-lg border border-slate-700 p-8 md:p-12 text-center">
+            <svg class="w-12 h-12 md:w-16 md:h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-slate-400 text-base md:text-lg mb-3 font-medium">Tidak ada invoice</p>
+            <p class="text-slate-500 text-sm mb-6">Mulai dengan membuat invoice baru</p>
+            <a href="{{ route('admin.invoices.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-blue-600/50 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Tambah Invoice
+            </a>
+        </div>
+        @endif
     </div>
 </div>
 
 <script>
+function filterByUsaha() {
+    const usahaId = document.getElementById('usahaFilter').value;
+    window.location.href = '{{ route("admin.invoices.index") }}?usaha_id=' + usahaId;
+}
+
 function resetFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = '';

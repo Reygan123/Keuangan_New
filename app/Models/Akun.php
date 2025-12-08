@@ -7,8 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Akun extends Model
 {
     protected $fillable = [
-        'name', 'saldo', 'klasifikasi', 'aktivitas_kas', 'nama_kelompok', 'sub_klasifikasi'
+        'name', 'saldo', 'klasifikasi', 'aktivitas_kas', 'nama_kelompok', 'sub_klasifikasi', 'usaha_id'
     ];
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
+    }
 
     public function mutasiAsal()
     {
