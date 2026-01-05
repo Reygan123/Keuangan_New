@@ -6,32 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Models\Akun;
 use App\Models\Transaksi;
 use App\Models\JurnalUmum;
+use App\Models\Usaha;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $currentUser = Auth::user();
+        $usahaSelected = $request->get('usaha_id');
+
+        $usahas = $currentUser->usahas()->get();
+
+        if (!$usahaSelected && $usahas->count() > 0) {
+            $usahaSelected = $usahas->first()->id;
+        }
+
         $bulanIni = Carbon::now()->format('Y-m');
         $tanggalAwalBulan = Carbon::now()->startOfMonth();
         $tanggalAkhirBulan = Carbon::now()->endOfMonth();
 
-        $labaRugiBersih = $this->hitungLabaRugiBersih($tanggalAwalBulan, $tanggalAkhirBulan);
-        $arusKasBersih = $this->hitungArusKasBersih($tanggalAwalBulan, $tanggalAkhirBulan);
-        $totalAsetLancar = $this->hitungTotalAsetLancar();
-        $totalKewajibanLancar = $this->hitungTotalKewajibanLancar();
+        $labaRugiBersih = $this->hitungLabaRugiBersih($tanggalAwalBulan, $tanggalAkhirBulan, $usahaSelected);
+        $arusKasBersih = $this->hitungArusKasBersih($tanggalAwalBulan, $tanggalAkhirBulan, $usahaSelected);
+        $totalAsetLancar = $this->hitungTotalAsetLancar($usahaSelected);
+        $totalKewajibanLancar = $this->hitungTotalKewajibanLancar($usahaSelected);
 
-        $saldoKas = $this->getSaldoAkunByKlasifikasi('KAS');
-        $saldoBank = $this->getSaldoAkunByKlasifikasi('BANK');
-        $piutangBelumTertagih = $this->getSaldoAkunByKlasifikasi('PIUTANG');
-        $utangBelumTerbayar = $this->getSaldoAkunByKlasifikasi('UTANG');
+        $saldoKas = $this->getSaldoAkunByKlasifikasi('KAS', $usahaSelected);
+        $saldoBank = $this->getSaldoAkunByKlasifikasi('BANK', $usahaSelected);
+        $piutangBelumTertagih = $this->getSaldoAkunByKlasifikasi('PIUTANG', $usahaSelected);
+        $utangBelumTerbayar = $this->getSaldoAkunByKlasifikasi('UTANG', $usahaSelected);
 
-        $grafikArusKas = $this->getGrafikArusKasBulanan();
-        $pieChartBeban = $this->getPieChartBeban($tanggalAwalBulan, $tanggalAkhirBulan);
+        $grafikArusKas = $this->getGrafikArusKasBulanan($usahaSelected);
+        $pieChartBeban = $this->getPieChartBeban($tanggalAwalBulan, $tanggalAkhirBulan, $usahaSelected);
 
-        $penerimaanTerakhir = $this->getPenerimaanTerakhir();
-        $pengeluaranTerakhir = $this->getPengeluaranTerakhir();
+        $penerimaanTerakhir = $this->getPenerimaanTerakhir($usahaSelected);
+        $pengeluaranTerakhir = $this->getPengeluaranTerakhir($usahaSelected);
 
         return view('admin.dashboard', compact(
             'labaRugiBersih',
@@ -45,64 +57,102 @@ class DashboardController extends Controller
             'grafikArusKas',
             'pieChartBeban',
             'penerimaanTerakhir',
-            'pengeluaranTerakhir'
+            'pengeluaranTerakhir',
+            'usahas',
+            'usahaSelected'
         ));
     }
 
-    private function hitungLabaRugiBersih($tanggalAwal, $tanggalAkhir)
+    private function hitungLabaRugiBersih($tanggalAwal, $tanggalAkhir, $usahaId)
     {
-        $pendapatan = JurnalUmum::whereHas('akun', function($q) {
+        $query = JurnalUmum::whereHas('akun', function($q) {
             $q->where('klasifikasi', 'PENDAPATAN');
         })
-        ->whereBetween('tanggal_transaksi', [$tanggalAwal, $tanggalAkhir])
-        ->sum('kredit');
+        ->whereBetween('tanggal_transaksi', [$tanggalAwal, $tanggalAkhir]);
 
-        $beban = JurnalUmum::whereHas('akun', function($q) {
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        $pendapatan = $query->sum('kredit');
+
+        $query = JurnalUmum::whereHas('akun', function($q) {
             $q->where('klasifikasi', 'BEBAN');
         })
-        ->whereBetween('tanggal_transaksi', [$tanggalAwal, $tanggalAkhir])
-        ->sum('debit');
+        ->whereBetween('tanggal_transaksi', [$tanggalAwal, $tanggalAkhir]);
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        $beban = $query->sum('debit');
 
         return $pendapatan - $beban;
     }
 
-    private function hitungArusKasBersih($tanggalAwal, $tanggalAkhir)
+    private function hitungArusKasBersih($tanggalAwal, $tanggalAkhir, $usahaId)
     {
-        $penerimaan = Transaksi::whereHas('label', function($q) {
+        $query = Transaksi::whereHas('label', function($q) {
             $q->where('tipe_utama', 'PENERIMAAN');
         })
-        ->whereBetween('tanggal', [$tanggalAwal, $tanggalAkhir])
-        ->sum('jumlah');
+        ->whereBetween('tanggal', [$tanggalAwal, $tanggalAkhir]);
 
-        $pengeluaran = Transaksi::whereHas('label', function($q) {
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        $penerimaan = $query->sum('jumlah');
+
+        $query = Transaksi::whereHas('label', function($q) {
             $q->where('tipe_utama', 'PENGELUARAN');
         })
-        ->whereBetween('tanggal', [$tanggalAwal, $tanggalAkhir])
-        ->sum('jumlah');
+        ->whereBetween('tanggal', [$tanggalAwal, $tanggalAkhir]);
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        $pengeluaran = $query->sum('jumlah');
 
         return $penerimaan - $pengeluaran;
     }
 
-    private function hitungTotalAsetLancar()
+    private function hitungTotalAsetLancar($usahaId)
     {
-        return Akun::where('klasifikasi', 'ASET')
-            ->where('nama_kelompok', 'LANCAR')
-            ->sum('saldo');
+        $query = Akun::where('klasifikasi', 'ASET')
+            ->where('nama_kelompok', 'LANCAR');
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        return $query->sum('saldo');
     }
 
-    private function hitungTotalKewajibanLancar()
+    private function hitungTotalKewajibanLancar($usahaId)
     {
-        return Akun::where('klasifikasi', 'KEWAJIBAN')
-            ->where('nama_kelompok', 'LANCAR')
-            ->sum('saldo');
+        $query = Akun::where('klasifikasi', 'KEWAJIBAN')
+            ->where('nama_kelompok', 'LANCAR');
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        return $query->sum('saldo');
     }
 
-    private function getSaldoAkunByKlasifikasi($klasifikasi)
+    private function getSaldoAkunByKlasifikasi($klasifikasi, $usahaId)
     {
-        return Akun::where('klasifikasi', $klasifikasi)->sum('saldo');
+        $query = Akun::where('klasifikasi', $klasifikasi);
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        return $query->sum('saldo');
     }
 
-    private function getGrafikArusKasBulanan()
+    private function getGrafikArusKasBulanan($usahaId)
     {
         $bulanSekarang = Carbon::now();
         $data = [];
@@ -112,17 +162,27 @@ class DashboardController extends Controller
             $awalBulan = $bulan->copy()->startOfMonth();
             $akhirBulan = $bulan->copy()->endOfMonth();
 
-            $penerimaan = Transaksi::whereHas('label', function($q) {
+            $query = Transaksi::whereHas('label', function($q) {
                 $q->where('tipe_utama', 'PENERIMAAN');
             })
-            ->whereBetween('tanggal', [$awalBulan, $akhirBulan])
-            ->sum('jumlah');
+            ->whereBetween('tanggal', [$awalBulan, $akhirBulan]);
 
-            $pengeluaran = Transaksi::whereHas('label', function($q) {
+            if ($usahaId) {
+                $query->where('usaha_id', $usahaId);
+            }
+
+            $penerimaan = $query->sum('jumlah');
+
+            $query = Transaksi::whereHas('label', function($q) {
                 $q->where('tipe_utama', 'PENGELUARAN');
             })
-            ->whereBetween('tanggal', [$awalBulan, $akhirBulan])
-            ->sum('jumlah');
+            ->whereBetween('tanggal', [$awalBulan, $akhirBulan]);
+
+            if ($usahaId) {
+                $query->where('usaha_id', $usahaId);
+            }
+
+            $pengeluaran = $query->sum('jumlah');
 
             $data[] = [
                 'bulan' => $bulan->format('M Y'),
@@ -134,37 +194,52 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function getPieChartBeban($tanggalAwal, $tanggalAkhir)
+    private function getPieChartBeban($tanggalAwal, $tanggalAkhir, $usahaId)
     {
-        return JurnalUmum::whereHas('akun', function($q) {
+        $query = JurnalUmum::whereHas('akun', function($q) {
             $q->where('klasifikasi', 'BEBAN');
         })
-        ->whereBetween('tanggal_transaksi', [$tanggalAwal, $tanggalAkhir])
-        ->select('akun_id', DB::raw('SUM(debit) as total'))
-        ->with('akun')
-        ->groupBy('akun_id')
-        ->get();
+        ->whereBetween('tanggal_transaksi', [$tanggalAwal, $tanggalAkhir]);
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        return $query->select('akun_id', DB::raw('SUM(debit) as total'))
+            ->with('akun')
+            ->groupBy('akun_id')
+            ->get();
     }
 
-    private function getPenerimaanTerakhir()
+    private function getPenerimaanTerakhir($usahaId)
     {
-        return Transaksi::whereHas('label', function($q) {
+        $query = Transaksi::whereHas('label', function($q) {
             $q->where('tipe_utama', 'PENERIMAAN');
         })
-        ->with(['akunPayment', 'label'])
-        ->latest()
-        ->take(5)
-        ->get();
+        ->with(['akunPayment', 'label']);
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        return $query->latest()
+            ->take(5)
+            ->get();
     }
 
-    private function getPengeluaranTerakhir()
+    private function getPengeluaranTerakhir($usahaId)
     {
-        return Transaksi::whereHas('label', function($q) {
+        $query = Transaksi::whereHas('label', function($q) {
             $q->where('tipe_utama', 'PENGELUARAN');
         })
-        ->with(['akunPayment', 'label'])
-        ->latest()
-        ->take(5)
-        ->get();
+        ->with(['akunPayment', 'label']);
+
+        if ($usahaId) {
+            $query->where('usaha_id', $usahaId);
+        }
+
+        return $query->latest()
+            ->take(5)
+            ->get();
     }
 }

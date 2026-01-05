@@ -11,7 +11,12 @@ class Invoice extends Model
 
     protected $fillable = [
         'transaksi_id', 'nomor_invoice', 'tanggal_jatuh_tempo',
-        'jumlah_pajak', 'terms_pembayaran', 'status_invoice', 'usaha_id'
+        'jumlah_pajak', 'terms_pembayaran', 'status_invoice', 'usaha_id',
+        'to_client_name', 'nama_bank', 'nomor_rekening'
+    ];
+
+    protected $casts = [
+        'tanggal_jatuh_tempo' => 'date',
     ];
 
     public function transaksi()
@@ -22,5 +27,22 @@ class Invoice extends Model
     public function usaha()
     {
         return $this->belongsTo(Usaha::class);
+    }
+
+    public function invoiceItems()
+    {
+        return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function getTotalAttribute()
+    {
+        return $this->invoiceItems->sum('total');
+    }
+
+    public function getSubtotalAttribute()
+    {
+        return $this->invoiceItems->sum(function($item) {
+            return $item->qty * $item->harga;
+        });
     }
 }

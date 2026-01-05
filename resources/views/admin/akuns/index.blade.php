@@ -30,13 +30,15 @@
 
                 <div class="flex flex-col gap-3">
                     <div class="flex flex-col sm:flex-row gap-2">
-                        @if(count($usahas) > 1)
-                        <select id="usahaFilter" class="bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[180px]">
-                            <option value="">Semua Usaha</option>
-                            @foreach($usahas as $usaha)
-                                <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
-                            @endforeach
-                        </select>
+                        @if (count($usahas) > 1)
+                            <select id="usahaFilter"
+                                class="bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[180px]">
+                                <option value="">Semua Usaha</option>
+                                @foreach ($usahas as $usaha)
+                                    <option value="{{ $usaha->id }}"
+                                        {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                                @endforeach
+                            </select>
                         @endif
                         <input type="text" id="searchInput" placeholder="Cari akun..."
                             class="flex-1 bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors">
@@ -79,14 +81,16 @@
                     <thead class="bg-slate-700/50 border-b border-slate-700">
                         <tr>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">ID</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-200">Kode</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Nama Akun</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Saldo</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Klasifikasi</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Sub Klasifikasi</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Aktivitas Kas</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Aktivitas Kas
+                            </th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden md:table-cell">Kelompok</th>
-                            @if(count($usahas) > 1)
-                            <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Usaha</th>
+                            @if (count($usahas) > 1)
+                                <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Usaha</th>
                             @endif
                             <th class="px-4 py-3 text-center font-semibold text-slate-200">Aksi</th>
                         </tr>
@@ -94,12 +98,14 @@
                     <tbody class="divide-y divide-slate-700/50" id="tableBody">
                         @foreach ($akuns as $akun)
                             <tr class="hover:bg-slate-700/30 transition-colors data-row"
-                                data-search="{{ strtolower($akun->name . ' ' . $akun->id) }}"
-                                data-klasifikasi="{{ $akun->klasifikasi }}"
-                                data-aktivitas="{{ $akun->aktivitas_kas }}"
+                                data-search="{{ strtolower($akun->name . ' ' . $akun->id . ' ' . ($akun->kode ?? '')) }}"
+                                data-klasifikasi="{{ $akun->klasifikasi }}" data-aktivitas="{{ $akun->aktivitas_kas }}"
                                 data-usaha="{{ $akun->usaha_id }}">
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">{{ $loop->iteration }}</td>
-                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-100 font-medium">{{ $akun->name }}</td>
+                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 font-mono">{{ $akun->kode ?? '-' }}
+                                </td>
+                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-100 font-medium">{{ $akun->name }}
+                                </td>
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">
                                     {{ number_format($akun->saldo, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3">
@@ -127,14 +133,14 @@
                                     {{ $akun->aktivitas_kas }}</td>
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 hidden md:table-cell">
                                     {{ $akun->nama_kelompok ?? '-' }}</td>
-                                @if(count($usahas) > 1)
-                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 hidden lg:table-cell">
-                                    {{ $akun->usaha->nama ?? '-' }}
-                                </td>
+                                @if (count($usahas) > 1)
+                                    <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 hidden lg:table-cell">
+                                        {{ $akun->usaha->nama ?? '-' }}
+                                    </td>
                                 @endif
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex justify-center gap-2 flex-wrap">
-                                        <button onclick="editAkun({ $akun })"
+                                        <button onclick="editAkun({{ json_encode($akun) }})"
                                             class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-xs rounded transition-colors">
                                             Edit
                                         </button>
@@ -167,19 +173,23 @@
                 @csrf
                 <h2 class="text-lg font-semibold text-slate-50">Tambah Akun Baru</h2>
 
-                @if(count($usahas) > 1)
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-2">Usaha</label>
-                    <select name="usaha_id" required
-                        class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                        <option value="">-- Pilih Usaha --</option>
-                        @foreach ($usahas as $usaha)
-                            <option value="{{ $usaha->id }}">{{ $usaha->nama }}</option>
-                        @endforeach
-                    </select>
+                    <input type="hidden" name="kode_otomatis" value="1">
                 </div>
+
+                @if (count($usahas) > 1)
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-2">Usaha</label>
+                        <select name="usaha_id" required
+                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="">-- Pilih Usaha --</option>
+                            @foreach ($usahas as $usaha)
+                                <option value="{{ $usaha->id }}">{{ $usaha->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 @else
-                <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+                    <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
                 @endif
 
                 <div>
@@ -257,6 +267,13 @@
                 @csrf
                 @method('PUT')
                 <h2 class="text-lg font-semibold text-slate-50">Edit Akun</h2>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-2">Kode Akun</label>
+                    <input type="text" name="kode" id="editKode"
+                        class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required>
+                </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-2">Nama Akun</label>
@@ -374,16 +391,17 @@
             });
 
             function editAkun(data) {
+                document.getElementById('editKode').value = data.kode || '';
                 document.getElementById('editName').value = data.name;
                 document.getElementById('editKlasifikasi').value = data.klasifikasi;
                 document.getElementById('editAktivitasKas').value = data.aktivitas_kas;
-                document.getElementById('editNamaKelompok').value = data.nama_kelompok;
+                document.getElementById('editNamaKelompok').value = data.nama_kelompok || '';
 
                 updateSubKlasifikasi(
                     document.getElementById('editKlasifikasi'),
                     document.getElementById('editSubKlasifikasi'),
                     document.getElementById('editSubKlasifikasiWrapper'),
-                    data.sub_klasifikasi
+                    data.sub_klasifikasi || ''
                 );
 
                 const form = document.getElementById('editForm');
@@ -432,7 +450,7 @@
                 const usahaFilter = document.getElementById('usahaFilter');
                 if (usahaFilter && usahaFilter.value) {
                     const usahaId = usahaFilter.value;
-                    window.location.href = '{{ route("admin.akuns.index") }}?usaha_id=' + usahaId;
+                    window.location.href = '{{ route('admin.akuns.index') }}?usaha_id=' + usahaId;
                 } else {
                     applyFilter();
                 }

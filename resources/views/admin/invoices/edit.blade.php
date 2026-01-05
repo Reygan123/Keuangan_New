@@ -14,7 +14,7 @@
         </div>
 
         <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-            <form action="{{ route('admin.invoices.update', $invoice->id) }}" method="POST">
+            <form action="{{ route('admin.invoices.update', $invoice->id) }}" method="POST" id="invoiceForm">
                 @csrf
                 @method('PUT')
                 <div class="p-6 space-y-6">
@@ -30,15 +30,93 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Transaksi <span class="text-red-400">*</span></label>
-                            <select name="transaksi_id" id="transaksi_id" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('transaksi_id') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Transaksi</label>
+                            <select name="transaksi_id" id="transaksi_id" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('transaksi_id') border-red-500 @enderror">
+                                <option value="">Pilih Transaksi (Opsional)</option>
                                 @foreach($transaksis as $transaksi)
                                     <option value="{{ $transaksi->id }}" data-jumlah="{{ $transaksi->jumlah }}" {{ old('transaksi_id', $invoice->transaksi_id) == $transaksi->id ? 'selected' : '' }}>
-                                        {{ $transaksi->pelanggan ? $transaksi->pelanggan->nama : $transaksi->supplier->nama }} - Rp {{ number_format($transaksi->jumlah, 0, ',', '.') }}
+                                                                                {{ 
+    $transaksi->pelanggan?->nama 
+    ?? $transaksi->supplier?->nama 
+    ?? 'Tanpa Relasi'
+}} - Rp {{ number_format($transaksi->jumlah, 0, ',', '.') }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('transaksi_id')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div id="additionalFields" class="{{ $invoice->transaksi_id ? 'hidden' : '' }} md:col-span-2 space-y-4 bg-slate-700/50 p-4 rounded-lg">
+                            <h3 class="text-sm font-semibold text-slate-300">Informasi Pembayaran</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">To (Client Name) <span class="text-red-400">*</span></label>
+                                    <input type="text" name="to_client_name" id="to_client_name" value="{{ old('to_client_name', $invoice->to_client_name) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Nama Bank</label>
+                                    <input type="text" name="nama_bank" id="nama_bank" value="{{ old('nama_bank', $invoice->nama_bank) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Rekening</label>
+                                    <input type="text" name="nomor_rekening" id="nomor_rekening" value="{{ old('nomor_rekening', $invoice->nomor_rekening) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="invoiceItemsSection" class="{{ $invoice->transaksi_id ? 'hidden' : '' }} md:col-span-2">
+                            <h3 class="text-sm font-semibold text-slate-300 mb-3">Invoice Items</h3>
+                            <div class="space-y-4">
+                                <div id="itemsContainer">
+                                    @if($invoice->invoiceItems->count() > 0)
+                                        @foreach($invoice->invoiceItems as $index => $item)
+                                            <div class="item-row grid grid-cols-12 gap-3 mb-3">
+                                                <div class="col-span-6">
+                                                    <input type="text" name="items[{{ $index }}][description]" value="{{ $item->description }}" placeholder="Description" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <input type="number" name="items[{{ $index }}][qty]" value="{{ $item->qty }}" placeholder="Qty" min="1" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+                                                </div>
+                                                <div class="col-span-3">
+                                                    <input type="number" name="items[{{ $index }}][harga]" value="{{ $item->harga }}" placeholder="Harga" min="0" step="0.01" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+                                                </div>
+                                                <div class="col-span-1 flex items-center justify-center">
+                                                    <button type="button" onclick="removeItem(this)" class="text-red-400 hover:text-red-300">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="item-row grid grid-cols-12 gap-3 mb-3">
+                                            <div class="col-span-6">
+                                                <input type="text" name="items[0][description]" placeholder="Description" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+                                            </div>
+                                            <div class="col-span-2">
+                                                <input type="number" name="items[0][qty]" placeholder="Qty" min="1" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+                                            </div>
+                                            <div class="col-span-3">
+                                                <input type="number" name="items[0][harga]" placeholder="Harga" min="0" step="0.01" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+                                            </div>
+                                            <div class="col-span-1 flex items-center justify-center">
+                                                <button type="button" onclick="removeItem(this)" class="text-red-400 hover:text-red-300">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                                <button type="button" onclick="addItem()" class="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Tambah Item
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -100,23 +178,112 @@
 </div>
 
 <script>
+let itemCount = {{ $invoice->invoiceItems->count() ?: 1 }};
+
+function toggleAdditionalFields() {
+    const transaksiSelect = document.getElementById('transaksi_id');
+    const additionalFields = document.getElementById('additionalFields');
+    const invoiceItemsSection = document.getElementById('invoiceItemsSection');
+    const toClientName = document.getElementById('to_client_name');
+
+    if (transaksiSelect.value === '') {
+        additionalFields.classList.remove('hidden');
+        invoiceItemsSection.classList.remove('hidden');
+        toClientName.required = true;
+    } else {
+        additionalFields.classList.add('hidden');
+        invoiceItemsSection.classList.add('hidden');
+        toClientName.required = false;
+    }
+    updateRingkasan();
+}
+
+function addItem() {
+    const container = document.getElementById('itemsContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'item-row grid grid-cols-12 gap-3 mb-3';
+    newRow.innerHTML = `
+        <div class="col-span-6">
+            <input type="text" name="items[${itemCount}][description]" placeholder="Description" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+        </div>
+        <div class="col-span-2">
+            <input type="number" name="items[${itemCount}][qty]" placeholder="Qty" min="1" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+        </div>
+        <div class="col-span-3">
+            <input type="number" name="items[${itemCount}][harga]" placeholder="Harga" min="0" step="0.01" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg">
+        </div>
+        <div class="col-span-1 flex items-center justify-center">
+            <button type="button" onclick="removeItem(this)" class="text-red-400 hover:text-red-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    container.appendChild(newRow);
+    itemCount++;
+
+    const inputs = newRow.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('input', updateRingkasan);
+    });
+}
+
+function removeItem(button) {
+    const row = button.closest('.item-row');
+    if (document.querySelectorAll('.item-row').length > 1) {
+        row.remove();
+        updateRingkasan();
+    }
+}
+
+function calculateItemsTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const qty = parseFloat(row.querySelector('input[name*="[qty]"]').value) || 0;
+        const harga = parseFloat(row.querySelector('input[name*="[harga]"]').value) || 0;
+        total += qty * harga;
+    });
+    return total;
+}
+
+function updateRingkasan() {
+    const transaksiSelect = document.getElementById('transaksi_id');
+    const jumlahPajakInput = document.getElementById('jumlah_pajak');
+
+    let subtotal = 0;
+
+    if (transaksiSelect.value === '') {
+        subtotal = calculateItemsTotal();
+    } else {
+        const selectedOption = transaksiSelect.options[transaksiSelect.selectedIndex];
+        subtotal = parseFloat(selectedOption.dataset.jumlah) || 0;
+    }
+
+    const pajak = parseFloat(jumlahPajakInput.value) || 0;
+    const total = subtotal + pajak;
+
+    document.getElementById('subtotal').textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
+    document.getElementById('pajak').textContent = 'Rp ' + pajak.toLocaleString('id-ID');
+    document.getElementById('total').textContent = 'Rp ' + total.toLocaleString('id-ID');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const transaksiSelect = document.getElementById('transaksi_id');
     const jumlahPajakInput = document.getElementById('jumlah_pajak');
 
-    function updateRingkasan() {
-        const selectedOption = transaksiSelect.options[transaksiSelect.selectedIndex];
-        const subtotal = parseFloat(selectedOption.dataset.jumlah) || 0;
-        const pajak = parseFloat(jumlahPajakInput.value) || 0;
-        const total = subtotal + pajak;
-
-        document.getElementById('subtotal').textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
-        document.getElementById('pajak').textContent = 'Rp ' + pajak.toLocaleString('id-ID');
-        document.getElementById('total').textContent = 'Rp ' + total.toLocaleString('id-ID');
+    if (transaksiSelect) {
+        transaksiSelect.addEventListener('change', toggleAdditionalFields);
     }
 
-    transaksiSelect.addEventListener('change', updateRingkasan);
-    jumlahPajakInput.addEventListener('input', updateRingkasan);
+    if (jumlahPajakInput) {
+        jumlahPajakInput.addEventListener('input', updateRingkasan);
+    }
+
+    document.querySelectorAll('#itemsContainer input').forEach(input => {
+        input.addEventListener('input', updateRingkasan);
+    });
+
     updateRingkasan();
 });
 </script>

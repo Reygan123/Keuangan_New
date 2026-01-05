@@ -82,6 +82,100 @@ class AkunController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $usahaId) {
+            $kodePrefixMap = [
+                'ASET' => '1',
+                'KEWAJIBAN' => '2',
+                'EKUITAS' => '3',
+                'PENDAPATAN' => '4',
+                'BEBAN' => '6'
+            ];
+
+            $prefix = $kodePrefixMap[$validated['klasifikasi']] ?? '9';
+
+            $lastAkun = Akun::where('usaha_id', $usahaId)
+                ->where('klasifikasi', $validated['klasifikasi'])
+                ->orderBy('kode', 'desc')
+                ->first();
+
+            if ($lastAkun && $lastAkun->kode) {
+                $lastNumber = intval(substr($lastAkun->kode, 0, 2));
+                $newNumber = str_pad($lastNumber + 1, 2, '0', STR_PAD_LEFT);
+                $kode = $newNumber . '000';
+            } else {
+                $baseCodes = [
+                    'ASET' => '10000',
+                    'KEWAJIBAN' => '20000',
+                    'EKUITAS' => '30000',
+                    'PENDAPATAN' => '40000',
+                    'BEBAN' => '60000'
+                ];
+                $kode = $baseCodes[$validated['klasifikasi']] ?? '90000';
+            }
+
+            if ($validated['sub_klasifikasi']) {
+                $subBaseCodes = [
+                    'LANCAR' => '11000',
+                    'TETAP' => '12000',
+                    'JANGKA PANJANG' => '22000'
+                ];
+
+                if (isset($subBaseCodes[$validated['sub_klasifikasi']])) {
+                    $baseKode = $subBaseCodes[$validated['sub_klasifikasi']];
+
+                    $lastSubAkun = Akun::where('usaha_id', $usahaId)
+                        ->where('klasifikasi', $validated['klasifikasi'])
+                        ->where('sub_klasifikasi', $validated['sub_klasifikasi'])
+                        ->where('kode', 'like', substr($baseKode, 0, 2) . '%')
+                        ->orderBy('kode', 'desc')
+                        ->first();
+
+                    if ($lastSubAkun && $lastSubAkun->kode) {
+                        $lastSubNumber = intval($lastSubAkun->kode);
+                        $newSubNumber = $lastSubNumber + 1;
+                        $kode = str_pad($newSubNumber, 5, '0', STR_PAD_LEFT);
+                    } else {
+                        $kode = $baseKode;
+                    }
+                }
+            }
+
+            if ($validated['nama_kelompok']) {
+                $lastDetailAkun = Akun::where('usaha_id', $usahaId)
+                    ->where('klasifikasi', $validated['klasifikasi'])
+                    ->where('sub_klasifikasi', $validated['sub_klasifikasi'])
+                    ->where('nama_kelompok', $validated['nama_kelompok'])
+                    ->where('kode', 'like', substr($kode, 0, 3) . '%')
+                    ->orderBy('kode', 'desc')
+                    ->first();
+
+                if ($lastDetailAkun && $lastDetailAkun->kode) {
+                    $lastDetailNumber = intval($lastDetailAkun->kode);
+                    $newDetailNumber = $lastDetailNumber + 1;
+                    $kode = str_pad($newDetailNumber, 5, '0', STR_PAD_LEFT);
+                } else {
+                    $currentBase = intval(substr($kode, 0, 3)) * 100;
+                    $kode = str_pad($currentBase + 1, 5, '0', STR_PAD_LEFT);
+                }
+            }
+
+            $existingKode = Akun::where('usaha_id', $usahaId)
+                ->where('kode', $kode)
+                ->exists();
+
+            if ($existingKode) {
+                $counter = 1;
+                while ($existingKode) {
+                    $newNumber = intval($kode) + $counter;
+                    $kode = str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+                    $existingKode = Akun::where('usaha_id', $usahaId)
+                        ->where('kode', $kode)
+                        ->exists();
+                    $counter++;
+                }
+            }
+
+            $validated['kode'] = $kode;
+
             $akun = Akun::create($validated);
 
             if ($validated['saldo'] != 0) {
@@ -118,6 +212,7 @@ class AkunController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'kode' => 'required|string|max:10',
             'klasifikasi' => 'required|string|in:ASET,KEWAJIBAN,EKUITAS,PENDAPATAN,BEBAN',
             'sub_klasifikasi' => 'nullable|string|in:LANCAR,TETAP,JANGKA PANJANG',
             'aktivitas_kas' => 'required|string|in:OPERASI,INVESTASI,PENDANAAN,TIDAK BERLAKU',

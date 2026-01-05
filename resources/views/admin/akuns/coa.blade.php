@@ -66,7 +66,7 @@
                                                     <div class="px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-800 transition duration-150 akunRow"
                                                         data-akun="{{ strtolower($akun->name) }}">
                                                         <span
-                                                            class="text-slate-400 font-mono w-16 flex-shrink-0">{{ $akun->id }}</span>
+                                                            class="text-slate-400 font-mono w-16 flex-shrink-0">{{ $akun->kode ?? $akun->id }}</span>
                                                         <span class="text-slate-200 flex-1">{{ $akun->name }}</span>
                                                     </div>
                                                 @endforeach
@@ -113,7 +113,7 @@
                                                     <div class="px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-800 transition duration-150 akunRow"
                                                         data-akun="{{ strtolower($akun->name) }}">
                                                         <span
-                                                            class="text-slate-400 font-mono w-16 flex-shrink-0">{{ $akun->id }}</span>
+                                                            class="text-slate-400 font-mono w-16 flex-shrink-0">{{ $akun->kode ?? $akun->id }}</span>
                                                         <span class="text-slate-200 flex-1">{{ $akun->name }}</span>
                                                     </div>
                                                 @endforeach

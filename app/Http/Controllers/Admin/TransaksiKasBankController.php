@@ -74,11 +74,11 @@ class TransaksiKasBankController extends Controller
                 ->get();
 
             $akunKasBank = Akun::where('usaha_id', $selectedUsahaId)
-                ->where('klasifikasi', 'ASET')
+                // ->where('klasifikasi', 'ASET')
                 ->get();
 
             $akunLawan = Akun::where('usaha_id', $selectedUsahaId)
-                ->where('klasifikasi', '!=', 'ASET')
+                // ->where('klasifikasi', '!=', 'ASET')
                 ->get();
         }
 
