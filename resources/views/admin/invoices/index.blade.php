@@ -74,18 +74,35 @@
                             <td class="px-4 py-3 text-slate-300">{{ $invoices->firstItem() + $key }}</td>
                             <td class="px-4 py-3 text-slate-200 font-medium">{{ $invoice->nomor_invoice }}</td>
                             <td class="px-4 py-3 text-slate-300">
-                                @if($invoice->transaksi->pelanggan)
-                                    <span class="text-xs px-2 py-1 bg-blue-900/50 text-blue-200 rounded">Pelanggan</span>
-                                    {{ $invoice->transaksi->pelanggan->nama }}
-                                @elseif($invoice->transaksi->supplier)
-                                    <span class="text-xs px-2 py-1 bg-amber-900/50 text-amber-200 rounded">Supplier</span>
-                                    {{ $invoice->transaksi->supplier->nama }}
+                                @if($invoice->transaksi)
+                                    @if($invoice->transaksi->pelanggan)
+                                        <span class="text-xs px-2 py-1 bg-blue-900/50 text-blue-200 rounded">Pelanggan</span>
+                                        {{ $invoice->transaksi->pelanggan->nama }}
+                                    @elseif($invoice->transaksi->supplier)
+                                        <span class="text-xs px-2 py-1 bg-amber-900/50 text-amber-200 rounded">Supplier</span>
+                                        {{ $invoice->transaksi->supplier->nama }}
+                                    @else
+                                        -
+                                    @endif
                                 @else
-                                    -
+                                    <span class="text-xs px-2 py-1 bg-slate-700 text-slate-200 rounded">Client</span>
+                                    {{ $invoice->to_client_name }}
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-slate-300">Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3 text-right text-slate-200 font-medium">Rp {{ number_format($invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}</td>
+                            <td class="px-4 py-3 text-right text-slate-300">
+                                @if($invoice->transaksi)
+                                    Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}
+                                @else
+                                    Rp {{ number_format($invoice->subtotal, 0, ',', '.') }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-right text-slate-200 font-medium">
+                                @if($invoice->transaksi)
+                                    Rp {{ number_format($invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
+                                @else
+                                    Rp {{ number_format($invoice->total + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 @switch($invoice->status_invoice)
                                     @case('pending')

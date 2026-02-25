@@ -54,9 +54,8 @@ class InvoiceController extends Controller
 
         $usahas = $currentUser->usahas()->get();
 
-        if (!$currentUsaha) {
-            $transaksis = collect();
-        } else {
+        $transaksis = collect();
+        if ($currentUsaha) {
             $transaksis = Transaksi::with(['pelanggan', 'supplier'])
                 ->where('usaha_id', $currentUsaha->id)
                 ->whereDoesntHave('invoice')
@@ -82,21 +81,51 @@ class InvoiceController extends Controller
             return back()->with('error', 'Pilih usaha terlebih dahulu')->withInput();
         }
 
-        $validated = $request->validate([
-            'transaksi_id' => 'required|exists:transaksis,id',
+        $rules = [
             'nomor_invoice' => 'required|string|unique:invoices,nomor_invoice',
             'tanggal_jatuh_tempo' => 'required|date',
             'jumlah_pajak' => 'nullable|numeric|min:0',
             'terms_pembayaran' => 'nullable|string',
             'status_invoice' => 'required|in:pending,paid,cancelled,overdue'
-        ]);
+        ];
 
+        if ($request->has('transaksi_id') && $request->transaksi_id != '') {
+            $rules['transaksi_id'] = 'required|exists:transaksis,id';
+            $transaksiRequired = true;
+        } else {
+            $transaksiRequired = false;
+            $rules['to_client_name'] = 'required|string';
+            $rules['nama_bank'] = 'nullable|string';
+            $rules['nomor_rekening'] = 'nullable|string';
+        }
+
+        $validated = $request->validate($rules);
         $validated['usaha_id'] = $currentUsaha->id;
 
         try {
             DB::beginTransaction();
 
             $invoice = Invoice::create($validated);
+
+            if (!$transaksiRequired) {
+                $itemsData = [];
+                if ($request->has('items')) {
+                    foreach ($request->items as $item) {
+                        if (!empty($item['description']) && $item['qty'] > 0 && $item['harga'] > 0) {
+                            $itemsData[] = [
+                                'description' => $item['description'],
+                                'qty' => $item['qty'],
+                                'harga' => $item['harga'],
+                                'total' => $item['qty'] * $item['harga']
+                            ];
+                        }
+                    }
+                }
+
+                if (!empty($itemsData)) {
+                    $invoice->invoiceItems()->createMany($itemsData);
+                }
+            }
 
             DB::commit();
 
@@ -105,6 +134,98 @@ class InvoiceController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal membuat invoice: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function edit(Invoice $invoice, Request $request)
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $currentUsaha = Usaha::find($invoice->usaha_id);
+        $usahas = $currentUser->usahas()->get();
+
+        $transaksis = Transaksi::with(['pelanggan', 'supplier'])
+            ->where('usaha_id', $invoice->usaha_id)
+            ->where(function ($query) use ($invoice) {
+                $query->whereDoesntHave('invoice')
+                    ->orWhere('id', $invoice->transaksi_id);
+            })
+            ->get();
+
+        return view('admin.invoices.edit', compact('invoice', 'transaksis', 'usahas', 'currentUsaha'));
+    }
+
+    public function update(Request $request, Invoice $invoice)
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $rules = [
+            'nomor_invoice' => 'required|string|unique:invoices,nomor_invoice,' . $invoice->id,
+            'tanggal_jatuh_tempo' => 'required|date',
+            'jumlah_pajak' => 'nullable|numeric|min:0',
+            'terms_pembayaran' => 'nullable|string',
+            'status_invoice' => 'required|in:pending,paid,cancelled,overdue'
+        ];
+
+        if ($request->has('transaksi_id') && $request->transaksi_id != '') {
+            $rules['transaksi_id'] = 'required|exists:transaksis,id';
+            $transaksiRequired = true;
+        } else {
+            $transaksiRequired = false;
+            $rules['to_client_name'] = 'required|string';
+            $rules['nama_bank'] = 'nullable|string';
+            $rules['nomor_rekening'] = 'nullable|string';
+        }
+
+        $validated = $request->validate($rules);
+
+        try {
+            DB::beginTransaction();
+
+            if (!$transaksiRequired) {
+                $validated['transaksi_id'] = null;
+            }
+
+            $invoice->update($validated);
+
+            if (!$transaksiRequired) {
+                $invoice->invoiceItems()->delete();
+
+                $itemsData = [];
+                if ($request->has('items')) {
+                    foreach ($request->items as $item) {
+                        if (!empty($item['description']) && $item['qty'] > 0 && $item['harga'] > 0) {
+                            $itemsData[] = [
+                                'description' => $item['description'],
+                                'qty' => $item['qty'],
+                                'harga' => $item['harga'],
+                                'total' => $item['qty'] * $item['harga']
+                            ];
+                        }
+                    }
+                }
+
+                if (!empty($itemsData)) {
+                    $invoice->invoiceItems()->createMany($itemsData);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.invoices.index', ['usaha_id' => $invoice->usaha_id])
+                ->with('success', 'Invoice berhasil diupdate.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal mengupdate invoice: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -123,135 +244,16 @@ class InvoiceController extends Controller
             'transaksi.detailProduks',
             'transaksi.label',
             'transaksi.akunPayment',
-            'transaksi.akunLawan'
+            'transaksi.akunLawan',
+            'invoiceItems',
+            'usaha'
         ]);
 
-        return view('admin.invoices.show', compact('invoice'));
-    }
-
-    public function edit(Invoice $invoice, Request $request)
-    {
-        $currentUser = Auth::user();
-
-        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
-            abort(403, 'Unauthorized');
+        $templateName = 'pdf';
+        if ($invoice->usaha && strtolower($invoice->usaha->nama) === 'jatidiri') {
+            $templateName = 'jatidiri';
         }
 
-        $currentUsaha = Usaha::find($invoice->usaha_id);
-        $usahas = $currentUser->usahas()->get();
-
-        $transaksis = Transaksi::with(['pelanggan', 'supplier'])
-            ->where('usaha_id', $invoice->usaha_id)
-            ->where(function($query) use ($invoice) {
-                $query->whereDoesntHave('invoice')
-                    ->orWhere('id', $invoice->transaksi_id);
-            })
-            ->get();
-
-        return view('admin.invoices.edit', compact('invoice', 'transaksis', 'usahas', 'currentUsaha'));
-    }
-
-    public function update(Request $request, Invoice $invoice)
-    {
-        $currentUser = Auth::user();
-
-        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
-            abort(403, 'Unauthorized');
-        }
-
-        $validated = $request->validate([
-            'transaksi_id' => 'required|exists:transaksis,id',
-            'nomor_invoice' => 'required|string|unique:invoices,nomor_invoice,' . $invoice->id,
-            'tanggal_jatuh_tempo' => 'required|date',
-            'jumlah_pajak' => 'nullable|numeric|min:0',
-            'terms_pembayaran' => 'nullable|string',
-            'status_invoice' => 'required|in:pending,paid,cancelled,overdue'
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            $invoice->update($validated);
-
-            DB::commit();
-
-            return redirect()->route('admin.invoices.index', ['usaha_id' => $invoice->usaha_id])
-                ->with('success', 'Invoice berhasil diupdate.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal mengupdate invoice: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    public function destroy(Invoice $invoice)
-    {
-        $currentUser = Auth::user();
-
-        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
-            abort(403, 'Unauthorized');
-        }
-
-        try {
-            $invoice->delete();
-
-            return redirect()->route('admin.invoices.index', ['usaha_id' => $invoice->usaha_id])
-                ->with('success', 'Invoice berhasil dihapus.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus invoice: ' . $e->getMessage());
-        }
-    }
-
-    public function generateNomorInvoice(Request $request)
-    {
-        $currentUser = Auth::user();
-        $selectedUsahaId = $request->get('usaha_id');
-        $currentUsaha = null;
-
-        if ($selectedUsahaId) {
-            $currentUsaha = $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first();
-        } else {
-            $currentUsaha = $currentUser->usahas()->first();
-        }
-
-        if (!$currentUsaha) {
-            return response()->json(['nomor_invoice' => 'PILIH-USAH']);
-        }
-
-        $prefix = 'INV';
-        $date = date('Ymd');
-
-        $lastInvoice = Invoice::whereDate('created_at', today())
-            ->where('usaha_id', $currentUsaha->id)
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if ($lastInvoice) {
-            $lastNumber = intval(substr($lastInvoice->nomor_invoice, -4));
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        return response()->json([
-            'nomor_invoice' => $prefix . '/' . $date . '/' . $newNumber
-        ]);
-    }
-
-    public function updateStatus(Request $request, Invoice $invoice)
-    {
-        $currentUser = Auth::user();
-
-        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
-            abort(403, 'Unauthorized');
-        }
-
-        $validated = $request->validate([
-            'status_invoice' => 'required|in:pending,paid,cancelled,overdue'
-        ]);
-
-        $invoice->update($validated);
-
-        return back()->with('success', 'Status invoice berhasil diupdate.');
+        return view('admin.invoices.show', compact('invoice', 'templateName'));
     }
 }

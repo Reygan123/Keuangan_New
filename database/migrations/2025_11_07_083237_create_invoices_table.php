@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaksi_id')->constrained('transaksis')->onDelete('cascade');
+            $table->foreignId('transaksi_id')->constrained('transaksis')->onDelete('cascade')->nullable();
             $table->string('nomor_invoice');
             $table->date('tanggal_jatuh_tempo');
             $table->decimal('jumlah_pajak', 15, 2)->default(0);
-            $table->string('terms_pembayaran');
+            $table->string('terms_pembayaran')->nullable();
             $table->string('status_invoice');
             $table->timestamps();
         });

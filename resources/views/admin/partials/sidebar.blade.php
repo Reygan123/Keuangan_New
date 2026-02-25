@@ -160,6 +160,41 @@
                         class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Nota</a>
                 </div>
             </details>
+
+            <details class="group mt-2">
+                <summary
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition cursor-pointer">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <span class="text-sm font-medium flex-1">Surat</span>
+                    <svg class="w-4 h-4 transition-transform duration-200 group-open:rotate-180 flex-shrink-0"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                        </path>
+                    </svg>
+                </summary>
+                <div class="mt-1 space-y-1 ml-6 border-l-2 border-slate-700 pl-2">
+                    {{-- <a href="{{ route('admin.surat.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Invoice</a>
+                    <a href="{{ route('admin.jenis-surat.index') }}" --}}
+                    {{-- class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Receipt</a> --}}
+                    <a href="{{ route('admin.surat-penyerahan.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Surat
+                        Penyerahan</a>
+                    <a href="{{ route('admin.surat-pemberitahuan.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Surat
+                        Pemberitahuan</a>
+                    <a href="{{ route('admin.surat-pernyataan.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Surat
+                        Penyataan</a>
+                    <a href="{{ route('admin.berita-acara.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Berita
+                        Acara</a>
+                </div>
+            </details>
         </div>
 
         <!-- Transaksi Section -->
