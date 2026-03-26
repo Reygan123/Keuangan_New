@@ -256,4 +256,32 @@ class InvoiceController extends Controller
 
         return view('admin.invoices.show', compact('invoice', 'templateName'));
     }
+
+    public function destroy(Invoice $invoice)
+{
+    $currentUser = Auth::user();
+
+    // Authorization check
+    if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
+        abort(403, 'Unauthorized');
+    }
+
+    try {
+        DB::beginTransaction();
+
+        // Delete related invoice items (if any)
+        $invoice->invoiceItems()->delete();
+
+        // Delete the invoice
+        $invoice->delete();
+
+        DB::commit();
+
+        return redirect()->route('admin.invoices.index', ['usaha_id' => $invoice->usaha_id])
+            ->with('success', 'Invoice berhasil dihapus.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Gagal menghapus invoice: ' . $e->getMessage());
+    }
+}
 }

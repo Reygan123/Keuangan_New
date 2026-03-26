@@ -1,399 +1,252 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Berita Acara Penyerahan Username dan Akun Aplikasi</title>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+       @page {
+        margin:0;
         }
 
         body {
-            font-family: 'Times New Roman', serif;
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        .pages-container {
-            width: 210mm;
-            margin: 0 auto;
-            background-color: #f7f7f7;
-        }
-
-        .page {
-            width: 100%;
-            height: 297mm;
-            position: relative;
-            page-break-after: always;
-            background-color: #f7f7f7;
-        }
-
-        .header {
-            width: 100%;
-            height: auto;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .footer {
-            width: 100%;
-            height: auto;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-        }
-
-        .content-area {
-            position: absolute;
-            background-color: #f7f7f7;
-            top: 60mm;
-            bottom: 40mm;
-            left: 25mm;
-            right: 25mm;
-            overflow: hidden;
-        }
-
-        .document-content {
-            font-size: 12pt;
-            line-height: 1.6;
-        }
-
-        @page {
-            size: A4 portrait;
-            margin: 0;
-        }
-
-        @media print {
-            body {
-                margin: 0;
-                padding: 0;
-                background: white;
-            }
-
-            .pages-container {
-                width: 100%;
-                margin: 0;
-            }
-
-            .page {
-                width: 100%;
-                height: 100vh;
-                margin: 0;
-                page-break-after: always;
-            }
-
-            .header, .footer {
-                width: 100%;
-                height: auto;
-            }
-        }
-
-        .page-break {
-            page-break-before: always;
-        }
-
-        .c0, .c1, .c2, .c6, .c9, .c12, .c14, .c20 {
             font-family: "Times New Roman", serif;
-        }
-
-        .c0 {
-            padding-top: 0pt;
-            padding-bottom: 0pt;
-            line-height: 1.5;
-            orphans: 2;
-            widows: 2;
-            text-align: left;
-            margin-bottom: 10px;
-        }
-
-        .c1 {
-            padding-top: 0pt;
-            text-indent: 36pt;
-            padding-bottom: 0pt;
-            line-height: 1.5;
-            orphans: 2;
-            widows: 2;
-            text-align: justify;
-            margin-bottom: 15px;
-        }
-
-        .c2 {
-            color: #000000;
-            font-weight: 400;
             font-size: 12pt;
+            color: #000;
+            line-height: 1.6;
+            background : #f7f7f7;
+            padding: 0 120px 0 120px;
+            margin-top: 200px;
+            margin-bottom: 120px;
+               
         }
 
-        .c5 {
-            height: 12pt;
+        /* ================= HEADER & FOOTER ================= */
+        .page-header {
+            position: fixed;
+            top: 0px;
+            left: 0;
+            right: 0;
+            height: 110px;
         }
 
-        .c6 {
-            color: #0563c1;
-            text-decoration: underline;
-            font-size: 11pt;
+        .page-footer {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            height: 100px;
         }
 
-        .c9 {
-            font-size: 11pt;
-            font-weight: 400;
-        }
-
-        .c12 {
-            padding-top: 0pt;
-            padding-bottom: 0pt;
-            line-height: 1.5;
-            orphans: 2;
-            widows: 2;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .c14 {
-            padding-top: 0pt;
-            padding-bottom: 0pt;
-            line-height: 1.5;
-            orphans: 2;
-            widows: 2;
-            text-align: justify;
-            margin-bottom: 10px;
-        }
-
-        .c20 {
-            color: #000000;
-            font-weight: 700;
-            text-decoration: underline;
-            font-size: 12pt;
-        }
-
-        .c18 {
-            border-spacing: 0;
-            border-collapse: collapse;
-            margin-right: auto;
+        .page-header img,
+        .page-footer img {
             width: 100%;
-            margin-bottom: 20px;
+        }
+
+        /* ================= TYPOGRAPHY ================= */
+        .title {
+            text-align: center;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 6px;
+        }
+
+        .paragraph {
+            text-align: justify;
+            margin-bottom: 14px;
+            text-indent: 36pt;
+        }
+
+        .paragraph-no-indent {
+            margin-bottom: 12px;
+        }
+
+        /* ================= INFO TABLE ================= */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+
+        .info-table td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+
+        .info-label {
+            width: 120px;
+        }
+
+        .info-separator {
+            width: 10px;
+        }
+
+        /* ================= DATA TABLE ================= */
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0 20px;
             table-layout: fixed;
         }
 
-        .c18 td, .c18 th {
-            border: 1pt solid #000000;
-            padding: 5pt 5.4pt;
-            vertical-align: top;
+        .data-table th,
+        .data-table td {
+            border: 1px solid #000;
+            padding: 6px;
             font-size: 11pt;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
-        .c16 { width: 8%; }
-        .c19 { width: 30%; }
-        .c17 { width: 25%; }
-        .c11 { width: 22%; }
-        .c3 { width: 15%; }
+        .data-table th {
+            text-align: center;
+            font-weight: bold;
+        }
 
+        /* ================= SIGNATURE ================= */
         .signature-table {
             width: 100%;
+            margin-top: 50px;
             border-collapse: collapse;
-            margin-top: 40px;
         }
 
         .signature-table td {
-            vertical-align: top;
-            padding: 10px;
-            text-align: center;
             width: 50%;
+            text-align: center;
+            vertical-align: top;
         }
 
         .signature-space {
-            height: 100px;
-            margin: 20px 0;
+            height: 90px;
         }
 
         .signature-name {
             font-weight: bold;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .signature-title {
-            font-size: 10pt;
-            margin-top: 5px;
-        }
-
-        .signature-line {
-            height: 1px;
-            border-bottom: 1px solid #000;
-            margin: 40px 0 20px 0;
-        }
-
-        .table-content {
-            font-size: 10pt;
-            line-height: 1.3;
-        }
-
-        .long-text {
-            font-size: 9.5pt;
-            line-height: 1.2;
-        }
-
-        a {
-            color: #0563c1;
-            text-decoration: underline;
-        }
-
-        a:hover {
-            color: #034a8c;
+            font-size: 11pt;
         }
     </style>
 </head>
 
 <body>
-    <div class="pages-container">
-        <div class="page">
-            <img src="{{ storage_path('app/public/header.jpeg') }}" class="header" alt="Header">
 
-            <div class="content-area">
-                <div class="document-content">
-                    <div class="c12">
-                        <span class="c20">BERITA ACARA</span>
-                    </div>
-                    <div class="c12">
-                        <span class="c20">PENYERAHAN USERNAME DAN AKUN APLIKASI</span>
-                    </div>
-                    <div class="c0 c5"></div>
+<!-- HEADER -->
+<div class="page-header">
+    <img src="{{ storage_path('app/public/header.jpeg') }}" alt="Header">
+</div>
 
-                    <div class="c0">
-                        <?php
-                        $tanggal = \Carbon\Carbon::parse($suratPenyerahan->tanggal_surat);
-                        $hari = $tanggal->translatedFormat('l');
-                        $tanggalFormatted = $tanggal->translatedFormat('d F Y');
-                        ?>
-                        <span class="c2">Pada hari ini, {{ $hari }}, {{ $tanggalFormatted }}, telah dilakukan penyerahan username dan akun aplikasi antara:</span>
-                    </div>
-                    <div class="c0 c5"></div>
+<!-- FOOTER -->
+<div class="page-footer">
+    <img src="{{ storage_path('app/public/footer.jpeg') }}" alt="Footer">
+</div>
 
-                    <div class="c0">
-                        <span class="c2">Pihak Pertama:</span>
-                    </div>
-                    <div class="c0">
-                        <span class="c2">Nama&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $suratPenyerahan->pihak_pertama_nama }}</span>
-                    </div>
-                    <div class="c0">
-                        <span class="c2">Jabatan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $suratPenyerahan->pihak_pertama_jabatan }}</span>
-                    </div>
-                    <div class="c0">
-                        <span class="c2">Instansi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $suratPenyerahan->pihak_pertama_instansi }}</span>
-                    </div>
-                    <div class="c0 c5"></div>
+<!-- ================= CONTENT ================= -->
 
-                    <div class="c0">
-                        <span class="c2">Pihak Kedua:</span>
-                    </div>
-                    <div class="c0">
-                        <span class="c2">Nama&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $suratPenyerahan->pihak_kedua_nama }}</span>
-                    </div>
-                    <div class="c0">
-                        <span class="c2">Jabatan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $suratPenyerahan->pihak_kedua_jabatan }}</span>
-                    </div>
-                    <div class="c0">
-                        <span class="c2">Instansi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $suratPenyerahan->pihak_kedua_instansi }}</span>
-                    </div>
-                    <div class="c0 c5"></div>
+<div class="title">BERITA ACARA</div>
+<div class="title">PENYERAHAN USERNAME DAN AKUN APLIKASI</div>
 
-                    <div class="c0">
-                        <span class="c2">Adapun akun yang diserahkan adalah sebagai berikut :</span>
-                    </div>
+@php
+    $tanggal = \Carbon\Carbon::parse($suratPenyerahan->tanggal_surat);
+@endphp
 
-                    <table class="c18">
-                        <tr>
-                            <td class="c16" colspan="1" rowspan="1">
-                                <div class="c12 table-content"><span class="c2">No</span></div>
-                            </td>
-                            <td class="c19" colspan="1" rowspan="1">
-                                <div class="c12 table-content"><span class="c2">Nama Aplikasi</span></div>
-                            </td>
-                            <td class="c17" colspan="1" rowspan="1">
-                                <div class="c12 table-content"><span class="c2">Username</span></div>
-                            </td>
-                            <td class="c11" colspan="1" rowspan="1">
-                                <div class="c12 table-content"><span class="c2">Email Terkait</span></div>
-                            </td>
-                            <td class="c3" colspan="1" rowspan="1">
-                                <div class="c12 table-content"><span class="c2">Password</span></div>
-                            </td>
-                        </tr>
-                        <?php $counter = 1; ?>
-                        @foreach($suratPenyerahan->detailPenyerahans as $detail)
-                        <tr>
-                            <td class="c16" colspan="1" rowspan="1">
-                                <div class="c12 table-content"><span class="c2">{{ $counter++ }}</span></div>
-                            </td>
-                            <td class="c19" colspan="1" rowspan="1">
-                                <div class="c0 table-content long-text">
-                                    <span class="c9">{{ $detail->nama_aplikasi }}</span>
-                                </div>
-                            </td>
-                            <td class="c17" colspan="1" rowspan="1">
-                                <div class="c0 table-content long-text">
-                                    <span class="c2">{{ $detail->username }}</span>
-                                </div>
-                            </td>
-                            <td class="c11" colspan="1" rowspan="1">
-                                <div class="c0 table-content long-text">
-                                    <span class="c2">{{ $detail->email_terkait ?? '-' }}</span>
-                                </div>
-                            </td>
-                            <td class="c3" colspan="1" rowspan="1">
-                                <div class="c0 table-content"><span class="c2">{{ $detail->password }}</span></div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </table>
+<p class="paragraph-no-indent">
+    Pada hari ini, {{ $tanggal->translatedFormat('l') }},
+    {{ $tanggal->translatedFormat('d F Y') }},
+    telah dilakukan penyerahan username dan akun aplikasi antara:
+</p>
 
-                    <div class="c0 c5"></div>
+<p><strong>Pihak Pertama</strong></p>
+<table class="info-table">
+    <tr>
+        <td class="info-label">Nama</td>
+        <td class="info-separator">:</td>
+        <td>{{ $suratPenyerahan->pihak_pertama_nama }}</td>
+    </tr>
+    <tr>
+        <td>Jabatan</td>
+        <td>:</td>
+        <td>{{ $suratPenyerahan->pihak_pertama_jabatan }}</td>
+    </tr>
+    <tr>
+        <td>Instansi</td>
+        <td>:</td>
+        <td>{{ $suratPenyerahan->pihak_pertama_instansi }}</td>
+    </tr>
+</table>
 
-                    <div class="c1">
-                        <span class="c2">{!! $suratPenyerahan->deskripsi_penyerahan !!}</span>
-                    </div>
+<p><strong>Pihak Kedua</strong></p>
+<table class="info-table">
+    <tr>
+        <td class="info-label">Nama</td>
+        <td class="info-separator">:</td>
+        <td>{{ $suratPenyerahan->pihak_kedua_nama }}</td>
+    </tr>
+    <tr>
+        <td>Jabatan</td>
+        <td>:</td>
+        <td>{{ $suratPenyerahan->pihak_kedua_jabatan }}</td>
+    </tr>
+    <tr>
+        <td>Instansi</td>
+        <td>:</td>
+        <td>{{ $suratPenyerahan->pihak_kedua_instansi }}</td>
+    </tr>
+</table>
 
-                    <div class="c14 c5"></div>
-                    <div class="c14 c5"></div>
-                    <div class="c14 c5"></div>
-                    <div class="c14 c5"></div>
+<p class="paragraph-no-indent">
+    Adapun akun yang diserahkan adalah sebagai berikut:
+</p>
 
-                    <div class="c1">
-                        <span class="c2">Demikian berita acara ini dibuat dengan sebenarnya dan ditandatangani oleh kedua belah pihak dalam rangkap dua untuk digunakan sebagaimana mestinya.</span>
-                    </div>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th width="5%">No</th>
+            <th width="30%">Nama Aplikasi</th>
+            <th width="20%">Username</th>
+            <th width="30%">Email Terkait</th>
+            <th width="15%">Password</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($suratPenyerahan->detailPenyerahans as $i => $detail)
+        <tr>
+            <td align="center">{{ $i + 1 }}</td>
+            <td>{{ $detail->nama_aplikasi }}</td>
+            <td>{{ $detail->username }}</td>
+            <td>{{ $detail->email_terkait ?? '-' }}</td>
+            <td>{{ $detail->password }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
 
-                    <table class="signature-table">
-                        <tr>
-                            <td style="width: 50%;">
-                                <div class="c12">
-                                    <span class="c2">Pihak Pertama,</span>
-                                </div>
-                                <div class="signature-space"></div>
-                                <div class="signature-name">{{ $suratPenyerahan->pihak_pertama_nama }}</div>
-                                <div class="signature-title">{{ $suratPenyerahan->pihak_pertama_jabatan }}</div>
-                            </td>
-                            <td style="width: 50%;">
-                                <div class="c12">
-                                    <span class="c2">Pihak Kedua,</span>
-                                </div>
-                                <div class="signature-space"></div>
-                                <div class="signature-name">{{ $suratPenyerahan->pihak_kedua_nama }}</div>
-                                <div class="signature-title">{{ $suratPenyerahan->pihak_kedua_jabatan }}</div>
-                            </td>
-                        </tr>
-                    </table>
+<p class="paragraph">
+    {!! $suratPenyerahan->deskripsi_penyerahan !!}
+</p>
 
-                    <div class="c0 c5"></div>
-                    <div class="c0 c5"></div>
-                </div>
-            </div>
+<p class="paragraph">
+    Demikian berita acara ini dibuat dengan sebenarnya dan ditandatangani oleh kedua belah pihak
+    dalam rangkap dua untuk digunakan sebagaimana mestinya.
+</p>
 
-            <img src="{{ storage_path('app/public/footer.jpeg') }}" class="footer" alt="Footer">
-        </div>
-    </div>
+<table class="signature-table">
+    <tr>
+        <td>
+            Pihak Pertama,
+            <div class="signature-space"></div>
+            <div class="signature-name">{{ $suratPenyerahan->pihak_pertama_nama }}</div>
+            <div class="signature-title">{{ $suratPenyerahan->pihak_pertama_jabatan }}</div>
+        </td>
+        <td>
+            Pihak Kedua,
+            <div class="signature-space"></div>
+            <div class="signature-name">{{ $suratPenyerahan->pihak_kedua_nama }}</div>
+            <div class="signature-title">{{ $suratPenyerahan->pihak_kedua_jabatan }}</div>
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>
