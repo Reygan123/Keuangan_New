@@ -17,6 +17,7 @@ class Akun extends Model
         'usaha_id'
     ];
 
+    // 27-3-2026
     public function usaha()
     {
         return $this->belongsTo(Usaha::class);
