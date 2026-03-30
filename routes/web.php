@@ -91,7 +91,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('laporan/arus-kas', [AkunController::class, 'arusKas'])->name('laporan.arus_kas');
     Route::get('laporan/ekuitas', [AkunController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
     Route::get('laporan/buku-kas', [AkunController::class, 'bukuKas'])->name('laporan.buku_kas');
+    Route::get('laporan/buku-besar', [AkunController::class, 'bukuBesar'])->name('laporan.buku_besar');
+    Route::get('laporan/ekuitas', [AkunController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
+    // Route::get('laporan/jurnal-umum', [JurnalUmumController::class, 'index'])->name('laporan.jurnal_umum');
+
     Route::get('laporan/jurnal-umum', [JurnalUmumController::class, 'index'])->name('laporan.jurnal_umum');
+    Route::put('jurnal-umum/{id}/adjust', [JurnalUmumController::class, 'updateToAdjustment'])->name('jurnal-umum.adjust');
+
+    Route::get('jurnal-penyesuaian', [JurnalUmumController::class, 'indexPenyesuaian'])->name('jurnal-penyesuaian');
+    Route::get('laporan/neraca-lajur', [AkunController::class, 'neracaLajur'])->name('laporan.neraca_lajur');
 
     Route::get('/dokumen', [DokumenController::class, 'index'])->name('dokumen.index');
 

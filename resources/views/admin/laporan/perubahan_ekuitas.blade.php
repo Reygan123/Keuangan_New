@@ -12,6 +12,17 @@
             <div class="bg-slate-900 border border-slate-800 rounded-lg shadow-lg overflow-hidden">
 
                 <div class="p-4 md:p-6 border-b border-slate-800">
+                    @if($usahas->count() > 0)
+<div>
+    <label for="usaha_id" class="block text-xs md:text-sm font-medium text-slate-300 mb-1.5">Usaha</label>
+    <select name="usaha_id" id="usaha_id" class="w-full px-3 py-2 text-xs md:text-sm bg-slate-800 border border-slate-700 text-white rounded focus:outline-none focus:border-blue-500">
+        @foreach($usahas as $u)
+        <option value="{{ $u->id }}" {{ $usahaSelected == $u->id ? 'selected' : '' }}>{{ $u->nama }}</option>
+        @endforeach
+    </select>
+</div>
+@endif
+
                     <form action="{{ route('admin.laporan.perubahan_ekuitas') }}" method="GET" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                             <div>

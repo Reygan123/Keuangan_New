@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JurnalUmum;
 use App\Models\Akun;
-use App\Models\Usaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class JurnalUmumController extends Controller
 {
@@ -94,16 +94,64 @@ class JurnalUmumController extends Controller
         }
 
         return view('admin.jurnal-umum.index', compact(
-            'jurnalUmum', 
-            'totalDebitPerHalaman', 
+            'jurnalUmum',
+            'totalDebitPerHalaman',
             'totalKreditPerHalaman',
             'totalDebitKeseluruhan',
             'totalKreditKeseluruhan',
-            'akuns', 
-            'usahas', 
+            'akuns',
+            'usahas',
             'usahaSelected',
             'sortOrder',
             'sortBy'
         ));
     }
+
+public function indexPenyesuaian(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahas = $currentUser->usahas()->get();
+    $usahaSelected = $request->get('usaha_id', $usahas->first()?->id);
+
+    $query = JurnalUmum::with('akun')->where('is_penyesuaian', true);
+
+    if ($usahaSelected) {
+        $query->where('usaha_id', $usahaSelected);
+    } else {
+        $query->whereIn('usaha_id', $usahas->pluck('id'));
+    }
+
+    if ($request->filled('start_date') && $request->filled('end_date')) {
+        $query->whereBetween('tanggal_transaksi', [$request->start_date, $request->end_date]);
+    }
+
+    $jurnals = $query->orderBy('tanggal_transaksi', 'desc')->paginate(20);
+
+    return view('admin.jurnal-penyesuaian.index', compact('jurnals', 'usahas', 'usahaSelected'));
+}
+
+public function updateToAdjustment(Request $request, $id)
+{
+    $request->validate([
+        'akun_id' => 'required',
+        'tanggal_transaksi' => 'required|date',
+        'debit' => 'required|numeric',
+        'kredit' => 'required|numeric',
+    ]);
+
+    $jurnal = JurnalUmum::findOrFail($id);
+
+    DB::transaction(function () use ($request, $jurnal) {
+        $jurnal->update([
+            'akun_id' => $request->akun_id,
+            'tanggal_transaksi' => $request->tanggal_transaksi,
+            'deskripsi' => $request->deskripsi,
+            'debit' => $request->debit,
+            'kredit' => $request->kredit,
+            'is_penyesuaian' => true,
+        ]);
+    });
+
+    return back()->with('success', 'Jurnal berhasil diubah menjadi Jurnal Penyesuaian.');
+}
 }
