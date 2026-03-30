@@ -8,6 +8,8 @@ use App\Models\Akun;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class JurnalUmumController extends Controller
 {
@@ -107,51 +109,258 @@ class JurnalUmumController extends Controller
         ));
     }
 
-public function indexPenyesuaian(Request $request)
-{
-    $currentUser = Auth::user();
-    $usahas = $currentUser->usahas()->get();
-    $usahaSelected = $request->get('usaha_id', $usahas->first()?->id);
+    public function indexPenyesuaian(Request $request)
+    {
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $usahaSelected = $request->get('usaha_id', $usahas->first()?->id);
 
-    $query = JurnalUmum::with('akun')->where('is_penyesuaian', true);
+        $query = JurnalUmum::with('akun')->where('is_penyesuaian', true);
 
-    if ($usahaSelected) {
-        $query->where('usaha_id', $usahaSelected);
-    } else {
-        $query->whereIn('usaha_id', $usahas->pluck('id'));
+        if ($usahaSelected) {
+            $query->where('usaha_id', $usahaSelected);
+        } else {
+            $query->whereIn('usaha_id', $usahas->pluck('id'));
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_transaksi', [$request->start_date, $request->end_date]);
+        }
+
+        $jurnals = $query->orderBy('tanggal_transaksi', 'desc')->paginate(20);
+
+        return view('admin.jurnal-penyesuaian.index', compact('jurnals', 'usahas', 'usahaSelected'));
     }
 
-    if ($request->filled('start_date') && $request->filled('end_date')) {
-        $query->whereBetween('tanggal_transaksi', [$request->start_date, $request->end_date]);
-    }
-
-    $jurnals = $query->orderBy('tanggal_transaksi', 'desc')->paginate(20);
-
-    return view('admin.jurnal-penyesuaian.index', compact('jurnals', 'usahas', 'usahaSelected'));
-}
-
-public function updateToAdjustment(Request $request, $id)
-{
-    $request->validate([
-        'akun_id' => 'required',
-        'tanggal_transaksi' => 'required|date',
-        'debit' => 'required|numeric',
-        'kredit' => 'required|numeric',
-    ]);
-
-    $jurnal = JurnalUmum::findOrFail($id);
-
-    DB::transaction(function () use ($request, $jurnal) {
-        $jurnal->update([
-            'akun_id' => $request->akun_id,
-            'tanggal_transaksi' => $request->tanggal_transaksi,
-            'deskripsi' => $request->deskripsi,
-            'debit' => $request->debit,
-            'kredit' => $request->kredit,
-            'is_penyesuaian' => true,
+    public function updateToAdjustment(Request $request, $id)
+    {
+        $request->validate([
+            'akun_id' => 'required',
+            'tanggal_transaksi' => 'required|date',
+            'debit' => 'required|numeric',
+            'kredit' => 'required|numeric',
         ]);
-    });
 
-    return back()->with('success', 'Jurnal berhasil diubah menjadi Jurnal Penyesuaian.');
-}
+        $jurnal = JurnalUmum::findOrFail($id);
+
+        DB::transaction(function () use ($request, $jurnal) {
+            $jurnal->update([
+                'akun_id' => $request->akun_id,
+                'tanggal_transaksi' => $request->tanggal_transaksi,
+                'deskripsi' => $request->deskripsi,
+                'debit' => $request->debit,
+                'kredit' => $request->kredit,
+                'is_penyesuaian' => true,
+            ]);
+        });
+
+        return back()->with('success', 'Jurnal berhasil diubah menjadi Jurnal Penyesuaian.');
+    }
+
+    public function importForm(Request $request)
+    {
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $usahaSelected = $request->get('usaha_id', $usahas->first()?->id);
+        $akuns = $usahaSelected ? Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get() : collect();
+
+        return view('admin.jurnal-umum.import', compact('usahas', 'usahaSelected', 'akuns'));
+    }
+
+    public function importPreview(Request $request)
+    {
+        $request->validate([
+            'file'     => 'required|file|mimes:xlsx,xls',
+            'usaha_id' => 'required|exists:usahas,id',
+        ]);
+
+        $currentUser = Auth::user();
+        $usahaSelected = $request->usaha_id;
+        $usahas = $currentUser->usahas()->get();
+        $akuns = Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get();
+
+        $path = $request->file('file')->store('imports');
+        $fullPath = Storage::path($path);
+
+        $parsed = $this->parseExcelJurnal($fullPath);
+
+        Session::put('import_file_path', $path);
+        Session::put('import_usaha_id', $usahaSelected);
+        Session::put('import_parsed', $parsed);
+
+        $namaAkunUnik = collect($parsed)
+            ->flatMap(fn($e) => [$e['nama_debit'], $e['nama_kredit']])
+            ->filter()
+            ->map(fn($n) => trim($n))
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('admin.jurnal-umum.import-mapping', compact(
+            'parsed',
+            'namaAkunUnik',
+            'akuns',
+            'usahas',
+            'usahaSelected'
+        ));
+    }
+
+    public function importExecute(Request $request)
+    {
+        $usahaId = Session::get('import_usaha_id');
+        $parsed  = Session::get('import_parsed');
+
+        if (!$usahaId || !$parsed) {
+            return redirect()->route('admin.jurnal-umum.import.form')->with('error', 'Sesi import kedaluwarsa. Silakan upload ulang.');
+        }
+
+        $mapping = $request->input('mapping', []);
+
+        $errors = [];
+        foreach ($mapping as $namaAkun => $akunId) {
+            if (!$akunId) {
+                $errors[] = "Akun \"$namaAkun\" belum dipetakan.";
+            }
+        }
+
+        if (!empty($errors)) {
+            return back()->withErrors($errors)->withInput();
+        }
+
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $usahaId)->exists()) {
+            return redirect()->route('admin.jurnal-umum.import.form')->with('error', 'Akses ditolak.');
+        }
+
+        DB::transaction(function () use ($parsed, $mapping, $usahaId) {
+            foreach ($parsed as $entri) {
+                $namaDebit  = trim($entri['nama_debit'] ?? '');
+                $namaKredit = trim($entri['nama_kredit'] ?? '');
+                $akunDebitId  = $mapping[$namaDebit] ?? null;
+                $akunKreditId = $mapping[$namaKredit] ?? null;
+
+                if (!$akunDebitId || !$akunKreditId || !$entri['jumlah']) continue;
+
+                JurnalUmum::create([
+                    'usaha_id'          => $usahaId,
+                    'akun_id'           => $akunDebitId,
+                    'tanggal_transaksi' => $entri['tanggal'],
+                    'deskripsi'         => $entri['keterangan'],
+                    'debit'             => $entri['jumlah'],
+                    'kredit'            => 0,
+                ]);
+
+                JurnalUmum::create([
+                    'usaha_id'          => $usahaId,
+                    'akun_id'           => $akunKreditId,
+                    'tanggal_transaksi' => $entri['tanggal'],
+                    'deskripsi'         => $entri['keterangan'],
+                    'debit'             => 0,
+                    'kredit'            => $entri['jumlah'],
+                ]);
+            }
+        });
+
+        Session::forget(['import_file_path', 'import_usaha_id', 'import_parsed']);
+
+        return redirect()->route('admin.laporan.jurnal_umum', ['usaha_id' => $usahaId])
+            ->with('success', 'Import jurnal berhasil. ' . count($parsed) . ' entri diimpor.');
+    }
+
+    private function parseExcelJurnal(string $filePath): array
+    {
+        $wb = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+        $ws = $wb->getActiveSheet();
+        $rows = $ws->toArray(null, true, false, false);
+
+        $entries = [];
+        $currentBulan = null;
+        $currentTahun = date('Y');
+
+        $bulanMap = [
+            'januari' => 1,
+            'februari' => 2,
+            'maret' => 3,
+            'april' => 4,
+            'mei' => 5,
+            'juni' => 6,
+            'juli' => 7,
+            'agustus' => 8,
+            'september' => 9,
+            'oktober' => 10,
+            'november' => 11,
+            'desember' => 12,
+        ];
+
+        $headerPassed = false;
+
+        for ($i = 0; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            $col0 = trim((string)($row[0] ?? ''));
+            $col2 = trim((string)($row[2] ?? ''));
+            $col3 = trim((string)($row[3] ?? ''));
+            $colF = $row[5] ?? null;
+            $colG = $row[6] ?? null;
+
+            if (!$headerPassed) {
+                if (strtolower($col0) === 'tanggal') {
+                    $headerPassed = true;
+                }
+                continue;
+            }
+
+            $colLower = strtolower($col0);
+            if (isset($bulanMap[$colLower])) {
+                $currentBulan = $bulanMap[$colLower];
+                $tanggal = sprintf('%04d-%02d-01', $currentTahun, $currentBulan);
+
+                $namaDebit = $col2 ?: null;
+                $jumlah = is_numeric($colF) ? (float)$colF : null;
+
+                if ($namaDebit && $jumlah) {
+                    $nextRow = $rows[$i + 1] ?? [];
+                    $namaKredit = trim((string)($nextRow[3] ?? ''));
+
+                    if ($namaDebit || $namaKredit) {
+                        $entries[] = [
+                            'tanggal'     => $tanggal,
+                            'keterangan'  => $namaDebit,
+                            'nama_debit'  => $namaDebit,
+                            'nama_kredit' => $namaKredit ?: null,
+                            'jumlah'      => $jumlah,
+                        ];
+                        $i++;
+                    }
+                }
+                continue;
+            }
+
+            $namaDebit = $col2 ?: null;
+            $jumlah = is_numeric($colF) ? (float)$colF : null;
+
+            if (!$namaDebit && !$jumlah) continue;
+
+            if ($currentBulan) {
+                $tanggal = sprintf('%04d-%02d-01', $currentTahun, $currentBulan);
+            } else {
+                $tanggal = date('Y-m-d');
+            }
+
+            $nextRow = $rows[$i + 1] ?? [];
+            $namaKredit = trim((string)($nextRow[3] ?? ''));
+
+            if (($namaDebit || $jumlah) && $namaKredit) {
+                $entries[] = [
+                    'tanggal'     => $tanggal,
+                    'keterangan'  => $namaDebit ?: 'Import',
+                    'nama_debit'  => $namaDebit,
+                    'nama_kredit' => $namaKredit,
+                    'jumlah'      => $jumlah,
+                ];
+                $i++;
+            }
+        }
+
+        return $entries;
+    }
 }
