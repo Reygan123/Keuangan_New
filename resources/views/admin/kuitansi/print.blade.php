@@ -1,84 +1,194 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kuitansi {{ $kuitansi->nomor_kuitansi }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
-        .info-section { margin-bottom: 20px; }
-        .payment-info { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .total { text-align: right; font-weight: bold; font-size: 16px; }
-        .signature { margin-top: 50px; text-align: right; }
-    </style>
+<meta charset="UTF-8">
+<title>Kuitansi</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    padding: 40px 50px; /* DIPERKECIL */
+    position: relative;
+}
+
+/* WATERMARK */
+.watermark {
+    position: absolute;
+    right: -30px;
+    top: 120px;
+    width: 300px; /* DIPERKECIL */
+    opacity: 0.90;
+      margin-top: -180px;
+      margin-right: -10px;
+}
+
+/* HEADER */
+.header {
+    width: 100%;
+    margin-bottom: 60px;
+     margin-top: -50px;
+}
+
+.left {
+    float: left;
+    margin-top: -50px;
+}
+
+.right {
+    float: right;
+    text-align: right;
+}
+
+.title {
+    font-size: 42px;
+    font-weight: bold;
+    color: #4f46e5;
+}
+
+.clear {
+    clear: both;
+}
+
+/* SECTION */
+.section {
+    margin-top: 20px;
+}
+
+.line {
+    border-bottom: 2px solid #c7d2fe;
+    margin: 12px 0;
+}
+
+/* TEXT */
+.row {
+    margin: 6px 0;
+}
+
+.label {
+    width: 220px;
+    display: inline-block;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.italic {
+    font-style: italic;
+}
+
+/* SIGNATURE */
+.signature {
+    margin-top: 80px;
+}
+
+.sig-left {
+    float: left;
+    width: 45%;
+    text-align: center;
+}
+
+.sig-right {
+    float: right;
+    width: 45%;
+    text-align: center;
+}
+
+/* FOOTER */
+.footer {
+    margin-top: 423px /* DIPERKECIL BIAR GA TURUN HALAMAN */
+}
+</style>
 </head>
+
 <body>
-    <div class="header">
-        <h1>KUITANSI</h1>
-        <h2>{{ $kuitansi->nomor_kuitansi }}</h2>
+
+<!-- WATERMARK -->
+<img src="{{ public_path('gambar/transjatidiri.png') }}" class="watermark">
+
+<!-- HEADER -->
+<div class="header">
+    <div class="left">
+        <img src="{{ public_path('gambar/logojatidari.png') }}" style="height:150px;"> <!-- DIPERKECIL -->
     </div>
 
-    <div class="payment-info">
-        <p><strong>Tanggal Pembayaran:</strong> {{ $kuitansi->tanggal_pembayaran }}</p>
-        <p><strong>Metode Pembayaran:</strong> {{ $kuitansi->metode_pembayaran }}</p>
-        <p><strong>Jumlah Dibayar:</strong> Rp {{ number_format($kuitansi->jumlah_dibayar, 0, ',', '.') }}</p>
+    <div class="right">
+        <div class="title">Kwitansi</div>
+        <div>Nomor: KW-{{ str_pad($kuitansi->id, 3, '0', STR_PAD_LEFT) }}/{{$kuitansi->tanda_tangan_penerima  }}/2026</div>
     </div>
+</div>
 
-    <div class="info-section">
-        <p><strong>Tanggal Transaksi:</strong> {{ $kuitansi->transaksi->tanggal }}</p>
-        <p><strong>Keterangan:</strong> {{ $kuitansi->transaksi->keterangan }}</p>
-    </div>
+<div class="clear"></div>
 
-    @if($kuitansi->transaksi->pelanggan)
-    <div class="info-section">
-        <h3>Dari Pelanggan</h3>
-        <p>{{ $kuitansi->transaksi->pelanggan->nama }}</p>
-    </div>
-    @endif
+<!-- DARI -->
+<div class="section">
+    <strong>Dari</strong>
+    <p>
+        {{ $kuitansi->usaha->nama ?? '-' }}<br>
+        No Rekening : 000000<br>
+        {{ $kuitansi->usaha->alamat ?? '-' }}
+    </p>
+</div>
 
-    @if($kuitansi->transaksi->supplier)
-    <div class="info-section">
-        <h3>Kepada Supplier</h3>
-        <p>{{ $kuitansi->transaksi->supplier->nama }}</p>
-    </div>
-    @endif
+<div class="line"></div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Produk</th>
-                <th>Jumlah</th>
-                <th>Harga</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($kuitansi->transaksi->detailProduks as $detail)
-            <tr>
-                <td>{{ $detail->produk->nama ?? '' }}</td>
-                <td>{{ $detail->jumlah }}</td>
-                <td>Rp {{ number_format($detail->harga, 0, ',', '.') }}</td>
-                <td>Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+<!-- DETAIL -->
+<div class="row">
+    <span class="label">Telah Terima Dari</span>
+    : {{ $kuitansi->tanda_tangan_penerima ?? '-' }}
+</div>
 
-    <div class="total">
-        <p>Total Transaksi: Rp {{ number_format($kuitansi->transaksi->jumlah, 0, ',', '.') }}</p>
-        <p>Jumlah Dibayar: Rp {{ number_format($kuitansi->jumlah_dibayar, 0, ',', '.') }}</p>
-    </div>
+<div class="line"></div>
 
-    <div class="signature">
-        <p>Penerima,</p>
+<div class="row">
+    <span class="label">Jumlah Pembayaran</span>
+    : <span class="bold">Rp {{ number_format($kuitansi->jumlah_dibayar, 0, ',', '.') }}</span>
+</div>
+
+<div class="line"></div>
+
+<div class="row">
+    <span class="label">Terbilang</span>
+    : <span class="italic bold">{{ $terbilang }}</span>
+</div>
+
+<div class="line"></div>
+
+<div class="row">
+    <span class="label">Untuk Pembayaran</span>
+    : {{ $kuitansi->transaksi->keterangan ?? '-' }}
+</div>
+
+<div class="line"></div>
+
+<!-- FOOTER TEXT -->
+<div class="section">
+    Terima Kasih Atas Pembayaran Anda.
+</div>
+
+<!-- SIGNATURE -->
+<div class="signature">
+    <div class="sig-left">
+        Penerima
         <br><br><br>
-        <p><strong>{{ $kuitansi->tanda_tangan_penerima }}</strong></p>
+        [.........................]
     </div>
 
-    <script>
-        window.print();
-    </script>
+    <div class="sig-right">
+        Penyetor
+        <br><br><br>
+        [.........................]
+    </div>
+</div>
+
+<div class="clear"></div>
+
+<!-- FOOTER ICON -->
+<div class="footer">
+    <img src="{{ public_path('gambar/footer.png') }}" style="width:100%;">
+</div>
+
 </body>
 </html>

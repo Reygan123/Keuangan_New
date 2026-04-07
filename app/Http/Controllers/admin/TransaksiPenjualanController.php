@@ -9,7 +9,7 @@ use App\Models\Pelanggan;
 use App\Models\Akun;
 use App\Models\Product;
 use App\Models\TransaksiDetailProduk;
-use App\Models\Usaha;
+// use App\Models\Usaha;
 use App\Services\TransaksiPenjualanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +20,7 @@ class TransaksiPenjualanController extends Controller
 {
     public function index(Request $request)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $usahas = $currentUser->usahas()->get();
         $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
@@ -89,6 +90,7 @@ class TransaksiPenjualanController extends Controller
 
     public function create(Request $request)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $usahas = $currentUser->usahas()->get();
         $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
@@ -115,7 +117,7 @@ class TransaksiPenjualanController extends Controller
         if (!$selectedUsahaId) {
             return redirect()->route('admin.penjualans.index')->with('error', 'Usaha tidak dipilih');
         }
-
+         /** @var \App\Models\User $currentUser */
         if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
             return redirect()->route('admin.penjualans.index')->with('error', 'Anda tidak memiliki akses ke usaha ini');
         }
@@ -159,6 +161,7 @@ class TransaksiPenjualanController extends Controller
                 $lineTotal = $qty * $hs;
                 $total += $lineTotal;
                 TransaksiDetailProduk::create([
+                    'usaha_id' => $selectedUsahaId,
                     'transaksi_id' => $transaksi->id,
                     'product_id' => $pid,
                     'kuantitas' => $qty,
@@ -175,6 +178,7 @@ class TransaksiPenjualanController extends Controller
 
     public function show(Transaksi $penjualan)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
             abort(403);
@@ -186,6 +190,7 @@ class TransaksiPenjualanController extends Controller
 
     public function edit(Transaksi $penjualan)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
             abort(403);
@@ -207,6 +212,7 @@ class TransaksiPenjualanController extends Controller
 
     public function update(Request $request, Transaksi $penjualan)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
             abort(403);
@@ -272,6 +278,7 @@ class TransaksiPenjualanController extends Controller
 
     public function destroy(Transaksi $penjualan)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         if (!$currentUser->usahas()->where('usahas.id', $penjualan->usaha_id)->exists()) {
             abort(403);

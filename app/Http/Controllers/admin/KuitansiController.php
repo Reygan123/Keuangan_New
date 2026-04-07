@@ -78,12 +78,12 @@ class KuitansiController extends Controller
         }
 
         $request->validate([
-            'transaksi_id' => 'required|exists:transaksis,id',
-            'nomor_kuitansi' => 'required|string|unique:kuitansis',
-            'tanggal_pembayaran' => 'required|date',
-            'metode_pembayaran' => 'required|string',
-            'jumlah_dibayar' => 'required|numeric',
-            'tanda_tangan_penerima' => 'required|string'
+            'transaksi_id' => 'exists:transaksis,id',
+            'nomor_kuitansi' => 'string|unique:kuitansis',
+            'tanggal_pembayaran' => 'date',
+            'metode_pembayaran' => 'string',
+            'jumlah_dibayar' => 'numeric',
+            'tanda_tangan_penerima' => 'string'
         ]);
 
         $transaksi = Transaksi::findOrFail($request->transaksi_id);

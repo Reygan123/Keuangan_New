@@ -11,6 +11,7 @@ class UsahaController extends Controller
 {
     public function index()
     {
+        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $usahas = $currentUser->usahas()->get();
         return view('admin.usahas.index', compact('usahas'));
@@ -18,6 +19,7 @@ class UsahaController extends Controller
 
     public function store(Request $request)
     {
+        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         $validated = $request->validate([
@@ -41,6 +43,7 @@ class UsahaController extends Controller
 
     public function edit(Usaha $usaha)
     {
+        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $usaha->id)->exists()) {
@@ -52,6 +55,7 @@ class UsahaController extends Controller
 
     public function update(Request $request, Usaha $usaha)
     {
+        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $usaha->id)->exists()) {
@@ -77,6 +81,7 @@ class UsahaController extends Controller
 
     public function destroy(Usaha $usaha)
     {
+        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $usaha->id)->exists()) {

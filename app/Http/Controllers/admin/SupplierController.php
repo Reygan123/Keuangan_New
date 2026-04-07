@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
-use App\Models\Usaha;
+// use App\Models\Usaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,6 +12,7 @@ class SupplierController extends Controller
 {
     public function index(Request $request)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $usahaSelected = $request->get('usaha_id');
 
@@ -36,6 +37,7 @@ class SupplierController extends Controller
 
     public function store(Request $request)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $currentUsaha = $currentUser->usahas()->first();
 
@@ -64,6 +66,7 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $supplier->usaha_id)->exists()) {
@@ -84,6 +87,7 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier)
     {
+         /** @var \App\Models\User $currentUser */ 
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $supplier->usaha_id)->exists()) {

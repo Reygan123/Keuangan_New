@@ -31,6 +31,8 @@ use App\Http\Controllers\Admin\TransaksiPenjualanController;
 use App\Http\Controllers\Admin\UsahaController;
 use App\Http\Controllers\Admin\TransaksiProduksiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SuperAdmin\CreateUsersController;
+use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -45,6 +47,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'super_admin'])->prefix('super_admin')->name('super_admin.')->group(function () {
+    Route::get('/dashboard', [SuperAdminController::class, 'index'])->name('dashboard');
+    Route::resource('users', CreateUsersController::class);
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -131,6 +138,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('surat-pemberitahuan.peserta.destroy');
 
     Route::get('invoices/{invoice}/export', [PDFController::class, 'exportInvoice'])->name('invoices.export');
+    Route::get('kuitansi/{kuitansi}/export', [PDFController::class, 'exportKuitansi'])->name('kuitansi.export');
 
     Route::resource('surat-penyerahan', SuratPenyerahanController::class);
     Route::get('surat-penyerahan/generate/nomor-surat', [SuratPenyerahanController::class, 'generateNomorSurat'])

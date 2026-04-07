@@ -1,400 +1,326 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Invoice - Hexagon Inc</title>
-    <style>
-        @font-face {
-            font-family: 'Sora';
-            src: url('/storage/fonts/Sora-Regular.ttf') format('truetype');
-            font-weight: normal;
-        }
+<meta charset="UTF-8">
 
-        @font-face {
-            font-family: 'Sora';
-            src: url('/storage/fonts/Sora-Bold.ttf') format('truetype');
-            font-weight: bold;
-        }
+<style>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+body{
+    font-family:sans-serif;
+    font-size:13px;
+    color:#333;
+}
 
-        body {
-            font-family: 'Sora', 'sans-serif';
-            background-color: white !important;
-            color: #333;
-            line-height: 1.6;
-        }
+.container{
+    width:100%;
+}
 
-        .inv-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            min-height: 100vh !important;
-            padding: 0;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            padding: 20px 30px 20px 30px;
-        }
+/* HEADER */
 
-        .logo-header {
-            position: absolute;
-            top: -25%;
-            right: -25%;
-        }
+.header-table{
+    width:100%;
+}
 
-        .logo-img {
-            opacity: 30%;
-        }
+.invoice-title{
+    font-size:42px;
+    font-weight:bold;
+    color:#3b3bf5;
+}
 
-        .body-address h1 {
-            font-size: 16px;
-        }
+.invoice-number{
+    font-size:13px;
+}
 
-        .body-client h4 {
-            padding-top: 8px;
-            font-size: 14px !important;
-            font-weight: 400 !important;
-        }
+/* ADDRESS */
 
-        .body-company p {
-            padding-top: 8px;
-            font-size: 14px !important;
-            font-weight: 400 !important;
-        }
+.address{
+    margin-top:40px;
+}
 
-       .body-content {
-        width: 100%;
-        table-layout: fixed;
-        border-collapse: collapse;
-        margin-top: 24px;
-        }
+.section-title{
+    font-weight:bold;
+    margin-bottom:6px;
+}
 
-        .body-content th {
-            font-size: 16px;
-            color: white;
-            background-color: #3030F8;
-            padding: 12px 16px;
-            text-align: center;
-        }
+/* ITEM TABLE */
 
-        .body-content td {
-            font-size: 16px;
-            padding: 12px 8px;
-            border-bottom: 1px solid #3030F850;
-            vertical-align: middle;
-            word-wrap: break-word;
+.item-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
 
-        }
+.item-table thead{
+    background:#3b3bf5;
+    color:white;
+}
 
-        .body-content th:nth-child(1),
-        .body-content td:nth-child(1) {
-            width: 50%;
-             border-radius: 40px 0px 0px 40px;
-        }
+.item-table th{
+    padding:12px;
+}
 
-        .body-content th:nth-child(2),
-        .body-content td:nth-child(2) {
-            width: 15%;
-            text-align: center;
-        }
+.item-table td{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+}
 
-        .body-content th:nth-child(3),
-        .body-content td:nth-child(3) {
-            width: 20%;
-            text-align: right;
-        }
+.center{
+    text-align:center;
+}
 
-        .body-content th:nth-child(4),
-        .body-content td:nth-child(4) {
-            width: 15%;
-            text-align: right;
-            border-radius: 0px 40px 40px 0px;
-        }
+.right{
+    text-align:right;
+}
 
+/* TOTAL */
 
-        .body-content td:nth-child(1), {
-         padding-left: 16px;
-        }
+.total-table{
+    width:280px;
+    margin-top:25px;
+    margin-left:auto;
+}
 
-         .body-content td:nth-child(4), {
-         padding-right: 16px;
-        }
+.total-table td{
+    padding:6px;
+}
 
-        .body-content thead th {
-            font-size: 16px;
-            color: white;
-            background-color: #3030F8;
-            padding: 4px 50px 12px 50px;
+/* SIGNATURE */
 
+.signature{
+    width:100%;
+    margin-top:70px;
+}
 
-        }
+.signature-box{
+    text-align:right;
+    position:relative;
+}
 
-        .body-content tbody tr td {
-            font-size: 16px;
-            padding: 16px 8px 16px 8px;
-            border-bottom: 2px solid #3030F850;
-        }
+.cap{
+    position:absolute;
+    right:60px;
+    top:-10px;
+    width:70px;
+    opacity:0.7;
+}
 
-        .total-payment {
-            padding-top: 32px;
-        }
+.ttd{
+    width:120px;
+}
 
-        .total-payment h2 {
-            font-size: 16px !important;
-        }
+.sign-name{
+    margin-top:10px;
+}
 
-        .total-section {
-            float: right;
-            width: 220px;
-        }
+/* FOOTER */
 
-        .total-box {
-            height: 30px;
-        }
+.footer{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    text-align:center;
+}
 
-        .total-box::after {
-            content: "";
-            display: table;
-            clear: both;
-            font-size: 16px !important;
-        }
+</style>
 
-        .total-title {
-            font-weight: 700;
-            float: left;
-        }
-
-        .total-body {
-            font-weight: 400 !important;
-            padding-left: 20px;
-            float: right;
-        }
-
-        .client {
-            padding-top: 24px;
-        }
-
-        .inv-header {
-            width: 100%;
-        }
-
-        .icon-text {
-            float: left;
-        }
-
-        .inv-number {
-            float: right;
-            text-align: right;
-        }
-
-        .title-number {
-            font-size: 46px;
-            font-weight: 700;
-            color: #3030F8 !important;
-        }
-
-        .number {
-            font-size: 16px;
-            font-weight: 400;
-        }
-
-        .inv-top {
-            width: calc(100% - 60px);
-            position: fixed;
-            top: 0%;
-            padding: 20px 0px 20px 0px;
-        }
-
-        .inv-body {
-            padding: 140px 0px 260px 0px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .inv-footer {
-            width: calc(100% - 60px);
-            position: fixed;
-            bottom: 0%;
-            padding: 20px 0px 20px 0px;
-        }
-
-        .inv-sign {
-            width: fit-content;
-            float: right;
-            text-align: center;
-
-            margin-bottom: 60px;
-
-        }
-
-        .sign img {
-            width: 160px;
-            height: 160px;
-            object-fit: contain;
-        }
-
-        .name {
-            margin-top: -16px;
-            font-size: 16px !important;
-            font-weight: 700;
-        }
-
-        .inv-contact {
-            width: 100%;
-            clear: both;
-        }
-
-        .inv-contact img {
-            width: 100%;
-            object-fit: contain;
-        }
-
-        .clearfix::after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        .due-box{
-            margin-top: 8px;
-        }
-
-        .due {
-            font-size: 10px;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="inv-container">
-        <div class="inv-top">
-            <div class="logo-header">
-                <img src="{{ storage_path('app/public/hexa.png') }}" alt="" class="logo-img">
-            </div>
-            <div class="inv-header clearfix">
-                <div class="icon-text">
-                    <img src="{{ storage_path('app/public/icon-text.png') }}" alt="">
-                </div>
 
-                <div class="inv-number">
-                    <h1 class="title-number">Invoice</h1>
-                    <p class="number">Number : {{ $invoice->nomor_invoice }}</p>
-                </div>
-            </div>
-        </div>
+@php
+$logo = base64_encode(file_get_contents(public_path('gambar/header.png')));
+$ttd = base64_encode(file_get_contents(public_path('gambar/ttd.png')));
+$cap = base64_encode(file_get_contents(public_path('gambar/cap.png')));
+$footer = base64_encode(file_get_contents(public_path('gambar/footerr.png')));
+@endphp
 
-        <div class="inv-body">
-            <div class="body-address">
-                <h1>From</h1>
-                <div class="body-company">
-                    <p>Hexagon Karyatama Indonesia</p>
+<div class="container">
 
-                    <p>Jl. Abdul Halim No.128, <br /> Cimahi Tengah, Kota Cimahi 40522</p>
-                </div>
-                <h1 class="client">
-                    To</h1>
-                <div class="body-client">
-                    @if($invoice->transaksi)
-                        @if($invoice->transaksi->pelanggan)
-                            <p>{{ $invoice->transaksi->pelanggan->nama }}</p>
-                        @elseif($invoice->transaksi->supplier)
-                            <p>{{ $invoice->transaksi->supplier->nama }}</p>
-                        @endif
-                    @else
-                        <p>{{ $invoice->to_client_name }}</p>
-                    @endif
-                    <div class="due-box">
-                        <p class="number due">Tanggal : {{ date('d F Y', strtotime($invoice->created_at)) }}</p>
-                        @if ($invoice->tanggal_jatuh_tempo)
-                            <p class="number due">Tanggal Jatuh Tempo :
-                                {{ date('d F Y', strtotime($invoice->tanggal_jatuh_tempo)) }}</p>
-                        @endif
-                    </div>
-                </div>
-            </div>
+<!-- HEADER -->
 
-            <table class="body-content">
-                <thead>
-                    <th>Deskripsi</th>
-                    <th>Qty</th>
-                    <th>Harga</th>
-                    <th>Total</th>
-                </thead>
-                <tbody>
-                    @if($invoice->transaksi && $invoice->transaksi->detailProduks->count() > 0)
-                        @foreach ($invoice->transaksi->detailProduks as $item)
-                            <tr>
-                                <td>{{ $item->produk->nama ?? '-' }}</td>
-                                <td>{{ $item->qty }}</td>
-                                <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
-                                <td>Rp {{ number_format($item->harga * $item->qty, 0, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    @elseif($invoice->invoiceItems->count() > 0)
-                        @foreach ($invoice->invoiceItems as $item)
-                            <tr>
-                                <td>{{ $item->description }}</td>
-                                <td>{{ $item->qty }}</td>
-                                <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
-                                <td>Rp {{ number_format($item->harga * $item->qty, 0, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    @endif
-                </tbody>
-            </table>
+<table class="header-table">
+<tr>
 
-            <div class="total-payment clearfix">
-                <h2>Status {{ ucfirst($invoice->status_invoice) }}</h2>
-                <div class="total-section">
-                    @php
-                        if($invoice->transaksi) {
-                            $subtotal = $invoice->transaksi->jumlah;
-                            $total = $invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0);
-                        } else {
-                            $subtotal = $invoice->subtotal;
-                            $total = $invoice->total + ($invoice->jumlah_pajak ?? 0);
-                        }
-                    @endphp
+<td>
+<img src="data:image/png;base64,{{ $logo }}" width="130">
+</td>
 
-                    <div class="total-box clearfix">
-                        <p class="total-body">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
-                        <p class="total-title">Sub Total</p>
-                    </div>
-                    @if ($invoice->jumlah_pajak > 0)
-                        <div class="total-box clearfix">
-                            <p class="total-body">Rp {{ number_format($invoice->jumlah_pajak, 0, ',', '.') }}</p>
-                            <p class="total-title">Tax</p>
-                        </div>
-                    @endif
-                    <div class="total-box clearfix">
-                        <p class="total-body">Rp {{ number_format($total, 0, ',', '.') }}</p>
-                        <p class="total-title">Total</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<td align="right">
 
-        <div class="inv-footer">
-            <div class="inv-sign">
-                <div class="sign">
-                    <img src="{{ storage_path('app/public/sign.png') }}" alt="">
-                </div>
-                <h3 class="name">{{ $user->name }}</h3>
-            </div>
+<div class="invoice-title">Invoice</div>
 
-            <div class="inv-contact">
-                <img src="{{ storage_path('app/public/sosmed.png') }}" alt="">
-            </div>
-        </div>
-    </div>
+<div class="invoice-number">
+Number : {{ $invoice->nomor_invoice }}
+</div>
+
+</td>
+
+</tr>
+</table>
+
+<!-- ADDRESS -->
+
+<div class="address">
+
+<div class="section-title">From</div>
+
+Hexagon Karyatama Indonesia<br>
+Jl. Abdul Halim No.128,<br>
+Cimahi Tengah, Kota Cimahi 40522
+
+<br><br>
+
+<div class="section-title">To</div>
+
+<strong>Client</strong><br>
+
+@if($invoice->transaksi)
+
+@if($invoice->transaksi->pelanggan)
+
+{{ $invoice->transaksi->pelanggan->nama }}
+
+@elseif($invoice->transaksi->supplier)
+
+{{ $invoice->transaksi->supplier->nama }}
+
+@endif
+
+@else
+
+{{ $invoice->to_client_name }}
+
+@endif
+
+<br><br>
+
+Tanggal :
+{{ date('d F Y', strtotime($invoice->created_at)) }}
+
+@if ($invoice->tanggal_jatuh_tempo)
+
+<br>
+
+Tanggal Jatuh Tempo :
+{{ date('d F Y', strtotime($invoice->tanggal_jatuh_tempo)) }}
+
+@endif
+
+</div>
+
+<!-- ITEM TABLE -->
+
+<table class="item-table">
+
+<thead>
+<tr>
+<th align="left">Deskripsi</th>
+<th class="center">Qty</th>
+<th class="right">Harga</th>
+<th class="right">Total</th>
+</tr>
+</thead>
+
+<tbody>
+
+@if($invoice->transaksi && $invoice->transaksi->detailProduks->count() > 0)
+
+@foreach ($invoice->transaksi->detailProduks as $item)
+
+<tr>
+
+<td>{{ $item->produk->nama ?? '-' }}</td>
+
+<td class="center">{{ $item->qty }}</td>
+
+<td class="right">
+Rp {{ number_format($item->harga,0,',','.') }}
+</td>
+
+<td class="right">
+Rp {{ number_format($item->harga * $item->qty,0,',','.') }}
+</td>
+
+</tr>
+
+@endforeach
+
+@endif
+
+</tbody>
+
+</table>
+
+<!-- TOTAL -->
+
+<table class="total-table">
+
+@php
+
+if($invoice->transaksi){
+$subtotal=$invoice->transaksi->jumlah;
+$total=$invoice->transaksi->jumlah+($invoice->jumlah_pajak??0);
+}else{
+$subtotal=$invoice->subtotal;
+$total=$invoice->total+($invoice->jumlah_pajak??0);
+}
+
+@endphp
+
+<tr>
+<td>Sub Total</td>
+<td class="right">Rp {{ number_format($subtotal,0,',','.') }}</td>
+</tr>
+
+@if ($invoice->jumlah_pajak > 0)
+
+<tr>
+<td>Tax</td>
+<td class="right">
+Rp {{ number_format($invoice->jumlah_pajak,0,',','.') }}
+</td>
+</tr>
+
+@endif
+
+<tr>
+<td><b>Total</b></td>
+<td class="right">
+<b>Rp {{ number_format($total,0,',','.') }}</b>
+</td>
+</tr>
+
+</table>
+
+<!-- SIGNATURE -->
+
+<div class="signature">
+
+<div class="signature-box">
+
+<img src="data:image/png;base64,{{ $cap }}" class="cap">
+
+<img src="data:image/png;base64,{{ $ttd }}" class="ttd">
+
+<div class="sign-name">
+<strong>{{ $user->name }}</strong><br>
+Finance
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FOOTER -->
+
+<div class="footer">
+
+<img src="data:image/png;base64,{{ $footer }}" width="100%">
+
+</div>
+
 </body>
-
 </html>

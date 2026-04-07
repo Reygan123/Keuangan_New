@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\KategoriHpp;
 use App\Models\Akun;
-use App\Models\Usaha;
+// use App\Models\Usaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -24,6 +24,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $usahaSelected = $request->get('usaha_id');
 
@@ -53,6 +54,7 @@ class ProductController extends Controller
 
     public function create()
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $currentUsaha = $currentUser->usahas()->first();
 
@@ -71,6 +73,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $currentUsaha = $currentUser->usahas()->first();
 
@@ -106,6 +109,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $product->usaha_id)->exists()) {
@@ -123,6 +127,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $product->usaha_id)->exists()) {
@@ -152,6 +157,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+         /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $product->usaha_id)->exists()) {
