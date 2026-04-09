@@ -82,7 +82,8 @@ class PDFController extends Controller
 
     $pdf = Pdf::loadView('admin.kuitansi.' . $templateName, compact('kuitansi', 'user', 'terbilang'));
 
-    return $pdf->download('kuitansi-' . $kuitansi->nomor_kuitansi . '.pdf');
+    // Untuk debugging: tampilkan PDF di browser, jangan langsung download
+    return $pdf->stream('kuitansi-' . $kuitansi->nomor_kuitansi . '.pdf');
 }
 
  // =========================
