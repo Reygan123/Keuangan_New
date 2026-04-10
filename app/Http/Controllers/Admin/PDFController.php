@@ -39,13 +39,15 @@ class PDFController extends Controller
             $templateName = 'jatidiri';
         }
 
+        $safeInvoiceNumber = str_replace(['/', '\\'], '-', $invoice->nomor_invoice);
+        $filename = 'invoice-' . $safeInvoiceNumber . '.pdf';
         $pdf = Pdf::loadView('admin.invoices.' . $templateName, compact('invoice', 'user'));
-        return $pdf->download('invoice-' . $invoice->nomor_invoice . '.pdf');
+        return $pdf->download($filename);
     }
 
     public function exportKuitansi(Kuitansi $kuitansi)
 {
-         /** @var \App\Models\User $currentUser */
+        
 
     $currentUser = Auth::user();
 

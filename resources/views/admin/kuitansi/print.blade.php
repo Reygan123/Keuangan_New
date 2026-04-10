@@ -9,7 +9,7 @@ body {
     font-family: Arial, sans-serif;
     font-size: 13px;
     color: #333;
-    padding: 120px 34px; /* DIPERKECIL */
+    padding: 120px 34px 0px 34px;
     position: relative;
 }
 
@@ -19,10 +19,10 @@ body {
     position: absolute;
     right: -30px;
     top: 120px;
-    width: 300px; /* DIPERKECIL */
+    width: 300px;
     opacity: 0.90;
-      margin-top: -180px;
-      margin-right: -10px;
+    margin-top: -180px;
+    margin-right: -10px;
 }
 
 /* HEADER */
@@ -89,49 +89,6 @@ body {
     font-style: italic;
 }
 
-/* SIGNATURE */
-.signature {
-    margin-top: 80px;
-    width: 100%;
-}
-.sig-box-container {
-    width: 100%;
-    margin: 0 auto;
-}
-.sig-box {
-    float: left;
-    width: 123px;
-    height: 120px;
-    text-align: center;
-    position: relative;
-}
-.sig-box.right-sig {
-    float: right;
-}
-.sig-title {
-    color: #000;
-    font-size: 15px;
-    font-weight: 400;
-    font-family: Arial, sans-serif;
-    position: absolute;
-    top: 0;
-    width: 100%;
-}
-.sig-line {
-    color: #000;
-    font-size: 10px;
-    font-weight: 400;
-    font-family: Arial, sans-serif;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-}
-
-/* FOOTER */
-.footer {
-    margin-top: 105px 
-}
-
 
 /* DARI SECTION */
 .dari-box {
@@ -158,6 +115,54 @@ body {
 .dari-detail-item:last-child {
     margin-bottom: 41px;
 }
+
+/* SIGNATURE */
+.signature {
+    margin-top: 80px;
+    width: 100%;
+}
+.sig-box-container {
+    width: 100%;
+    margin: 0 auto;
+}
+.sig-box {
+    float: left;
+    width: 123px;
+    height: 130px;
+    text-align: center;
+    position: relative;
+}
+.sig-box.right-sig {
+    float: right;
+}
+.sig-title {
+    color: #000;
+    font-size: 15px;
+    font-weight: 400;
+    font-family: Arial, sans-serif;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+.sig-line {
+    color: #000;
+    font-size: 13px;
+    font-weight: 400;
+    font-family: Arial, sans-serif;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+/* FOOTER (Opsi PDF) */
+.footer {
+    position: fixed;
+    bottom: 0px; 
+    left: 0px;
+    width: 100%;
+}
+
+
 
 </style>
 
@@ -238,11 +243,14 @@ body {
     <div class="sig-box-container">
         <div class="sig-box">
             <div class="sig-title">Penerima</div>
-            <div class="sig-line">[.................................]</div>
+            <div style="position: absolute; top: 25px; width: 100%; text-align: center;">
+                <img src="{{ public_path('gambar/ttd.png') }}" style="width: 90px;">
+            </div>
+            <div class="sig-line">Irma Rofiah</div>
         </div>
         <div class="sig-box right-sig">
             <div class="sig-title">Penyetor</div>
-            <div class="sig-line">[.................................]</div>
+            <div class="sig-line">[..........................................]</div>
         </div>
         <div class="clear"></div>
     </div>
