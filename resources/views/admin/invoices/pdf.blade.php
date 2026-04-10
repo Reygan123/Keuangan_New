@@ -129,10 +129,7 @@ body{
 <body>
 
 @php
-$logo = base64_encode(file_get_contents(public_path('gambar/header.png')));
-$ttd = base64_encode(file_get_contents(public_path('gambar/ttd.png')));
-$cap = base64_encode(file_get_contents(public_path('gambar/cap.png')));
-$footer = base64_encode(file_get_contents(public_path('gambar/footerr.png')));
+$logo = base64_encode(file_get_contents(public_pat
 @endphp
 
 <div class="container">
