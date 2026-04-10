@@ -13,8 +13,6 @@ class NotaController extends Controller
 {
     public function index(Request $request)
     {
-         /** @var \App\Models\User $currentUser */
-
         $currentUser = Auth::user();
 
         $selectedUsahaId = $request->get('usaha_id');
@@ -41,8 +39,6 @@ class NotaController extends Controller
 
     public function create(Request $request)
     {
-         /** @var \App\Models\User $currentUser */
-
         $currentUser = Auth::user();
 
         $selectedUsahaId = $request->get('usaha_id');
@@ -67,8 +63,6 @@ class NotaController extends Controller
 
     public function store(Request $request)
     {
-         /** @var \App\Models\User $currentUser */
-
         $currentUser = Auth::user();
         $selectedUsahaId = $request->get('usaha_id');
         $currentUsaha = null;
@@ -106,15 +100,12 @@ class NotaController extends Controller
 
     public function edit($id, Request $request)
     {
-         /** @var \App\Models\User $currentUser */
-
         $nota = Nota::findOrFail($id);
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $nota->usaha_id)->exists()) {
             abort(403, 'Unauthorized');
         }
-        
 
         $currentUsaha = Usaha::find($nota->usaha_id);
         $usahas = $currentUser->usahas()->get();
@@ -153,7 +144,6 @@ class NotaController extends Controller
 
     public function destroy($id)
     {
-
         $nota = Nota::findOrFail($id);
         $currentUser = Auth::user();
 

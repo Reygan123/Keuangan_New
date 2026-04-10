@@ -14,7 +14,6 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         $selectedUsahaId = $request->get('usaha_id');
@@ -42,7 +41,6 @@ class InvoiceController extends Controller
 
     public function create(Request $request)
     {
-        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         $selectedUsahaId = $request->get('usaha_id');
@@ -69,7 +67,6 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
-        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
         $selectedUsahaId = $request->get('usaha_id');
         $currentUsaha = null;
@@ -143,7 +140,6 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice, Request $request)
     {
-        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
@@ -166,7 +162,6 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice)
     {
-        /** @var \App\Models\User $currentUser */
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
@@ -237,7 +232,6 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        /** @var \App\Models\User $currentUser */ 
         $currentUser = Auth::user();
 
         if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
