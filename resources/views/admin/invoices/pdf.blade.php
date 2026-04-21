@@ -19,7 +19,7 @@
 
         /* ================= PAGE SETUP ================= */
         @page {
-            size: A4;
+            size: f4;
             margin: 0;
         }
 
@@ -38,7 +38,7 @@
             left: 0;
             right: 0;
             height: 100px;
-            padding: 27px 30px;
+            padding: 50px 35px 35px 60px;
             
         }
 
@@ -61,7 +61,7 @@
         }
 
         .header-left img {
-            width: 100px;
+            width: 81px;
         }
 
         .title-number {
@@ -82,7 +82,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 20px 30px;
+          padding: 50px 35px 20px 60px;
             margin-bottom: -70px;
             text-align: center;
         }
@@ -102,13 +102,13 @@
         .inv-container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 0 30px;
+            padding: 50px 35px 35px 60px;
            
         }
 
         .logo-watermark {
             position: absolute;
-            top: -40%;
+            top: -35%;
             right: -23%;
             opacity: 20%;
             width: 600px;
@@ -124,6 +124,7 @@
         .body-client p {
             font-size: 14px;
             margin: 4px 0;
+      
         }
 
         .due {
@@ -148,9 +149,9 @@
         .body-content th {
             color: white;
             font-size: 16px;
-            padding: 12px 16px;
-        
-            
+            text-align: center;
+            vertical-align: middle;
+            padding: 0 3px 15px 0;
         }
 
         .body-content th:nth-child(1),
@@ -169,6 +170,7 @@
             font-size: 16px;
             padding: 16px 8px;
             border-bottom: 2px solid #3030F850;
+   
                
         }
 
@@ -208,7 +210,18 @@
             clear: both;
         }
 
-        
+        .note-text {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        .page-break-before {
+            page-break-before: always;
+            break-before: page;
+        }
 
         /* ================= SIGN ================= */
         .inv-sign {
@@ -262,8 +275,8 @@
 
     <h1>From</h1>
     <div class="body-company">
-        <p><strong>Hexagon Karyatama Indonesia</strong></p>
-        <p>Jl. Abdul Halim No.128<br>Cimahi Tengah, Kota Cimahi</p>
+        <p style="margin-bottom: 12px;">Hexagon Karyatama Indonesia</p>
+        <p style="line-height: 1;">Jl. Abdul Halim No.128<br>Cimahi Tengah, Kota Cimahi 40522</p>
     </div>
 
     <h1>To</h1>
@@ -317,6 +330,13 @@
                     </tr>
                 </table>
         </div>
+    </div>
+
+    <div class="note-text page-break-before">
+        Demikian invoice ini kami sampaikan sebagai rincian atas transaksi yang telah dilakukan.
+        Kami berharap pembayaran dapat segera diselesaikan sesuai ketentuan yang telah disepakati.
+        Bila ada pertanyaan, klarifikasi, atau ketidaksesuaian data, mohon segera hubungi kami agar dapat kami tindak lanjuti.
+        Terima kasih atas kepercayaan dan kerja sama Bapak/Ibu.
     </div>
 
     <div class="inv-sign">

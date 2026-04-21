@@ -10,69 +10,72 @@ use Illuminate\Support\Facades\Auth;
 
 class PDFController extends Controller
 {
-    public function exportInvoice(Invoice $invoice)
-    {
-        $currentUser = Auth::user();
+    // public function exportInvoice(Invoice $invoice)
+    // {
+    //     $currentUser = Auth::user();
 
-        if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
-            abort(403, 'Unauthorized');
-        }
+    //     if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
+    //         abort(403, 'Unauthorized');
+    //     }
     
-        $invoice->load([
-            'transaksi.pelanggan',
-            'transaksi.supplier',
-            'transaksi.detailProduks',
-            'transaksi.label',
-            'transaksi.akunPayment',
-            'transaksi.akunLawan',
-            'invoiceItems',
-            'usaha'
-        ]);
+    //     $invoice->load([
+    //         'transaksi.pelanggan',
+    //         'transaksi.supplier',
+    //         'transaksi.detailProduks',
+    //         'transaksi.label',
+    //         'transaksi.akunPayment',
+    //         'transaksi.akunLawan',
+    //         'invoiceItems',
+    //         'usaha'
+    //     ]);
 
-        $user = Auth::user();
+    //     $user = Auth::user();
 
-        $templateName = 'pdf';
-        if ($invoice->usaha && strtolower($invoice->usaha->nama) === 'jatidiri') {
-            $templateName = 'jatidiri';
-        }
+    //     $templateName = 'pdf';
+    //     if ($invoice->usaha && strtolower($invoice->usaha->nama) === 'jatidiri') {
+    //         $templateName = 'jatidiri';
+    //     }
 
-        $pdf = Pdf::loadView('admin.invoices.' . $templateName, compact('invoice', 'user'));
+    //     $pdf = Pdf::loadView('admin.invoices.' . $templateName, compact('invoice', 'user'));
       
-        return $pdf->download('invoice' . $invoice->nama_bank . '.pdf');
+    //     return $pdf->download('invoice' . $invoice->nama_bank . '.pdf');
+    // }
+   public function exportInvoice(Invoice $invoice)
+{
+    $currentUser = Auth::user();
+
+    if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
+        abort(403, 'Unauthorized');
     }
-//    public function exportInvoice(Invoice $invoice)
-// {
-//     $currentUser = Auth::user();
 
-//     if (!$currentUser->usahas()->where('usahas.id', $invoice->usaha_id)->exists()) {
-//         abort(403, 'Unauthorized');
-//     }
+    $invoice->load([
+        'transaksi.pelanggan',
+        'transaksi.supplier',
+        'transaksi.detailProduks',
+        'transaksi.label',
+        'transaksi.akunPayment',
+        'transaksi.akunLawan',
+        'invoiceItems',
+        'usaha'
+    ]);
 
-//     $invoice->load([
-//         'transaksi.pelanggan',
-//         'transaksi.supplier',
-//         'transaksi.detailProduks',
-//         'transaksi.label',
-//         'transaksi.akunPayment',
-//         'transaksi.akunLawan',
-//         'invoiceItems',
-//         'usaha'
-//     ]);
+    $user = Auth::user();
 
-//     $user = Auth::user();
+    $templateName = 'pdf';
+    if ($invoice->usaha && strtolower($invoice->usaha->nama) === 'jatidiri') {
+        $templateName = 'jatidiri';
+    }
 
-//     $templateName = 'pdf';
-//     if ($invoice->usaha && strtolower($invoice->usaha->nama) === 'jatidiri') {
-//         $templateName = 'jatidiri';
-//     }
-
-//     $pdf = Pdf::loadView('admin.invoices.' . $templateName, compact('invoice', 'user'));
+    $pdf = Pdf::loadView('admin.invoices.' . $templateName, compact('invoice', 'user'));
     
-//     // Setting untuk DOMPDF
-//     $pdf->setPaper('a4');
-//     $pdf->setOption('enable_html5_parser', true);
-//     $pdf->setOption('enable_remote', true);
+    // Setting untuk DOMPDF
+    $pdf->setPaper('a4');
+    $pdf->setOption('enable_html5_parser', true);
+    $pdf->setOption('enable_remote', true);
     
-//     return $pdf->stream('invoice_' . $invoice->nomor_invoice . '.pdf');
-// }
+    // Sanitasi nama file untuk menghilangkan karakter "/" dan "\"
+    $filename = 'invoice_' . str_replace(['/', '\\'], '_', $invoice->nomor_invoice) . '.pdf';
+    
+    return $pdf->stream($filename);
+}
 }

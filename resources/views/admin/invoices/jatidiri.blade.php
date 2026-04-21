@@ -7,31 +7,21 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Invoice - Jatidiri</title>
     <style>
-    @font-face {
-        font-family: 'Sora';
-        src: url('/storage/fonts/Sora-Regular.ttf') format('truetype');
-        font-weight: normal;
-    }
-
-    @font-face {
-        font-family: 'Sora';
-        src: url('/storage/fonts/Sora-Bold.ttf') format('truetype');
-        font-weight: bold;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
 
     html,
     body {
-        font-family: 'Sora', 'sans-serif';
+        font-family: 'Plus Jakarta Sans', sans-serif;
         background-color: white !important;
         color: #333;
         line-height: 1.6;
-        margin-top: 130px;   /* ruang header */
-        margin-bottom: 90px; /* ruang footer */
+        margin-top: 120px;   /* ruang header */
+        margin-bottom: 60px; /* ruang footer */
 
     }
 
     @page {
-      size: A4;
+      size: f4;
     margin: 0;
      
     }
@@ -42,7 +32,9 @@
     left: 0;
     right: 0;
     height: 100px;
-    padding: 27px 30px;
+   padding: 100px 35px 35px 60px;
+   
+
    
 }
 
@@ -50,6 +42,7 @@
         width: 100%;
         border-collapse: collapse;
         margin-top : -100px;
+          
     }
 
     .header-left {
@@ -90,7 +83,7 @@
         width: @page;
         height: 20;
         background: white;
-        padding: 20px 30px;
+       padding: 50px 30px 50px 60px;
         margin-bottom: -90px;
         flex-direction: column;
         justify-content: center;
@@ -113,7 +106,7 @@
 
     .inv-container {
         background: white;
-        padding: 0 30px;
+        padding: 50px 35px 35px 60px;
         max-width: 800px;
         margin: 0 auto;
       
@@ -127,7 +120,7 @@
         position: absolute;
         max-width: 400px;
         z-index: 100;
-        top: -50%;
+        top: -30%;
         right: -2%;
     }
 
@@ -135,23 +128,35 @@
         opacity: 5%;
     }
 
+    .body-address {
+        margin-top: -50px;
+    }
+
     .body-address h1 {
         font-size: 16px;
-        margin: 24px 0 12px 0;
+        margin: 8px 0 4px 0;
         font-weight: 700;
+          
+      
     }
 
     .body-company,
     .body-client {
         font-size: 14px;
-        margin-bottom: 12px;
+        margin-bottom: 6px;
+      
     }
 
     .body-company p,
     .body-client p {
-        margin: 4px 0;
+        margin: 0;
         font-weight: 400;
-        padding-top: 8px;
+        padding-top: 0;
+        line-height: 1.3;
+    }
+
+    .body-company p:first-child {
+        margin-bottom: 8px;
     }
 
     .body-content {
@@ -170,10 +175,10 @@
     .body-content th {
         font-size: 16px;
         color: white;
-        padding: 12px 16px;
+        padding: -12px 10px 12px 16px;
         text-align: center;
         font-weight: 600;
-        font-family: 'Sora', 'sans-serif';
+        font-family: 'Plus Jakarta Sans', 'sans-serif';
     }
 
    
@@ -246,7 +251,7 @@
         text-align: center;
         margin-bottom: 60px;
         clear: both;
-        margin-top: 40px;
+        margin-top: 10px;
     }
 
 
@@ -276,6 +281,20 @@
     .due {
         font-size: 10px;
         color: #666;
+    }
+
+    .note-text {
+        margin-top: 40px;
+        font-size: 14px;
+        color: #666;
+        line-height: 1.6;
+        text-align: justify;
+        text-indent: 28px;
+    }
+
+    .page-break-before {
+        page-break-before: always;
+        break-before: page;
     }
 
     /* Page break handling */
@@ -321,7 +340,7 @@
             <h1>From</h1>
             <div class="body-company">
                 @if($invoice->usaha)
-                <p><strong>{{ $invoice->usaha->nama }}</strong></p>
+                <p>{{ $invoice->usaha->nama }}  </p>
                 <p>{{ $invoice->usaha->alamat }}</p>
                 @if($invoice->usaha->telepon)
                 <p>Tel: {{ $invoice->usaha->telepon }}</p>
@@ -414,10 +433,15 @@
             </div>
         </div>
 
+        <div class="note-text">
+            Demikian invoice ini kami sampaikan sebagai rincian atas transaksi yang telah dilakukan.
+            Kami berharap pembayaran dapat segera diselesaikan sesuai ketentuan yang telah disepakati.
+            Bila ada pertanyaan, klarifikasi, atau ketidaksesuaian data, mohon segera hubungi kami agar dapat kami tindak lanjuti.
+            Terima kasih atas kepercayaan dan kerja sama Bapak/Ibu.
+        </div>
+
         <div class="inv-sign">
-            <div class="sign">
-                <img src="{{ storage_path('app/public/sign.png') }}" alt="">
-            </div>
+            <img src="{{ storage_path('app/public/sign.png') }}" alt="">
             <div class="sign-name">{{ $user->name }}</div>
         </div>
     </div>

@@ -1,6 +1,11 @@
 {
     "sora": {
-        "normal": "C:\\Project\\pmb-unpas\\Keuangan_New\\storage\\fonts\/sora_normal_176fa2249d64bc1fe27f2286fb6f3f4a",
-        "bold": "sora_bold_2ae9d166ac158d3c8ab2c4308b689297"
+        "normal": "D:\\laragon\\www\\Keuangan_New_V2\\storage\\fonts\/sora_normal_be6e9d01744080339b7f1b52d93f474a",
+        "bold": "sora_bold_8570cc4a892ff50bf0cfd60c7a698d8c"
+    },
+    "plus jakarta sans": {
+        "normal": "D:\\laragon\\www\\Keuangan_New_V2\\storage\\fonts\/plus_jakarta_sans_normal_a61e26c3bf7a8dd6b37143de092efef8",
+        "600": "D:\\laragon\\www\\Keuangan_New_V2\\storage\\fonts\/plus_jakarta_sans_600_9f311d0ee9acf3e7bf95a4348b029c33",
+        "bold": "plus_jakarta_sans_bold_78a6995f90ba527650463aab62b3a3b3"
     }
 }
