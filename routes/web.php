@@ -142,6 +142,7 @@ Route::post('jurnal-umum/import/execute', [JurnalUmumController::class, 'importE
         ->name('surat-pemberitahuan.peserta.destroy');
 
     Route::get('invoices/{invoice}/export', [PDFController::class, 'exportInvoice'])->name('invoices.export');
+    Route::get('kuitansi/{kuitansi}/export', [PDFController::class, 'exportKuitansi'])->name('kuitansi.export');
 
     Route::resource('surat-penyerahan', SuratPenyerahanController::class);
     Route::get('surat-penyerahan/generate/nomor-surat', [SuratPenyerahanController::class, 'generateNomorSurat'])
