@@ -22,6 +22,14 @@
 
     <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg shadow-lg p-4 mb-6">
         <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-col sm:flex-row gap-3">
+            @if(count($usahas) > 1)
+            <select name="usaha_id" class="bg-slate-700/50 border border-slate-600/50 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all min-w-[180px]">
+                <option value="">Semua Usaha</option>
+                @foreach($usahas as $usaha)
+                    <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                @endforeach
+            </select>
+            @endif
             <input type="text" name="search" placeholder="Cari nama produk..." value="{{ request('search') }}"
                 class="flex-1 bg-slate-700/50 border border-slate-600/50 text-white rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
@@ -43,6 +51,9 @@
                         <th class="px-4 py-3 text-right font-semibold hidden md:table-cell">HPP Rata2</th>
                         <th class="px-4 py-3 text-left font-semibold hidden lg:table-cell">Satuan</th>
                         <th class="px-4 py-3 text-right font-semibold">Stok</th>
+                        @if(count($usahas) > 1)
+                        <th class="px-4 py-3 text-left font-semibold hidden lg:table-cell">Usaha</th>
+                        @endif
                         <th class="px-4 py-3 text-center font-semibold w-20">Aksi</th>
                     </tr>
                 </thead>
@@ -54,6 +65,9 @@
                             <td class="px-4 py-3 text-right text-slate-300 hidden md:table-cell">Rp {{ number_format($item->hpp_unit_rata2, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-slate-300 hidden lg:table-cell">{{ $item->satuan_unit }}</td>
                             <td class="px-4 py-3 text-right text-slate-300">{{ number_format($item->stok, 0, ',', '.') }}</td>
+                            @if(count($usahas) > 1)
+                            <td class="px-4 py-3 text-slate-300 hidden lg:table-cell">{{ $item->usaha->nama ?? '-' }}</td>
+                            @endif
                             <td class="px-4 py-3 text-center">
                                 <div class="flex justify-center gap-2">
                                     <a href="{{ route('admin.products.edit', $item) }}" class="text-blue-400 hover:text-blue-300 text-xs sm:text-sm transition-colors">
@@ -72,7 +86,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-3 text-center text-slate-400 text-sm">Belum ada Produk</td>
+                            <td colspan="{{ count($usahas) > 1 ? 7 : 6 }}" class="px-4 py-3 text-center text-slate-400 text-sm">Belum ada Produk</td>
                         </tr>
                     @endforelse
                 </tbody>

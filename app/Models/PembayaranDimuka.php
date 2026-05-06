@@ -23,8 +23,14 @@ class PembayaranDimuka extends Model
         'akun_kas_id',
         'akun_beban_id',
         'total_diamortisasi',
-        'status'
+        'status',
+        'usaha_id'
     ];
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
+    }
 
     public function akunAset()
     {

@@ -34,15 +34,6 @@
                 @enderror
             </div>
 
-            {{-- <div>
-                <label for="hpp_unit_rata2" class="text-slate-300 block mb-2 text-sm font-medium">HPP Unit Rata-Rata</label>
-                <input type="number" name="hpp_unit_rata2" id="hpp_unit_rata2" value="{{ old('hpp_unit_rata2', $product->hpp_unit_rata2) }}" step="any" min="0"
-                        class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('hpp_unit_rata2') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                @error('hpp_unit_rata2')
-                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div> --}}
-
             <div>
                 <label for="akun_pendapatan_id" class="text-slate-300 block mb-2 text-sm font-medium">Akun Pendapatan</label>
                 <select name="akun_pendapatan_id" id="akun_pendapatan_id" required
@@ -100,15 +91,6 @@
                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            {{-- <div>
-                <label for="stok" class="text-slate-300 block mb-2 text-sm font-medium">Stok</label>
-                <input type="number" name="stok" id="stok" value="{{ old('stok', $product->stok) }}" required min="0"
-                        class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('stok') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                @error('stok')
-                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div> --}}
         </div>
 
         <div class="flex gap-3 pt-4">
@@ -121,4 +103,43 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const usahaSelect = document.getElementById('usaha_id');
+    const kategoriSelect = document.getElementById('kategori_hpp_id');
+
+    if (usahaSelect) {
+        usahaSelect.addEventListener('change', function() {
+            const usahaId = this.value;
+
+            if (!usahaId) {
+                kategoriSelect.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+                return;
+            }
+
+            fetch(`/admin/kategori-hpp-by-usaha-product?usaha_id=${usahaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    let options = '<option value="">-- Pilih Kategori --</option>';
+
+                    data.forEach(kategori => {
+                        const selected = kategori.id == '{{ old("kategori_hpp_id", $product->kategori_hpp_id) }}' ? 'selected' : '';
+                        options += `<option value="${kategori.id}" ${selected}>${kategori.name}</option>`;
+                    });
+
+                    kategoriSelect.innerHTML = options;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        const currentUsahaId = usahaSelect.value;
+        if (currentUsahaId) {
+            usahaSelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
 @endsection

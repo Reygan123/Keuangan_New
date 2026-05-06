@@ -7,9 +7,11 @@
             <h1 class="text-2xl font-bold text-white">Pembelian</h1>
             <p class="text-slate-400 text-sm mt-1">Daftar transaksi pembelian</p>
         </div>
-        <a href="{{ route('admin.pembelians.create') }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">
+        @if($selectedUsahaId)
+        <a href="{{ route('admin.pembelians.create', ['usaha_id' => $selectedUsahaId]) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm">
             Tambah Pembelian
         </a>
+        @endif
     </div>
 
     @if(session('success'))
@@ -20,21 +22,35 @@
     @endif
 
     <div class="bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/60 p-4 mb-4">
-        <form method="GET" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form method="GET" id="filterForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
-                <input type="text" name="search" placeholder="Cari supplier..." value="{{ request('search') }}" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                <label class="block text-slate-400 text-xs font-semibold mb-1">Usaha</label>
+                <select name="usaha_id" onchange="document.getElementById('filterForm').submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                    <option value="">-- Pilih Usaha --</option>
+                    @foreach($usahas as $usaha)
+                    <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
-                <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                <label class="block text-slate-400 text-xs font-semibold mb-1">Cari Supplier</label>
+                <input type="text" name="search" placeholder="Cari supplier..." value="{{ request('search') }}" oninput="document.getElementById('filterForm').submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
             </div>
-            <div class="flex gap-2">
-                <input type="date" name="end_date" value="{{ request('end_date') }}" class="flex-1 bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Cari</button>
-                <a href="{{ route('admin.pembelians.index') }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Reset</a>
+            <div>
+                <label class="block text-slate-400 text-xs font-semibold mb-1">Tanggal Mulai</label>
+                <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="document.getElementById('filterForm').submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                    <label class="block text-slate-400 text-xs font-semibold mb-1">Tanggal Akhir</label>
+                    <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="document.getElementById('filterForm').submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <a href="{{ route('admin.pembelians.index') }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm h-10 flex items-center">Reset</a>
             </div>
         </form>
     </div>
 
+    @if($selectedUsahaId)
     <div class="bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/60 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-700 text-sm">
@@ -77,5 +93,23 @@
             </table>
         </div>
     </div>
+    @else
+    <div class="bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/60 p-8 text-center">
+        <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk melihat transaksi pembelian</p>
+    </div>
+    @endif
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let timeoutId;
+
+    document.querySelector('input[name="search"]').addEventListener('input', function(e) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(function() {
+            document.getElementById('filterForm').submit();
+        }, 500);
+    });
+});
+</script>
 @endsection

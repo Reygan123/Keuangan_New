@@ -17,7 +17,8 @@ class Product extends Model
         'akun_persediaan_id',
         'akun_hpp_id',
         'satuan_unit',
-        'stok'
+        'stok',
+        'usaha_id'
     ];
 
     public function kategoriHpp()
@@ -43,5 +44,10 @@ class Product extends Model
     public function transaksiDetails()
     {
         return $this->hasMany(TransaksiDetailProduk::class, 'product_id');
+    }
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
     }
 }

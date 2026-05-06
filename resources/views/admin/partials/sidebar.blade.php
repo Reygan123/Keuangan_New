@@ -13,7 +13,14 @@
     </div>
 
     <!-- Scrollable Navigation -->
-    <nav class="flex-1 overflow-y-auto scrollbar-hide">
+    <nav id="sidebar-nav"
+     class="flex-1 overflow-y-auto scrollbar-hide"
+     x-init="
+        $el.scrollTop = localStorage.getItem('sidebar-scroll') || 0;
+        $el.addEventListener('scroll', () => {
+            localStorage.setItem('sidebar-scroll', $el.scrollTop);
+        });
+     ">
         <div class="px-4 py-6">
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Dashboard</p>
 
@@ -160,6 +167,41 @@
                         class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Nota</a>
                 </div>
             </details>
+
+            <details class="group mt-2">
+                <summary
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition cursor-pointer">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <span class="text-sm font-medium flex-1">Surat</span>
+                    <svg class="w-4 h-4 transition-transform duration-200 group-open:rotate-180 flex-shrink-0"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                        </path>
+                    </svg>
+                </summary>
+                <div class="mt-1 space-y-1 ml-6 border-l-2 border-slate-700 pl-2">
+                    {{-- <a href="{{ route('admin.surat.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Invoice</a>
+                    <a href="{{ route('admin.jenis-surat.index') }}" --}}
+                    {{-- class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Receipt</a> --}}
+                    <a href="{{ route('admin.surat-penyerahan.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Surat
+                        Penyerahan</a>
+                    <a href="{{ route('admin.surat-pemberitahuan.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Surat
+                        Pemberitahuan</a>
+                    <a href="{{ route('admin.surat-pernyataan.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Surat
+                        Penyataan</a>
+                    <a href="{{ route('admin.berita-acara.index') }}"
+                        class="block px-4 py-2 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition">Berita
+                        Acara</a>
+                </div>
+            </details>
         </div>
 
         <!-- Transaksi Section -->
@@ -276,6 +318,16 @@
                 <span class="text-sm font-medium">Neraca</span>
             </a>
 
+            <a href="{{ route('admin.laporan.neraca_lajur') }}"
+    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('admin.jurnal-penyesuaian') ? 'bg-blue-500 text-white' : 'text-slate-300 hover:bg-slate-800' }} mt-2">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+        </path>
+    </svg>
+    <span class="text-sm font-medium">Neraca Lajur</span>
+</a>
+
             <a href="{{ route('admin.laporan.arus_kas') }}"
                 class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition mt-2">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,6 +347,15 @@
                 </svg>
                 <span class="text-sm font-medium">Buku Kas</span>
             </a>
+            <a href="{{ route('admin.laporan.buku_besar') }}"
+                class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition mt-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                    </path>
+                </svg>
+                <span class="text-sm font-medium">Buku Besar</span>
+            </a>
 
             <a href="{{ route('admin.laporan.jurnal_umum') }}"
                 class="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition mt-2">
@@ -305,6 +366,16 @@
                 </svg>
                 <span class="text-sm font-medium">Jurnal Umum</span>
             </a>
+
+            <a href="{{ route('admin.jurnal-penyesuaian') }}"
+    class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('admin.jurnal-penyesuaian') ? 'bg-blue-500 text-white' : 'text-slate-300 hover:bg-slate-800' }} mt-2">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+        </path>
+    </svg>
+    <span class="text-sm font-medium">Jurnal Penyesuaian</span>
+</a>
         </div>
     </nav>
 

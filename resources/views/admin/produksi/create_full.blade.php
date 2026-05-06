@@ -11,6 +11,12 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="mb-4 p-3 bg-red-500/20 border border-red-500/40 text-red-300 text-sm rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="mb-4 p-3 bg-red-500/20 border border-red-500/40 text-red-300 text-sm rounded-lg">
                 <ul class="list-disc list-inside space-y-1">
@@ -21,9 +27,32 @@
             </div>
         @endif
 
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4 mb-6">
+            <form method="GET" action="{{ route('admin.produksi.create') }}" class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <label class="block text-slate-400 text-xs font-semibold mb-1">Pilih Usaha</label>
+                    <select name="usaha_id" onchange="this.form.submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        <option value="">-- Pilih Usaha --</option>
+                        @foreach($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </form>
+            @if($selectedUsahaId)
+            <p class="text-slate-300 text-xs mt-2">Transaksi produksi akan dicatat untuk usaha: <span class="font-semibold">{{ $usahas->where('id', $selectedUsahaId)->first()->nama ?? '' }}</span></p>
+            @endif
+        </div>
+
+        @if(!$selectedUsahaId)
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-8 text-center">
+            <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk membuat transaksi produksi</p>
+        </div>
+        @else
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-6">
             <form method="POST" action="{{ route('admin.produksi.store') }}" class="space-y-5">
                 @csrf
+                <input type="hidden" name="usaha_id" value="{{ $selectedUsahaId }}">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -102,6 +131,7 @@
                 </div>
             </form>
         </div>
+        @endif
     </div>
 </div>
 
@@ -116,9 +146,11 @@ document.addEventListener('DOMContentLoaded', function () {
         newRow.innerHTML = `
             <select name="material_ids[]" class="flex-1 bg-slate-700/50 border border-slate-600/50 text-slate-100 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all" required>
                 <option value="">Pilih Material</option>
-                @foreach($products as $p)
-                    <option value="{{ $p->id }}">{{ $p->nama }} (Stok: {{ $p->stok }} {{ $p->satuan_unit }})</option>
-                @endforeach
+                @if(isset($products) && $products->count() > 0)
+                    @foreach($products as $p)
+                        <option value="{{ $p->id }}">{{ $p->nama }} (Stok: {{ $p->stok }} {{ $p->satuan_unit }})</option>
+                    @endforeach
+                @endif
             </select>
             <input type="number" step="0.01" name="material_quantities[]" placeholder="Qty" class="w-24 bg-slate-700/50 border border-slate-600/50 text-slate-100 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all" required>
             <button type="button" class="remove-material px-3 py-2 bg-red-600/80 hover:bg-red-600 text-white text-sm rounded transition-colors duration-200">

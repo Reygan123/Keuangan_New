@@ -9,6 +9,13 @@
                 <p class="text-xs md:text-sm text-slate-400 mt-1">Hasil operasional perusahaan</p>
             </div>
             <form method="GET" action="{{ route('admin.laporan.laba_rugi') }}" class="flex flex-col sm:flex-row gap-2">
+                @if($usahas && $usahas->count() > 0)
+                <select name="usaha_id" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
+                    @foreach($usahas as $usahaItem)
+                    <option value="{{ $usahaItem->id }}" {{ $usahaSelected == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
+                    @endforeach
+                </select>
+                @endif
                 <input type="date" name="start_date" value="{{ $start_date_str }}" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
                 <input type="date" name="end_date" value="{{ $end_date_str }}" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors font-semibold">Filter</button>

@@ -29,8 +29,20 @@
                 @endif
 
                 <div class="flex flex-col gap-3">
-                    <input type="text" id="searchInput" placeholder="Cari akun..."
-                        class="w-full bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        @if (count($usahas) > 1)
+                            <select id="usahaFilter"
+                                class="bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[180px]">
+                                <option value="">Semua Usaha</option>
+                                @foreach ($usahas as $usaha)
+                                    <option value="{{ $usaha->id }}"
+                                        {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                                @endforeach
+                            </select>
+                        @endif
+                        <input type="text" id="searchInput" placeholder="Cari akun..."
+                            class="flex-1 bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors">
+                    </div>
 
                     <div class="flex flex-col sm:flex-row gap-2">
                         <select id="filterKlasifikasi"
@@ -52,6 +64,10 @@
                             <option value="TIDAK BERLAKU">TIDAK BERLAKU</option>
                         </select>
 
+                        <button onclick="applyFilter()"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                            Filter
+                        </button>
                         <button onclick="resetFilters()"
                             class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm rounded-lg transition-colors">
                             Reset
@@ -65,6 +81,7 @@
                     <thead class="bg-slate-700/50 border-b border-slate-700">
                         <tr>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">ID</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-200">Kode</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Nama Akun</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Saldo</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200">Klasifikasi</th>
@@ -72,16 +89,23 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Aktivitas Kas
                             </th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden md:table-cell">Kelompok</th>
+                            @if (count($usahas) > 1)
+                                <th class="px-4 py-3 text-left font-semibold text-slate-200 hidden lg:table-cell">Usaha</th>
+                            @endif
                             <th class="px-4 py-3 text-center font-semibold text-slate-200">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-700/50" id="tableBody">
                         @foreach ($akuns as $akun)
                             <tr class="hover:bg-slate-700/30 transition-colors data-row"
-                                data-search="{{ strtolower($akun->name . ' ' . $akun->id) }}"
-                                data-klasifikasi="{{ $akun->klasifikasi }}" data-aktivitas="{{ $akun->aktivitas_kas }}">
+                                data-search="{{ strtolower($akun->name . ' ' . $akun->id . ' ' . ($akun->kode ?? '')) }}"
+                                data-klasifikasi="{{ $akun->klasifikasi }}" data-aktivitas="{{ $akun->aktivitas_kas }}"
+                                data-usaha="{{ $akun->usaha_id }}">
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">{{ $loop->iteration }}</td>
-                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-100 font-medium">{{ $akun->name }}</td>
+                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 font-mono">{{ $akun->kode ?? '-' }}
+                                </td>
+                                <td class="px-4 py-3 text-xs sm:text-sm text-slate-100 font-medium">{{ $akun->name }}
+                                </td>
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300">
                                     {{ number_format($akun->saldo, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3">
@@ -109,9 +133,14 @@
                                     {{ $akun->aktivitas_kas }}</td>
                                 <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 hidden md:table-cell">
                                     {{ $akun->nama_kelompok ?? '-' }}</td>
+                                @if (count($usahas) > 1)
+                                    <td class="px-4 py-3 text-xs sm:text-sm text-slate-300 hidden lg:table-cell">
+                                        {{ $akun->usaha->nama ?? '-' }}
+                                    </td>
+                                @endif
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex justify-center gap-2 flex-wrap">
-                                        <button onclick="editAkun({ $akun })"
+                                        <button onclick="editAkun({{ json_encode($akun) }})"
                                             class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-xs rounded transition-colors">
                                             Edit
                                         </button>
@@ -143,6 +172,25 @@
             <form method="POST" action="{{ route('admin.akuns.store') }}" class="space-y-4">
                 @csrf
                 <h2 class="text-lg font-semibold text-slate-50">Tambah Akun Baru</h2>
+
+                <div>
+                    <input type="hidden" name="kode_otomatis" value="1">
+                </div>
+
+                @if (count($usahas) > 1)
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-2">Usaha</label>
+                        <select name="usaha_id" required
+                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="">-- Pilih Usaha --</option>
+                            @foreach ($usahas as $usaha)
+                                <option value="{{ $usaha->id }}">{{ $usaha->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @else
+                    <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+                @endif
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-2">Nama Akun</label>
@@ -221,18 +269,18 @@
                 <h2 class="text-lg font-semibold text-slate-50">Edit Akun</h2>
 
                 <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-2">Kode Akun</label>
+                    <input type="text" name="kode" id="editKode"
+                        class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required>
+                </div>
+
+                <div>
                     <label class="block text-xs font-medium text-slate-300 mb-2">Nama Akun</label>
                     <input name="name" id="editName"
                         class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                         required>
                 </div>
-
-                {{-- <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-2">Saldo</label>
-                    <input name="saldo" id="editSaldo" type="number" step="0.01"
-                        class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        required>
-                </div> --}}
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-2">Klasifikasi</label>
@@ -343,17 +391,17 @@
             });
 
             function editAkun(data) {
+                document.getElementById('editKode').value = data.kode || '';
                 document.getElementById('editName').value = data.name;
-                // document.getElementById('editSaldo').value = data.saldo;
                 document.getElementById('editKlasifikasi').value = data.klasifikasi;
                 document.getElementById('editAktivitasKas').value = data.aktivitas_kas;
-                document.getElementById('editNamaKelompok').value = data.nama_kelompok;
+                document.getElementById('editNamaKelompok').value = data.nama_kelompok || '';
 
                 updateSubKlasifikasi(
                     document.getElementById('editKlasifikasi'),
                     document.getElementById('editSubKlasifikasi'),
                     document.getElementById('editSubKlasifikasiWrapper'),
-                    data.sub_klasifikasi
+                    data.sub_klasifikasi || ''
                 );
 
                 const form = document.getElementById('editForm');
@@ -361,10 +409,12 @@
                 document.getElementById('editModal').showModal();
             }
 
-            function filterTable() {
+            function applyFilter() {
+                const usahaFilter = document.getElementById('usahaFilter');
                 const searchValue = document.getElementById('searchInput').value.toLowerCase();
                 const klasifikasi = document.getElementById('filterKlasifikasi').value;
                 const aktivitas = document.getElementById('filterAktivitas').value;
+                const usahaId = usahaFilter ? usahaFilter.value : '';
                 const rows = document.querySelectorAll('.data-row');
                 let visibleCount = 0;
 
@@ -372,8 +422,9 @@
                     const matchSearch = row.dataset.search.includes(searchValue);
                     const matchKlasifikasi = !klasifikasi || row.dataset.klasifikasi === klasifikasi;
                     const matchAktivitas = !aktivitas || row.dataset.aktivitas === aktivitas;
+                    const matchUsaha = !usahaId || row.dataset.usaha == usahaId;
 
-                    if (matchSearch && matchKlasifikasi && matchAktivitas) {
+                    if (matchSearch && matchKlasifikasi && matchAktivitas && matchUsaha) {
                         row.style.display = '';
                         visibleCount++;
                     } else {
@@ -388,12 +439,30 @@
                 document.getElementById('searchInput').value = '';
                 document.getElementById('filterKlasifikasi').value = '';
                 document.getElementById('filterAktivitas').value = '';
-                filterTable();
+                const usahaFilter = document.getElementById('usahaFilter');
+                if (usahaFilter) {
+                    usahaFilter.value = '';
+                }
+                applyFilter();
             }
 
-            document.getElementById('searchInput').addEventListener('keyup', filterTable);
-            document.getElementById('filterKlasifikasi').addEventListener('change', filterTable);
-            document.getElementById('filterAktivitas').addEventListener('change', filterTable);
+            function filterTable() {
+                const usahaFilter = document.getElementById('usahaFilter');
+                if (usahaFilter && usahaFilter.value) {
+                    const usahaId = usahaFilter.value;
+                    window.location.href = '{{ route('admin.akuns.index') }}?usaha_id=' + usahaId;
+                } else {
+                    applyFilter();
+                }
+            }
+
+            document.getElementById('searchInput').addEventListener('keyup', applyFilter);
+            document.getElementById('filterKlasifikasi').addEventListener('change', applyFilter);
+            document.getElementById('filterAktivitas').addEventListener('change', applyFilter);
+            const usahaFilter = document.getElementById('usahaFilter');
+            if (usahaFilter) {
+                usahaFilter.addEventListener('change', filterTable);
+            }
         </script>
     </div>
 @endsection

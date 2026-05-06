@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaksi;
 use App\Models\LabelTransaksi;
 use App\Models\Akun;
+use App\Models\Usaha;
 use App\Services\TransaksiKasBankService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class TransaksiKasBankController extends Controller
 {
@@ -19,58 +21,73 @@ class TransaksiKasBankController extends Controller
         $this->service = $service;
     }
 
-    /**
-     * Menampilkan daftar transaksi berdasarkan tipe utama (PENERIMAAN atau PENGELUARAN).
-     */
-    public function index($tipe)
+    public function index(Request $request, $tipe)
     {
         $tipe = strtoupper($tipe);
         if (!in_array($tipe, ['PENERIMAAN', 'PENGELUARAN'])) {
             return abort(404);
         }
 
-        $transaksis = Transaksi::whereHas('label', function ($q) use ($tipe) {
-            $q->where('tipe_utama', $tipe);
-        })->with(['label', 'akunPayment', 'akunLawan'])->latest()->get();
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
 
+        $transaksisQuery = Transaksi::whereHas('label', function ($q) use ($tipe) {
+            $q->where('tipe_utama', $tipe);
+        })->with(['label', 'akunPayment', 'akunLawan']);
+
+        if ($selectedUsahaId) {
+            session(['current_usaha_id' => $selectedUsahaId]);
+            $transaksisQuery->where('usaha_id', $selectedUsahaId);
+        } else {
+            $transaksisQuery->where('usaha_id', -1);
+        }
+
+        $transaksis = $transaksisQuery->latest()->get();
         $title = ($tipe === 'PENERIMAAN') ? 'Penerimaan Kas/Bank' : 'Pengeluaran Kas/Bank';
 
-        return view('admin.kasbank.index', compact('transaksis', 'title', 'tipe'));
+        return view('admin.kasbank.index', compact('transaksis', 'title', 'tipe', 'usahas', 'selectedUsahaId'));
     }
 
-    /**
-     * Menampilkan formulir pembuatan transaksi baru.
-     */
-    public function create($tipe)
+    public function create(Request $request, $tipe)
     {
         $tipe = strtoupper($tipe);
         if (!in_array($tipe, ['PENERIMAAN', 'PENGELUARAN'])) {
             return abort(404);
         }
 
-        $labels = LabelTransaksi::where('tipe_utama', $tipe)->get();
-        // Akun Kas/Bank (untuk akun_payment_id) - Klasifikasi ASET -> Kelompok Kas & Bank
-        $akunKasBank = Akun::where('klasifikasi', 'ASET')
-            //    ->whereIn('nama_kelompok', ['Kas', 'Bank'])
-            ->get();
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
 
-        // Akun Lawan (untuk akun_lawan_id) - Semua akun selain Kas/Bank (Pendapatan, Beban, Utang, Piutang, dll.)
-        $akunLawan = Akun::where('klasifikasi', '!=', 'ASET')
-            ->orWhere(function ($query) {
-                $query->where('klasifikasi', 'ASET')
-                    ->whereNotIn('nama_kelompok', ['Kas', 'Bank']);
-            })
-            ->get();
+        if (!$selectedUsahaId && $usahas->count() > 0) {
+            $selectedUsahaId = $usahas->first()->id;
+        }
+
+        $labels = collect();
+        $akunKasBank = collect();
+        $akunLawan = collect();
+
+        if ($selectedUsahaId) {
+            $labels = LabelTransaksi::where('tipe_utama', $tipe)
+                ->where('usaha_id', $selectedUsahaId)
+                ->get();
+
+            $akunKasBank = Akun::where('usaha_id', $selectedUsahaId)
+                // ->where('klasifikasi', 'ASET')
+                ->get();
+
+            $akunLawan = Akun::where('usaha_id', $selectedUsahaId)
+                // ->where('klasifikasi', '!=', 'ASET')
+                ->get();
+        }
 
         $title = ($tipe === 'PENERIMAAN') ? 'Buat Penerimaan Kas/Bank' : 'Buat Pengeluaran Kas/Bank';
         $labelAksi = ($tipe === 'PENERIMAAN') ? 'Pemasukan Ke' : 'Pengeluaran Dari';
 
-        return view('admin.kasbank.create', compact('labels', 'akunKasBank', 'akunLawan', 'title', 'tipe', 'labelAksi'));
+        return view('admin.kasbank.create', compact('labels', 'akunKasBank', 'akunLawan', 'title', 'tipe', 'labelAksi', 'usahas', 'selectedUsahaId'));
     }
 
-    /**
-     * Menyimpan transaksi baru.
-     */
     public function store(Request $request, $tipe)
     {
         $tipe = strtoupper($tipe);
@@ -78,16 +95,27 @@ class TransaksiKasBankController extends Controller
             return abort(404);
         }
 
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+        $currentUser = Auth::user();
+
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.kasbank.index', $tipe)->with('error', 'Usaha tidak dipilih');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
+            return redirect()->route('admin.kasbank.index', $tipe)->with('error', 'Anda tidak memiliki akses ke usaha ini');
+        }
+
         $request->validate([
             'label_id' => 'required|exists:label_transaksis,id',
-            'akun_payment_id' => 'required|exists:akuns,id', // Akun Kas/Bank
-            'akun_lawan_id' => 'required|exists:akuns,id',   // Akun Lawan (counter account)
+            'akun_payment_id' => 'required|exists:akuns,id',
+            'akun_lawan_id' => 'required|exists:akuns,id',
             'tanggal' => 'required|date',
             'jumlah' => 'required|numeric|min:0.01',
             'keterangan' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($request, $tipe) {
+        DB::transaction(function () use ($request, $tipe, $selectedUsahaId) {
             $transaksi = Transaksi::create([
                 'label_id' => $request->label_id,
                 'supplier_id' => null,
@@ -98,6 +126,7 @@ class TransaksiKasBankController extends Controller
                 'jumlah' => $request->jumlah,
                 'keterangan' => $request->keterangan,
                 'status' => 'PENDING',
+                'usaha_id' => $selectedUsahaId,
             ]);
 
             $this->service->prosesTransaksi($transaksi);
@@ -105,12 +134,18 @@ class TransaksiKasBankController extends Controller
 
         $successMsg = ($tipe === 'PENERIMAAN') ? 'Penerimaan Kas/Bank berhasil ditambahkan' : 'Pengeluaran Kas/Bank berhasil ditambahkan';
 
-        return redirect()->route('admin.kasbank.index', $tipe)->with('success', $successMsg);
+        return redirect()->route('admin.kasbank.index', ['tipe' => $tipe, 'usaha_id' => $selectedUsahaId])->with('success', $successMsg);
     }
 
     public function show($tipe, $id)
     {
         $kasbank = Transaksi::findOrFail($id);
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $kasbank->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $kasbank->load(['label', 'akunPayment', 'akunLawan']);
         $tipe = $kasbank->label->tipe_utama;
 
@@ -126,24 +161,47 @@ class TransaksiKasBankController extends Controller
     public function edit($tipe, $id)
     {
         $kasbank = Transaksi::findOrFail($id);
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $kasbank->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $tipe = $kasbank->label->tipe_utama;
         if (!in_array($tipe, ['PENERIMAAN', 'PENGELUARAN'])) {
             return abort(404);
         }
 
-        $labels = LabelTransaksi::where('tipe_utama', $tipe)->get();
-        $akunKasBank = Akun::where('klasifikasi', 'ASET')->get();
-        $akunLawan = Akun::where('klasifikasi', '!=', 'ASET')->get();
+        $labels = LabelTransaksi::where('tipe_utama', $tipe)
+            ->where('usaha_id', $kasbank->usaha_id)
+            ->get();
+
+        $akunKasBank = Akun::where('usaha_id', $kasbank->usaha_id)
+            ->where('klasifikasi', 'ASET')
+            ->get();
+
+        $akunLawan = Akun::where('usaha_id', $kasbank->usaha_id)
+            ->where('klasifikasi', '!=', 'ASET')
+            ->get();
 
         $title = ($tipe === 'PENERIMAAN') ? 'Edit Penerimaan Kas/Bank' : 'Edit Pengeluaran Kas/Bank';
         $labelAksi = ($tipe === 'PENERIMAAN') ? 'Pemasukan Ke' : 'Pengeluaran Dari';
 
-        return view('admin.kasbank.edit', compact('kasbank', 'labels', 'akunKasBank', 'akunLawan', 'title', 'tipe', 'labelAksi'));
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $kasbank->usaha_id;
+
+        return view('admin.kasbank.edit', compact('kasbank', 'labels', 'akunKasBank', 'akunLawan', 'title', 'tipe', 'labelAksi', 'usahas', 'selectedUsahaId'));
     }
 
     public function update(Request $request, $tipe, $id)
     {
         $kasbank = Transaksi::findOrFail($id);
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $kasbank->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $tipe = $kasbank->label->tipe_utama;
         if (!in_array($tipe, ['PENERIMAAN', 'PENGELUARAN'])) {
             return abort(404);
@@ -176,12 +234,18 @@ class TransaksiKasBankController extends Controller
 
         $successMsg = ($tipe === 'PENERIMAAN') ? 'Penerimaan Kas/Bank berhasil diperbarui' : 'Pengeluaran Kas/Bank berhasil diperbarui';
 
-        return redirect()->route('admin.kasbank.index', $tipe)->with('success', $successMsg);
+        return redirect()->route('admin.kasbank.index', ['tipe' => $tipe, 'usaha_id' => $kasbank->usaha_id])->with('success', $successMsg);
     }
 
     public function destroy($tipe, $id)
     {
         $kasbank = Transaksi::findOrFail($id);
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $kasbank->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $tipe = $kasbank->label->tipe_utama;
         if (!in_array($tipe, ['PENERIMAAN', 'PENGELUARAN'])) {
             return abort(404);
@@ -194,6 +258,6 @@ class TransaksiKasBankController extends Controller
 
         $successMsg = ($tipe === 'PENERIMAAN') ? 'Penerimaan Kas/Bank berhasil dihapus' : 'Pengeluaran Kas/Bank berhasil dihapus';
 
-        return redirect()->route('admin.kasbank.index', $tipe)->with('success', $successMsg);
+        return redirect()->route('admin.kasbank.index', ['tipe' => $tipe, 'usaha_id' => $kasbank->usaha_id])->with('success', $successMsg);
     }
 }

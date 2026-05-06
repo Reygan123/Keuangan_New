@@ -8,15 +8,26 @@
                 <h1 class="text-xl md:text-2xl font-bold text-slate-50">Laporan Arus Kas</h1>
                 <p class="text-xs md:text-sm text-slate-400 mt-1">Pergerakan kas masuk dan keluar</p>
             </div>
-            <form method="GET" action="{{ route('admin.laporan.arus_kas') }}" class="flex gap-2 items-end">
+            <form method="GET" action="{{ route('admin.laporan.arus_kas') }}" class="flex flex-col sm:flex-row gap-2 items-end">
+                @if($usahas && $usahas->count() > 0)
+                <div>
+                    <label class="text-xs text-slate-300 block mb-2">Usaha</label>
+                    <select name="usaha_id" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer">
+                        @foreach($usahas as $usahaItem)
+                        <option value="{{ $usahaItem->id }}" {{ $usahaSelected == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
                 <div>
                     <label class="text-xs text-slate-300 block mb-2">Tahun</label>
-                    <select name="tahun" onchange="this.form.submit()" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer">
+                    <select name="tahun" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer">
                         @for($i = date('Y') - 5; $i <= date('Y') + 1; $i++)
                             <option value="{{ $i }}" @selected($tahun == $i)>{{ $i }}</option>
                         @endfor
                     </select>
                 </div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors font-semibold h-fit">Filter</button>
             </form>
         </div>
 

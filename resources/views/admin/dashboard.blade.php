@@ -2,10 +2,21 @@
 
 @section('content')
 <div class="p-4 sm:p-6 max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
         <h1 class="text-2xl font-bold text-white">Dashboard</h1>
-        <div class="text-slate-400 text-sm">
-            Periode: {{ Carbon\Carbon::now()->translatedFormat('F Y') }}
+        <div class="flex items-center gap-3">
+            @if($usahas && $usahas->count() > 0)
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="flex gap-2">
+                <select name="usaha_id" onchange="this.form.submit()" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer">
+                    @foreach($usahas as $usaha)
+                    <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                    @endforeach
+                </select>
+            </form>
+            @endif
+            <div class="text-slate-400 text-sm">
+                Periode: {{ Carbon\Carbon::now()->translatedFormat('F Y') }}
+            </div>
         </div>
     </div>
 

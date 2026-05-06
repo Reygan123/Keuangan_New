@@ -29,14 +29,30 @@
         @endif
 
         <div class="space-y-3">
-            <div class="relative">
-                <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-500" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input type="text" id="searchInput" placeholder="Cari label, tipe..."
-                    class="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700/60 text-white text-sm rounded-lg placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-colors">
+            <div class="flex flex-col sm:flex-row gap-3">
+                @if(count($usahas) > 1)
+                <select id="usahaFilter" class="bg-slate-800/50 border border-slate-700/60 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-colors min-w-[180px]">
+                    <option value="">Semua Usaha</option>
+                    @foreach($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                    @endforeach
+                </select>
+                @endif
+                <div class="relative flex-1">
+                    <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-500" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Cari label, tipe..."
+                        class="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700/60 text-white text-sm rounded-lg placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-colors">
+                </div>
+                <button onclick="applyFilter()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                    Filter
+                </button>
+                <button onclick="resetFilters()" class="px-3 py-2 bg-slate-700/50 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors">
+                    Reset
+                </button>
             </div>
 
             <div class="bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/60 overflow-hidden">
@@ -53,6 +69,11 @@
                                 <th
                                     class="px-4 py-2.5 text-left text-slate-300 font-medium text-xs uppercase tracking-tight">
                                     Tipe</th>
+                                @if(count($usahas) > 1)
+                                <th
+                                    class="px-4 py-2.5 text-left text-slate-300 font-medium text-xs uppercase tracking-tight hidden lg:table-cell">
+                                    Usaha</th>
+                                @endif
                                 <th
                                     class="px-4 py-2.5 text-center text-slate-300 font-medium text-xs uppercase tracking-tight">
                                     Aksi</th>
@@ -61,14 +82,21 @@
                         <tbody class="divide-y divide-slate-700/40">
                             @forelse($labels as $label)
                                 <tr class="searchable-row hover:bg-slate-700/20 transition-colors"
-                                    data-label="{{ $label->nama_label }}" data-type="{{ $label->tipe_utama }}"
-                                    data-desc="{{ $label->deskripsi ?? '' }}">
+                                    data-label="{{ $label->nama_label }}"
+                                    data-type="{{ $label->tipe_utama }}"
+                                    data-desc="{{ $label->deskripsi ?? '' }}"
+                                    data-usaha="{{ $label->usaha_id }}">
                                     <td class="px-4 py-2.5 text-slate-100 text-sm">{{ $label->nama_label }}</td>
                                     <td class="px-4 py-2.5 text-slate-400 text-xs">{{ $label->deskripsi ?? '—' }}</td>
                                     <td class="px-4 py-2.5">
                                         <span
                                             class="inline-block px-2 py-1 bg-slate-700/40 text-slate-300 text-xs rounded">{{ $label->tipe_utama }}</span>
                                     </td>
+                                    @if(count($usahas) > 1)
+                                    <td class="px-4 py-2.5 text-slate-400 text-xs hidden lg:table-cell">
+                                        {{ $label->usaha->nama ?? '-' }}
+                                    </td>
+                                    @endif
                                     <td class="px-4 py-2.5 text-center">
                                         <div class="inline-flex items-center gap-2">
                                             <button onclick="openEdit({{ json_encode($label) }})"
@@ -86,7 +114,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-6 text-center text-slate-500 text-sm">Belum ada label
+                                    <td colspan="{{ count($usahas) > 1 ? 5 : 4 }}" class="px-4 py-6 text-center text-slate-500 text-sm">Belum ada label
                                         transaksi</td>
                                 </tr>
                             @endforelse
@@ -102,6 +130,22 @@
             <form method="POST" action="{{ route('admin.label_transaksis.store') }}" class="p-4 space-y-3">
                 @csrf
                 <h3 class="text-base font-semibold text-white">Tambah Label Transaksi</h3>
+
+                @if(count($usahas) > 1)
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1.5 font-medium">Usaha</label>
+                    <select name="usaha_id" required
+                        class="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-colors">
+                        <option value="">-- Pilih Usaha --</option>
+                        @foreach ($usahas as $usaha)
+                            <option value="{{ $usaha->id }}">{{ $usaha->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @else
+                <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+                @endif
+
                 <div>
                     <label class="block text-xs text-slate-300 mb-1.5 font-medium">Nama Label</label>
                     <input name="nama_label" type="text" required
@@ -178,7 +222,6 @@
 
     <script>
         function openEdit(label) {
-
             if (!label || !label.id) {
                 console.error('Label data tidak valid:', label);
                 return;
@@ -204,18 +247,49 @@
             }
         }
 
-        document.getElementById('searchInput').addEventListener('keyup', function(e) {
-            const query = e.target.value.toLowerCase();
+        function applyFilter() {
+            const usahaFilter = document.getElementById('usahaFilter');
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const usahaId = usahaFilter ? usahaFilter.value : '';
             const rows = document.querySelectorAll('.searchable-row');
 
             rows.forEach(row => {
                 const label = row.dataset.label.toLowerCase();
                 const type = row.dataset.type.toLowerCase();
                 const desc = row.dataset.desc.toLowerCase();
-                const match = label.includes(query) || type.includes(query) || desc.includes(query);
-                row.style.display = match ? '' : 'none';
+                const rowUsaha = row.dataset.usaha;
+
+                const searchMatch = label.includes(searchValue) || type.includes(searchValue) || desc.includes(searchValue);
+                const usahaMatch = !usahaId || rowUsaha == usahaId;
+
+                row.style.display = searchMatch && usahaMatch ? '' : 'none';
             });
-        });
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            const usahaFilter = document.getElementById('usahaFilter');
+            if (usahaFilter) {
+                usahaFilter.value = '';
+            }
+            applyFilter();
+        }
+
+        function filterByUsaha() {
+            const usahaId = document.getElementById('usahaFilter').value;
+            if (usahaId) {
+                window.location.href = '{{ route("admin.label_transaksis.index") }}?usaha_id=' + usahaId;
+            } else {
+                applyFilter();
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keyup', applyFilter);
+
+        const usahaFilter = document.getElementById('usahaFilter');
+        if (usahaFilter) {
+            usahaFilter.addEventListener('change', filterByUsaha);
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             const editModal = document.getElementById('editModal');

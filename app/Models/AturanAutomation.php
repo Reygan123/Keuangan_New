@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AturanAutomation extends Model
 {
     protected $fillable = [
-        'label_id', 'akun_debit_id', 'akun_kredit_id'
+        'label_id', 'akun_debit_id', 'akun_kredit_id', 'usaha_id'
     ];
 
     public function label()
@@ -23,5 +23,10 @@ class AturanAutomation extends Model
     public function akunKredit()
     {
         return $this->belongsTo(Akun::class, 'akun_kredit_id');
+    }
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
     }
 }

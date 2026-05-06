@@ -7,42 +7,85 @@ use App\Models\PembayaranDimuka;
 use App\Models\AmortisasiLog;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
+use App\Models\Usaha;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PembayaranDimukaController extends Controller
 {
-    // ... (metode index, create, edit, update, riwayat tidak diubah)
 
-    public function index()
+    public function index(Request $request)
     {
-        $pembayaranDimuka = PembayaranDimuka::with(['akunAset', 'akunBeban', 'amortisasiLog'])->get();
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+
+        $pembayaranDimukaQuery = PembayaranDimuka::with(['akunAset', 'akunBeban', 'amortisasiLog']);
+
+        if ($selectedUsahaId) {
+            session(['current_usaha_id' => $selectedUsahaId]);
+            $pembayaranDimukaQuery->where('usaha_id', $selectedUsahaId);
+        } else {
+            $pembayaranDimukaQuery->where('usaha_id', -1);
+        }
+
+        $pembayaranDimuka = $pembayaranDimukaQuery->get();
 
         $pembayaranDimuka->each(function ($item) {
             $item->nilai_buku = $item->jumlah_nominal - $item->total_diamortisasi;
         });
 
-        return view('admin.pembayaran-dimuka.index', compact('pembayaranDimuka'));
+        return view('admin.pembayaran-dimuka.index', compact('pembayaranDimuka', 'usahas', 'selectedUsahaId'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $akunAset = Akun::where('klasifikasi', 'ASET')
-            ->where('sub_klasifikasi', 'LANCAR')
-            ->where('name', 'like', '%muka%')
-            ->get();
+        $currentUser = Auth::user();
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
 
-        $akunBeban = Akun::where('klasifikasi', 'BEBAN')->get();
+        if (!$selectedUsahaId && $usahas->count() > 0) {
+            $selectedUsahaId = $usahas->first()->id;
+        }
 
-        $akunKas = Akun::where('klasifikasi', 'ASET')
-            ->get();
+        $akunAset = collect();
+        $akunBeban = collect();
+        $akunKas = collect();
 
-        return view('admin.pembayaran-dimuka.create', compact('akunAset', 'akunBeban', 'akunKas'));
+        if ($selectedUsahaId) {
+            $akunAset = Akun::where('usaha_id', $selectedUsahaId)
+                ->where('klasifikasi', 'ASET')
+                ->where('sub_klasifikasi', 'LANCAR')
+                ->where('name', 'like', '%muka%')
+                ->get();
+
+            $akunBeban = Akun::where('usaha_id', $selectedUsahaId)
+                ->where('klasifikasi', 'BEBAN')
+                ->get();
+
+            $akunKas = Akun::where('usaha_id', $selectedUsahaId)
+                ->where('klasifikasi', 'ASET')
+                ->get();
+        }
+
+        return view('admin.pembayaran-dimuka.create', compact('akunAset', 'akunBeban', 'akunKas', 'usahas', 'selectedUsahaId'));
     }
 
     public function store(Request $request)
     {
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
+        $currentUser = Auth::user();
+
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.pembayaran-dimuka.index')->with('error', 'Usaha tidak dipilih');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $selectedUsahaId)->exists()) {
+            return redirect()->route('admin.pembayaran-dimuka.index')->with('error', 'Anda tidak memiliki akses ke usaha ini');
+        }
+
         $validated = $request->validate([
             'nama_pembayaran' => 'required|string|max:255',
             'tgl_transaksi' => 'required|date',
@@ -69,37 +112,56 @@ class PembayaranDimukaController extends Controller
             'nominal_bulanan' => round($nominal_bulanan, 2),
             'akun_aset_id' => $validated['akun_aset_id'],
             'akun_beban_id' => $validated['akun_beban_id'],
-            'akun_kas_id' => $validated['akun_kas_id']
+            'akun_kas_id' => $validated['akun_kas_id'],
+            'usaha_id' => $selectedUsahaId
         ]);
 
-        // 1. Buat Jurnal Umum
         $this->buatJurnalPembayaranAwal($pembayaran);
 
-        // 2. REKALKULASI Saldo Akun yang Terpengaruh (FIX BUG SALDO)
-        $this->recalculateAkunSaldo($pembayaran->akun_aset_id);
-        $this->recalculateAkunSaldo($pembayaran->akun_kas_id);
+        $this->recalculateAkunSaldo($pembayaran->akun_aset_id, $selectedUsahaId);
+        $this->recalculateAkunSaldo($pembayaran->akun_kas_id, $selectedUsahaId);
 
-        return redirect()->route('admin.pembayaran-dimuka.index')->with('success', 'Pembayaran di muka berhasil ditambahkan.');
+        return redirect()->route('admin.pembayaran-dimuka.index', ['usaha_id' => $selectedUsahaId])->with('success', 'Pembayaran di muka berhasil ditambahkan.');
     }
 
     public function edit($id)
     {
         $pembayaran = PembayaranDimuka::findOrFail($id);
-        $akunAset = Akun::where('klasifikasi', 'ASET')
+
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $pembayaran->usaha_id)->exists()) {
+            abort(403);
+        }
+
+        $akunAset = Akun::where('usaha_id', $pembayaran->usaha_id)
+            ->where('klasifikasi', 'ASET')
             ->where('sub_klasifikasi', 'LANCAR')
             ->where('name', 'like', '%dibayar di muka%')
             ->get();
 
-        $akunBeban = Akun::where('klasifikasi', 'BEBAN')->get();
-
-        $akunKas = Akun::where('klasifikasi', 'ASET')
+        $akunBeban = Akun::where('usaha_id', $pembayaran->usaha_id)
+            ->where('klasifikasi', 'BEBAN')
             ->get();
 
-        return view('admin.pembayaran-dimuka.edit', compact('pembayaran', 'akunAset', 'akunBeban', 'akunKas'));
+        $akunKas = Akun::where('usaha_id', $pembayaran->usaha_id)
+            ->where('klasifikasi', 'ASET')
+            ->get();
+
+        $usahas = $currentUser->usahas()->get();
+        $selectedUsahaId = $pembayaran->usaha_id;
+
+        return view('admin.pembayaran-dimuka.edit', compact('pembayaran', 'akunAset', 'akunBeban', 'akunKas', 'usahas', 'selectedUsahaId'));
     }
 
     public function update(Request $request, $id)
     {
+        $pembayaran = PembayaranDimuka::findOrFail($id);
+
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $pembayaran->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'nama_pembayaran' => 'required|string|max:255',
             'tgl_transaksi' => 'required|date',
@@ -110,11 +172,6 @@ class PembayaranDimukaController extends Controller
             'akun_beban_id' => 'required|exists:akuns,id',
             'akun_kas_id' => 'required|exists:akuns,id'
         ]);
-
-        $pembayaran = PembayaranDimuka::findOrFail($id);
-        // Tangkap ID akun lama sebelum update (jika akun berubah)
-        // $oldAkunAsetId = $pembayaran->akun_aset_id;
-        // $oldAkunKasId = $pembayaran->akun_kas_id;
 
         $periode_mulai = Carbon::parse($validated['periode_mulai']);
         $periode_akhir = Carbon::parse($validated['periode_akhir']);
@@ -134,39 +191,34 @@ class PembayaranDimukaController extends Controller
             'akun_kas_id' => $validated['akun_kas_id']
         ]);
 
-        // Jika terjadi perubahan pada data transaksi, Anda harus menghapus dan membuat ulang jurnal,
-        // lalu re-kalkulasi semua akun yang terlibat (baik yang lama maupun yang baru).
-        // Untuk saat ini, kita anggap hanya data PembayaranDimuka yang diupdate, bukan transaksi jurnalnya.
-        // Jika jurnal juga perlu diupdate, Anda harus memanggil hapusJurnalTerkait() diikuti buatJurnalPembayaranAwal(), lalu recalculate.
-
-        return redirect()->route('admin.pembayaran-dimuka.index')->with('success', 'Pembayaran di muka berhasil diperbarui.');
+        return redirect()->route('admin.pembayaran-dimuka.index', ['usaha_id' => $pembayaran->usaha_id])->with('success', 'Pembayaran di muka berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $pembayaran = PembayaranDimuka::findOrFail($id);
 
-        // Ambil ID akun yang terpengaruh sebelum menghapus jurnal
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $pembayaran->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $akunIdsToRecalculate = [
             $pembayaran->akun_aset_id,
             $pembayaran->akun_kas_id,
-            $pembayaran->akun_beban_id // mungkin sudah diamortisasi
+            $pembayaran->akun_beban_id
         ];
 
-        // 1. Hapus Jurnal Umum Terkait
         $this->hapusJurnalTerkait($pembayaran);
 
-        // 2. Hapus Log dan Data Utama
         $pembayaran->amortisasiLog()->delete();
         $pembayaran->delete();
 
-        // 3. REKALKULASI Saldo Akun yang Terpengaruh (FIX BUG SALDO)
-        // Recalculate semua akun unik yang terlibat
         foreach (array_unique($akunIdsToRecalculate) as $akunId) {
-            $this->recalculateAkunSaldo($akunId);
+            $this->recalculateAkunSaldo($akunId, $pembayaran->usaha_id);
         }
 
-        return redirect()->route('admin.pembayaran-dimuka.index')->with('success', 'Pembayaran di muka berhasil dihapus.');
+        return redirect()->route('admin.pembayaran-dimuka.index', ['usaha_id' => $pembayaran->usaha_id])->with('success', 'Pembayaran di muka berhasil dihapus.');
     }
 
     private function buatJurnalPembayaranAwal($pembayaran)
@@ -178,7 +230,8 @@ class PembayaranDimukaController extends Controller
             'debit' => $pembayaran->jumlah_nominal,
             'kredit' => 0,
             'referensi_transaksi_id' => $pembayaran->id,
-            'referensi_transaksi_tipe' => get_class($pembayaran)
+            'referensi_transaksi_tipe' => get_class($pembayaran),
+            'usaha_id' => $pembayaran->usaha_id
         ]);
 
         JurnalUmum::create([
@@ -188,22 +241,23 @@ class PembayaranDimukaController extends Controller
             'debit' => 0,
             'kredit' => $pembayaran->jumlah_nominal,
             'referensi_transaksi_id' => $pembayaran->id,
-            'referensi_transaksi_tipe' => get_class($pembayaran)
+            'referensi_transaksi_tipe' => get_class($pembayaran),
+            'usaha_id' => $pembayaran->usaha_id
         ]);
     }
 
     private function hapusJurnalTerkait($pembayaran)
     {
-        // Hapus Jurnal transaksi awal
         JurnalUmum::where('referensi_transaksi_id', $pembayaran->id)
             ->where('referensi_transaksi_tipe', get_class($pembayaran))
+            ->where('usaha_id', $pembayaran->usaha_id)
             ->delete();
 
-        // Hapus Jurnal amortisasi
         $amortisasiLogIds = $pembayaran->amortisasiLog()->pluck('id');
 
         JurnalUmum::where('sumber_log_type', 'amortisasi')
             ->whereIn('sumber_log_id', $amortisasiLogIds)
+            ->where('usaha_id', $pembayaran->usaha_id)
             ->delete();
     }
 
@@ -211,12 +265,19 @@ class PembayaranDimukaController extends Controller
     {
         $bulan = $request->input('bulan', now()->format('Y-m'));
         $tanggal_amortisasi = Carbon::parse($bulan)->endOfMonth();
+        $selectedUsahaId = $request->input('usaha_id', session('current_usaha_id'));
 
-        $pembayaranAktif = PembayaranDimuka::with(['amortisasiLog'])->where('status', 'AKTIF')->get();
+        if (!$selectedUsahaId) {
+            return redirect()->route('admin.pembayaran-dimuka.index')->with('error', 'Usaha tidak dipilih');
+        }
+
+        $pembayaranAktif = PembayaranDimuka::with(['amortisasiLog'])
+            ->where('status', 'AKTIF')
+            ->where('usaha_id', $selectedUsahaId)
+            ->get();
 
         $totalAmortisasi = 0;
         $itemDiproses = 0;
-        $akunIdsRecalculated = [];
 
         foreach ($pembayaranAktif as $pembayaran) {
             if ($this->perluAmortisasi($pembayaran, $tanggal_amortisasi)) {
@@ -226,12 +287,10 @@ class PembayaranDimukaController extends Controller
                     'jumlah_amortisasi' => $pembayaran->nominal_bulanan
                 ]);
 
-                // 1. Buat Jurnal Amortisasi
                 $this->buatJurnalAmortisasi($amortisasiLog, $pembayaran);
 
-                // 2. REKALKULASI Saldo Akun yang Terpengaruh (FIX BUG SALDO)
-                $this->recalculateAkunSaldo($pembayaran->akun_beban_id);
-                $this->recalculateAkunSaldo($pembayaran->akun_aset_id);
+                $this->recalculateAkunSaldo($pembayaran->akun_beban_id, $selectedUsahaId);
+                $this->recalculateAkunSaldo($pembayaran->akun_aset_id, $selectedUsahaId);
 
                 $pembayaran->total_diamortisasi += $pembayaran->nominal_bulanan;
 
@@ -246,7 +305,7 @@ class PembayaranDimukaController extends Controller
             }
         }
 
-        return redirect()->route('admin.pembayaran-dimuka.index')
+        return redirect()->route('admin.pembayaran-dimuka.index', ['usaha_id' => $selectedUsahaId])
             ->with('success', "Amortisasi berhasil diproses. $itemDiproses item diamortisasi dengan total Rp " . number_format($totalAmortisasi, 2, ',', '.'));
     }
 
@@ -277,8 +336,9 @@ class PembayaranDimukaController extends Controller
             'kredit' => 0,
             'referensi_transaksi_id' => $amortisasiLog->id,
             'referensi_transaksi_tipe' => 'amortisasi',
-            'sumber_log_type' => 'amortisasi', // BARU
-            'sumber_log_id' => $amortisasiLog->id // BARU
+            'sumber_log_type' => 'amortisasi',
+            'sumber_log_id' => $amortisasiLog->id,
+            'usaha_id' => $pembayaran->usaha_id
         ]);
 
         $jurnalAset = JurnalUmum::create([
@@ -289,32 +349,35 @@ class PembayaranDimukaController extends Controller
             'kredit' => $amortisasiLog->jumlah_amortisasi,
             'referensi_transaksi_id' => $amortisasiLog->id,
             'referensi_transaksi_tipe' => 'amortisasi',
-            'sumber_log_type' => 'amortisasi', // BARU
-            'sumber_log_id' => $amortisasiLog->id // BARU
+            'sumber_log_type' => 'amortisasi',
+            'sumber_log_id' => $amortisasiLog->id,
+            'usaha_id' => $pembayaran->usaha_id
         ]);
 
         $amortisasiLog->update(['jurnal_umum_id' => $jurnalBeban->id]);
     }
 
-    /**
-     * Menghitung ulang total saldo dari Jurnal Umum dan menyimpannya ke kolom saldo di tabel Akuns.
-     * @param int $akunId
-     * @return void
-     */
-    protected function recalculateAkunSaldo($akunId)
+    protected function recalculateAkunSaldo($akunId, $usahaId)
     {
         $saldo = JurnalUmum::where('akun_id', $akunId)
+            ->where('usaha_id', $usahaId)
             ->selectRaw('COALESCE(SUM(debit), 0) - COALESCE(SUM(kredit), 0) AS balance')
             ->value('balance');
 
         if ($saldo !== null) {
-            Akun::where('id', $akunId)->update(['saldo' => $saldo]);
+            Akun::where('id', $akunId)->where('usaha_id', $usahaId)->update(['saldo' => $saldo]);
         }
     }
 
     public function riwayat($id)
     {
         $pembayaran = PembayaranDimuka::with(['amortisasiLog.jurnalUmum'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if (!$currentUser->usahas()->where('usahas.id', $pembayaran->usaha_id)->exists()) {
+            abort(403);
+        }
+
         $riwayat = $pembayaran->amortisasiLog;
 
         return view('admin.pembayaran-dimuka.riwayat', compact('pembayaran', 'riwayat'));

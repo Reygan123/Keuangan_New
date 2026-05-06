@@ -14,13 +14,24 @@
         <div class="mb-4 p-3 bg-slate-700/50 text-slate-100 rounded-lg text-sm border border-slate-600">{{ session('success') }}</div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-4 p-3 bg-red-900/50 text-red-100 rounded-lg text-sm border border-red-600">{{ session('error') }}</div>
+    @endif
+
     <div class="mb-4 flex flex-col sm:flex-row gap-3">
-        <div class="flex-1">
-            <input type="text" id="searchInput" placeholder="Cari nama, email, atau telepon..." class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+        <div class="flex-1 flex gap-3">
+            <select id="usahaFilter" class="px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 min-w-[180px]">
+                <option value="">Semua Usaha</option>
+                @foreach($usahas as $usaha)
+                    <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                @endforeach
+            </select>
+            <input type="text" id="searchInput" placeholder="Cari nama, email, atau telepon..." class="flex-1 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
         </div>
-        <button onclick="resetSearch()" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 text-slate-100 rounded-lg text-sm font-medium transition-colors">
-            Reset
-        </button>
+        <div class="flex gap-2">
+            <button onclick="applyFilter()" class="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-100 rounded-lg text-sm font-medium transition-colors">Filter</button>
+            <button onclick="resetSearch()" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 text-slate-100 rounded-lg text-sm font-medium transition-colors">Reset</button>
+        </div>
     </div>
 
     <div class="overflow-x-auto bg-slate-800/50 rounded-lg border border-slate-700">
@@ -31,19 +42,27 @@
                     <th class="px-3 sm:px-4 py-3 text-left font-semibold text-slate-200">Email</th>
                     <th class="hidden sm:table-cell px-3 sm:px-4 py-3 text-left font-semibold text-slate-200">Telepon</th>
                     <th class="hidden lg:table-cell px-3 sm:px-4 py-3 text-left font-semibold text-slate-200">Alamat</th>
+                    @if(count($usahas) > 1)
+                    <th class="hidden lg:table-cell px-3 sm:px-4 py-3 text-left font-semibold text-slate-200">Usaha</th>
+                    @endif
                     <th class="px-3 sm:px-4 py-3 text-center font-semibold text-slate-200">Aksi</th>
                 </tr>
             </thead>
             <tbody id="supplierTable">
                 @foreach ($suppliers as $supplier)
-                    <tr class="border-b border-slate-700 hover:bg-slate-700/30 transition-colors supplier-row">
+                    <tr class="border-b border-slate-700 hover:bg-slate-700/30 transition-colors supplier-row" data-search="{{ strtolower($supplier->nama . ' ' . $supplier->email . ' ' . $supplier->telepon) }}" data-usaha="{{ $supplier->usaha_id }}">
                         <td class="px-3 sm:px-4 py-2 sm:py-3 text-slate-200">{{ $supplier->nama }}</td>
                         <td class="px-3 sm:px-4 py-2 sm:py-3 text-slate-300 text-xs sm:text-sm break-all">{{ $supplier->email }}</td>
                         <td class="hidden sm:table-cell px-3 sm:px-4 py-2 sm:py-3 text-slate-300">{{ $supplier->telepon }}</td>
                         <td class="hidden lg:table-cell px-3 sm:px-4 py-2 sm:py-3 text-slate-400 truncate">{{ $supplier->alamat }}</td>
+                        @if(count($usahas) > 1)
+                        <td class="hidden lg:table-cell px-3 sm:px-4 py-2 sm:py-3 text-slate-400">
+                            {{ $supplier->usaha->nama ?? '-' }}
+                        </td>
+                        @endif
                         <td class="px-3 sm:px-4 py-2 sm:py-3 text-center">
                             <div class="flex justify-center gap-2">
-                                <button onclick="editSupplier({{ $supplier }})" class="px-2 sm:px-3 py-1 bg-amber-600/90 hover:bg-amber-600 active:bg-amber-700 text-slate-100 rounded text-xs font-medium transition-colors">
+                                <button onclick="editSupplier({{ json_encode($supplier) }})" class="px-2 sm:px-3 py-1 bg-amber-600/90 hover:bg-amber-600 active:bg-amber-700 text-slate-100 rounded text-xs font-medium transition-colors">
                                     <svg class="inline w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     Edit
                                 </button>
@@ -68,6 +87,21 @@
     <form method="POST" action="{{ route('admin.suppliers.store') }}" class="space-y-4">
         @csrf
         <h2 class="text-lg sm:text-xl font-semibold text-slate-200 mb-4">Tambah Supplier</h2>
+
+        @if(count($usahas) > 1)
+        <div>
+            <label class="block text-xs sm:text-sm text-slate-300 mb-2">Usaha</label>
+            <select name="usaha_id" class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500" required>
+                <option value="">Pilih Usaha</option>
+                @foreach($usahas as $usaha)
+                    <option value="{{ $usaha->id }}">{{ $usaha->nama }}</option>
+                @endforeach
+            </select>
+        </div>
+        @else
+        <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+        @endif
+
         <div>
             <label class="block text-xs sm:text-sm text-slate-300 mb-2">Nama</label>
             <input name="nama" placeholder="Nama" class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500" required>
@@ -139,21 +173,27 @@ function editSupplier(data) {
     document.getElementById('editModal').showModal()
 }
 
-function filterSuppliers() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase()
+function applyFilter() {
+    const usahaId = document.getElementById('usahaFilter').value
+    const searchValue = document.getElementById('searchInput').value.toLowerCase()
     const rows = document.querySelectorAll('.supplier-row')
 
     rows.forEach(row => {
+        const usahaMatch = !usahaId || row.dataset.usaha == usahaId
         const text = row.textContent.toLowerCase()
-        row.style.display = text.includes(searchTerm) ? '' : 'none'
+        const searchMatch = text.includes(searchValue)
+
+        row.style.display = usahaMatch && searchMatch ? '' : 'none'
     })
 }
 
 function resetSearch() {
     document.getElementById('searchInput').value = ''
-    filterSuppliers()
+    document.getElementById('usahaFilter').value = ''
+    document.querySelectorAll('.supplier-row').forEach(row => row.style.display = '')
 }
 
-document.getElementById('searchInput')?.addEventListener('keyup', filterSuppliers)
+document.getElementById('searchInput').addEventListener('keyup', applyFilter)
+document.getElementById('usahaFilter').addEventListener('change', applyFilter)
 </script>
 @endsection

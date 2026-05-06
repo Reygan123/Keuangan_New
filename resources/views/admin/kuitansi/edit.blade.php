@@ -3,7 +3,15 @@
 @section('content')
 <div class="min-h-screen bg-slate-900">
     <div class="p-4 md:p-6 lg:p-8">
-        <h1 class="text-2xl md:text-3xl font-bold text-slate-100 mb-6">Edit Kuitansi</h1>
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Edit Kuitansi</h1>
+            @if($usahas->count() > 1)
+            <div class="flex items-center gap-2">
+                <span class="text-slate-400 text-sm">Usaha:</span>
+                <span class="text-slate-200 text-sm font-medium">{{ $currentUsaha->nama }}</span>
+            </div>
+            @endif
+        </div>
 
         <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
             <form action="{{ route('admin.kuitansi.update', $kuitansi->id) }}" method="POST">
@@ -46,7 +54,7 @@
                 </div>
 
                 <div class="px-6 py-4 border-t border-slate-700 bg-slate-700/30 flex gap-3 justify-end">
-                    <a href="{{ route('admin.kuitansi.index') }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Batal</a>
+                    <a href="{{ route('admin.kuitansi.index', ['usaha_id' => $currentUsaha->id]) }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Batal</a>
                     <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">Update</button>
                 </div>
             </form>

@@ -7,10 +7,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-slate-100">{{ $title }}</h1>
-            <a href="{{ route('admin.kasbank.create', $tipe) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+            @if($selectedUsahaId)
+            <a href="{{ route('admin.kasbank.create', ['tipe' => $tipe, 'usaha_id' => $selectedUsahaId]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Tambah {{ $tipe == 'PENERIMAAN' ? 'Penerimaan' : 'Pengeluaran' }}
             </a>
+            @endif
         </div>
 
         @if (session('success'))
@@ -19,8 +21,25 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-4 p-3 bg-red-500/20 border border-red-500/40 text-red-300 text-sm rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4 md:p-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-2">Usaha</label>
+                    <form method="GET" action="{{ route('admin.kasbank.index', $tipe) }}" id="filterForm">
+                        <select name="usaha_id" onchange="document.getElementById('filterForm').submit()" class="w-full bg-slate-700/50 border border-slate-600/50 text-slate-100 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
+                            <option value="">-- Pilih Usaha --</option>
+                            @foreach($usahas as $usaha)
+                            <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-2">Cari Berdasarkan Label</label>
                     <input type="text" id="searchLabel" placeholder="Ketik label..." class="w-full bg-slate-700/50 border border-slate-600/50 text-slate-100 text-sm rounded px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
@@ -37,6 +56,7 @@
             </div>
         </div>
 
+        @if($selectedUsahaId)
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -87,6 +107,11 @@
                 </table>
             </div>
         </div>
+        @else
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-8 text-center">
+            <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk melihat transaksi kas/bank</p>
+        </div>
+        @endif
     </div>
 </div>
 

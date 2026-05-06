@@ -15,7 +15,13 @@ class Penyusutan extends Model
         'jumlah_penyusutan',
         'akun_beban_id',
         'akun_akumulasi_id',
+        'usaha_id',
     ];
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
+    }
 
     public function detailAset()
     {

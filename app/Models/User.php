@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -14,7 +15,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', // 👈 tambahkan ini
+        'role',
     ];
 
     protected $hidden = [
@@ -33,5 +34,10 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function usahas()
+    {
+        return $this->belongsToMany(Usaha::class, 'usaha_user')->withPivot('role');
     }
 }

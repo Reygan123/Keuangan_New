@@ -7,8 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Transaksi extends Model
 {
     protected $fillable = [
-        'label_id', 'pelanggan_id', 'supplier_id', 'akun_payment_id', 'akun_lawan_id', 'tanggal', 'jumlah', 'keterangan'
+        'label_id', 'pelanggan_id', 'supplier_id', 'akun_payment_id', 'akun_lawan_id', 'tanggal', 'jumlah', 'keterangan', 'usaha_id'
     ];
+
+    public function usaha()
+    {
+        return $this->belongsTo(Usaha::class);
+    }
 
     public function label()
     {

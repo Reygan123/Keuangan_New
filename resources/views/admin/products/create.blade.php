@@ -8,6 +8,26 @@
         @csrf
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @if(count($usahas) > 1)
+            <div class="sm:col-span-2">
+                <label for="usaha_id" class="text-slate-300 block mb-2 text-sm font-medium">Usaha</label>
+                <select name="usaha_id" id="usaha_id" required
+                        class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('usaha_id') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
+                    <option value="">-- Pilih Usaha --</option>
+                    @foreach ($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ old('usaha_id') == $usaha->id ? 'selected' : '' }}>
+                            {{ $usaha->nama }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('usaha_id')
+                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            @else
+            <input type="hidden" name="usaha_id" id="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+            @endif
+
             <div class="sm:col-span-2">
                 <label for="nama" class="text-slate-300 block mb-2 text-sm font-medium">Nama Produk</label>
                 <input type="text" name="nama" id="nama" value="{{ old('nama') }}" required
@@ -22,25 +42,18 @@
                 <select name="kategori_hpp_id" id="kategori_hpp_id" required
                         class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('kategori_hpp_id') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
                     <option value="">-- Pilih Kategori --</option>
-                    @foreach ($kategoriHpps as $kategori)
-                        <option value="{{ $kategori->id }}" {{ old('kategori_hpp_id') == $kategori->id ? 'selected' : '' }}>
-                            {{ $kategori->name }}
-                        </option>
-                    @endforeach
+                    @if(old('kategori_hpp_id') && count($kategoriHpps) > 0)
+                        @foreach ($kategoriHpps as $kategori)
+                            <option value="{{ $kategori->id }}" {{ old('kategori_hpp_id') == $kategori->id ? 'selected' : '' }}>
+                                {{ $kategori->name }}
+                            </option>
+                        @endforeach
+                    @endif
                 </select>
                 @error('kategori_hpp_id')
                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            {{-- <div>
-                <label for="hpp_unit_rata2" class="text-slate-300 block mb-2 text-sm font-medium">HPP Unit Rata-Rata</label>
-                <input type="number" name="hpp_unit_rata2" id="hpp_unit_rata2" value="{{ old('hpp_unit_rata2', 0) }}" step="any" min="0"
-                        class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('hpp_unit_rata2') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                @error('hpp_unit_rata2')
-                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div> --}}
 
             <div>
                 <label for="akun_pendapatan_id" class="text-slate-300 block mb-2 text-sm font-medium">Akun Pendapatan</label>
@@ -99,15 +112,6 @@
                     <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            {{-- <div>
-                <label for="stok" class="text-slate-300 block mb-2 text-sm font-medium">Stok Awal</label>
-                <input type="number" name="stok" id="stok" value="{{ old('stok', 0) }}" required min="0"
-                        class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('stok') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                @error('stok')
-                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div> --}}
         </div>
 
         <div class="flex gap-3 pt-4">
@@ -120,4 +124,43 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const usahaSelect = document.getElementById('usaha_id');
+    const kategoriSelect = document.getElementById('kategori_hpp_id');
+
+    if (usahaSelect) {
+        usahaSelect.addEventListener('change', function() {
+            const usahaId = this.value;
+
+            if (!usahaId) {
+                kategoriSelect.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+                return;
+            }
+
+            fetch(`/admin/kategori-hpp-by-usaha-product?usaha_id=${usahaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    let options = '<option value="">-- Pilih Kategori --</option>';
+
+                    data.forEach(kategori => {
+                        const selected = kategori.id == '{{ old("kategori_hpp_id") }}' ? 'selected' : '';
+                        options += `<option value="${kategori.id}" ${selected}>${kategori.name}</option>`;
+                    });
+
+                    kategoriSelect.innerHTML = options;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        const currentUsahaId = usahaSelect.value;
+        if (currentUsahaId) {
+            usahaSelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
 @endsection

@@ -21,8 +21,32 @@
             </div>
         @endif
 
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4 mb-6">
+            <form method="GET" action="{{ route('admin.pembayaran-dimuka.create') }}" class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <label class="block text-slate-400 text-xs font-semibold mb-1">Pilih Usaha</label>
+                    <select name="usaha_id" onchange="this.form.submit()" class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        <option value="">-- Pilih Usaha --</option>
+                        @foreach($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </form>
+            @if($selectedUsahaId)
+            <p class="text-slate-300 text-xs mt-2">Pembayaran akan dicatat untuk usaha: <span class="font-semibold">{{ $usahas->where('id', $selectedUsahaId)->first()->nama ?? '' }}</span></p>
+            @endif
+        </div>
+
+        @if(!$selectedUsahaId)
+        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-8 text-center">
+            <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk membuat pembayaran di muka</p>
+        </div>
+        @else
         <form action="{{ route('admin.pembayaran-dimuka.store') }}" method="POST" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-6 shadow-lg">
             @csrf
+            <input type="hidden" name="usaha_id" value="{{ $selectedUsahaId }}">
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Nama Pembayaran <span class="text-red-400">*</span></label>
@@ -85,12 +109,13 @@
                     <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                     Simpan
                 </button>
-                <a href="{{ route('admin.pembayaran-dimuka.index') }}" class="flex items-center bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <a href="{{ route('admin.pembayaran-dimuka.index', ['usaha_id' => $selectedUsahaId]) }}" class="flex items-center bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     Batal
                 </a>
             </div>
         </form>
+        @endif
     </div>
 </div>
 @endsection
