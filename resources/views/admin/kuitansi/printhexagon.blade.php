@@ -10,7 +10,7 @@ body {
     font-size: 13px;
     color: #333;
     padding: 120px 34px 0px 34px;
-    position: relative;
+    position: relative; 
 }
 
 
@@ -19,22 +19,22 @@ body {
     position: absolute;
     right: -30px;
     top: 120px;
-    width: 300px;
+    width: 600px;
     opacity: 0.90;
     margin-top: -180px;
-    margin-right: -10px;
+    margin-right: -16px;
 }
 
 /* HEADER */
 .header {
     width: 100%;
-    margin-bottom: 60px;
-     margin-top: -50px;
+    margin-bottom: 30px;
+     margin-top: -120px;
 }
 
 .left {
     float: left;
-    margin-top: -50px;
+    margin-top: -10px;
 }
 
 .right {
@@ -174,12 +174,12 @@ body {
 
    
 
-<img src="{{ public_path('gambar/transjatidiri.png') }}" class="watermark">
+<img src="{{ public_path('gambar/transhexagon.png') }}" class="watermark">
 
 <!-- HEADER -->
 <div class="header">
     <div class="left">
-        <img src="{{ public_path('gambar/logojatidari.png') }}" style="height:150px;"> 
+        <img src="{{ public_path('gambar/logohexagon.png') }}" style="height:100px;"> 
     </div>
 
     <div class="right">
@@ -260,7 +260,7 @@ body {
 
 <!-- FOOTER ICON -->
 <div class="footer">
-    <img src="{{ public_path('gambar/footer.png') }}" style="width:100%;">
+    <img src="{{ public_path('gambar/footerhexagon.png') }}" style="width:100%;">
 </div>
 
 

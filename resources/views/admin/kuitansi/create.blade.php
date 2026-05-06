@@ -25,7 +25,7 @@
                 <div class="p-6 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Transaksi <span class="text-red-400">*</span></label>
-                        <select name="transaksi_id" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                        <select name="transaksi_id" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" >
                             <option value="">Pilih Transaksi</option>
                             @foreach($transaksis as $transaksi)
                             <option value="{{ $transaksi->id }}">{{ $transaksi->keterangan }} - {{ \Carbon\Carbon::parse($transaksi->tanggal)->format('d/m/Y') }}</option>
@@ -35,27 +35,27 @@
 
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Kuitansi <span class="text-red-400">*</span></label>
-                        <input type="text" name="nomor_kuitansi" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                        <input type="text" name="nomor_kuitansi" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" >
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Tanggal Pembayaran <span class="text-red-400">*</span></label>
-                        <input type="date" name="tanggal_pembayaran" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                        <input type="date" name="tanggal_pembayaran" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" >
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Metode Pembayaran <span class="text-red-400">*</span></label>
-                        <input type="text" name="metode_pembayaran" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                        <input type="text" name="metode_pembayaran" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" >
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Jumlah Dibayar <span class="text-red-400">*</span></label>
-                        <input type="number" name="jumlah_dibayar" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                        <input type="number" name="jumlah_dibayar" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" >
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Tanda Tangan Penerima <span class="text-red-400">*</span></label>
-                        <input type="text" name="tanda_tangan_penerima" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                        <input type="text" name="tanda_tangan_penerima" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" >
                     </div>
                 </div>
 

@@ -61,44 +61,48 @@ class KuitansiController extends Controller
         return view('admin.kuitansi.create', compact('transaksis', 'usahas', 'currentUsaha'));
     }
 
-    public function store(Request $request)
-    {
-        $currentUser = Auth::user();
-        $selectedUsahaId = $request->get('usaha_id');
-        $currentUsaha = null;
+   public function store(Request $request)
+{
+    $currentUser = Auth::user();
+    $selectedUsahaId = $request->get('usaha_id');
 
-        if ($selectedUsahaId) {
-            $currentUsaha = $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first();
-        } else {
-            $currentUsaha = $currentUser->usahas()->first();
+    $currentUsaha = $selectedUsahaId
+        ? $currentUser->usahas()->where('usahas.id', $selectedUsahaId)->first()
+        : $currentUser->usahas()->first();
+
+    if (!$currentUsaha) {
+        return back()->with('error', 'Pilih usaha terlebih dahulu')->withInput();
+    }
+
+    $validated = $request->validate([
+        'transaksi_id' => 'nullable|exists:transaksis,id',
+        'nomor_kuitansi' => 'nullable|string|unique:kuitansis,nomor_kuitansi',
+        'tanggal_pembayaran' => 'nullable|date',
+        'metode_pembayaran' => 'nullable|string',
+        'jumlah_dibayar' => 'nullable|numeric',
+        'tanda_tangan_penerima' => 'nullable|string'
+    ]);
+
+    if (!empty($validated['transaksi_id'])) {
+        $transaksi = Transaksi::find($validated['transaksi_id']);
+
+        if (!$transaksi) {
+            return back()->with('error', 'Transaksi tidak ditemukan')->withInput();
         }
-
-        if (!$currentUsaha) {
-            return back()->with('error', 'Pilih usaha terlebih dahulu')->withInput();
-        }
-
-        $request->validate([
-            'transaksi_id' => 'required|exists:transaksis,id',
-            'nomor_kuitansi' => 'required|string|unique:kuitansis',
-            'tanggal_pembayaran' => 'required|date',
-            'metode_pembayaran' => 'required|string',
-            'jumlah_dibayar' => 'required|numeric',
-            'tanda_tangan_penerima' => 'required|string'
-        ]);
-
-        $transaksi = Transaksi::findOrFail($request->transaksi_id);
 
         if ($transaksi->usaha_id != $currentUsaha->id) {
-            return back()->with('error', 'Transaksi tidak tersedia untuk usaha ini')->withInput();
+            return back()->with('error', 'Transaksi tidak sesuai usaha')->withInput();
         }
-
-        $data = $request->all();
-        $data['usaha_id'] = $currentUsaha->id;
-
-        Kuitansi::create($data);
-
-        return redirect()->route('admin.kuitansi.index', ['usaha_id' => $currentUsaha->id])->with('success', 'Kuitansi berhasil dibuat');
     }
+
+    $validated['usaha_id'] = $currentUsaha->id;
+
+    Kuitansi::create($validated);
+
+    return redirect()
+        ->route('admin.kuitansi.index', ['usaha_id' => $currentUsaha->id])
+        ->with('success', 'Kuitansi berhasil dibuat');
+}
 
     public function edit($id, Request $request)
     {
