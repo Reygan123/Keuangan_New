@@ -98,8 +98,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('laporan/jurnal-umum', [JurnalUmumController::class, 'index'])->name('laporan.jurnal_umum');
     Route::put('jurnal-umum/{id}/adjust', [JurnalUmumController::class, 'updateToAdjustment'])->name('jurnal-umum.adjust');
     Route::get('jurnal-umum/import', [JurnalUmumController::class, 'importForm'])->name('jurnal-umum.import.form');
-Route::post('jurnal-umum/import/preview', [JurnalUmumController::class, 'importPreview'])->name('jurnal-umum.import.preview');
-Route::post('jurnal-umum/import/execute', [JurnalUmumController::class, 'importExecute'])->name('jurnal-umum.import.execute');
+    Route::match(['get', 'post'], 'jurnal-umum/import/preview', [JurnalUmumController::class, 'importPreview'])->name('jurnal-umum.import.preview');
+    Route::post('jurnal-umum/import/execute', [JurnalUmumController::class, 'importExecute'])->name('jurnal-umum.import.execute');
 
     Route::get('jurnal-penyesuaian', [JurnalUmumController::class, 'indexPenyesuaian'])->name('jurnal-penyesuaian');
     Route::get('laporan/neraca-lajur', [AkunController::class, 'neracaLajur'])->name('laporan.neraca_lajur');
@@ -179,7 +179,7 @@ Route::post('jurnal-umum/import/execute', [JurnalUmumController::class, 'importE
         ->name('surat.import');
     Route::get('surat/export', [SuratController::class, 'export'])
         ->name('surat.export');
-        Route::get('surat/export-pdf', [SuratController::class, 'exportPdf']) // Tambah route PDF
+    Route::get('surat/export-pdf', [SuratController::class, 'exportPdf']) // Tambah route PDF
         ->name('surat.export-pdf');
 });
 

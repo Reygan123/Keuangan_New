@@ -297,6 +297,13 @@
         let tsFilter, tsModal;
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Restore scroll position jika ada di session storage
+            const savedScrollPos = sessionStorage.getItem('tableScrollPos');
+            if (savedScrollPos) {
+                window.scrollTo(0, parseInt(savedScrollPos));
+                sessionStorage.removeItem('tableScrollPos');
+            }
+
             document.querySelectorAll('.tom-select-filter').forEach(el => {
                 tsFilter = new TomSelect(el, {
                     create: false
@@ -306,6 +313,13 @@
             tsModal = new TomSelect("#modal_akun_select", {
                 create: false,
                 dropdownParent: 'body'
+            });
+
+            // Simpan scroll position sebelum navigasi pagination
+            document.querySelectorAll('a[href*="page="]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    sessionStorage.setItem('tableScrollPos', window.scrollY);
+                });
             });
         });
 

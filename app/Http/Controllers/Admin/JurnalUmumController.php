@@ -169,6 +169,11 @@ class JurnalUmumController extends Controller
 
     public function importPreview(Request $request)
     {
+        // Redirect to import form if GET request
+        if ($request->method() === 'GET') {
+            return redirect()->route('admin.jurnal-umum.import.form');
+        }
+
         $request->validate([
             'file'     => 'required|file|mimes:xlsx,xls',
             'usaha_id' => 'required|exists:usahas,id',
@@ -275,7 +280,7 @@ class JurnalUmumController extends Controller
 
         $entries = [];
         $currentBulan = null;
-        $currentTahun = date('Y');
+        $currentTahun = 2022;
 
         $bulanMap = [
             'januari' => 1,
