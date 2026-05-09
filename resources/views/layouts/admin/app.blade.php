@@ -21,14 +21,27 @@
     </style>
 </head>
 
-<body class="bg-slate-950 text-white" x-data="{ sidebarExpanded: true }">
+<body class="bg-slate-950 text-white" x-data="{ sidebarExpanded: window.innerWidth >= 1024 }">
 
     {{-- Sidebar Container --}}
     <div class="flex min-h-screen">
         @include('admin.partials.sidebar')
 
+{{-- Mobile overlay --}}
+<div
+    x-show="sidebarExpanded"
+    x-transition:enter="transition-opacity ease-linear duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition-opacity ease-linear duration-300"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @click="sidebarExpanded = false"
+    class="lg:hidden fixed inset-0 z-30 bg-black/60"
+></div>
+
         {{-- Main Content --}}
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
             {{-- Mobile Header --}}
             <div class="lg:hidden bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
                 <button @click="sidebarExpanded = !sidebarExpanded" class="p-2 hover:bg-slate-800 rounded-lg transition">
@@ -41,7 +54,7 @@
             </div>
 
             {{-- Page Content --}}
-            <main class="flex-1 lg:ml-64 p-4 lg:p-6">
+            <main class="flex-1 lg:ml-64 p-4 lg:p-6 overflow-x-auto">
                 @yield('content')
             </main>
         </div>

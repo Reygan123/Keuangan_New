@@ -33,7 +33,7 @@ class AkunController extends Controller
             }
         }
 
-        $query->orderBy('id', 'asc');
+        $query->orderBy('kode', 'asc');
 
         $akuns = $query->selectSub(function ($subQuery) use ($usahaSelected, $usahas) {
             $subQuery->selectRaw('CASE
@@ -257,8 +257,8 @@ class AkunController extends Controller
             $labaRugiGroups = collect();
         } else {
             $akuns = Akun::where('usaha_id', $usahaSelected)
-                ->orderBy('id', 'asc')
-                ->get();
+    ->orderBy('kode', 'asc')
+    ->get();
 
             $groupedByClassification = $akuns->groupBy('klasifikasi');
 

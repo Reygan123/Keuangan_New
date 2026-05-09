@@ -23,17 +23,29 @@
                 </div>
                 <div class="divide-y divide-slate-700">
                     @foreach($namaAkunUnik as $nama)
+                    @php
+                        $isHutang = str_contains(strtolower($nama), 'hutang') || str_contains(strtolower($nama), 'utang');
+                    @endphp
                     <div class="px-4 py-3 flex items-center gap-4">
-                        <div class="flex-1 text-slate-300 text-sm font-mono">{{ $nama }}</div>
+                        <div class="flex-1 text-slate-300 text-sm font-mono">
+                            {{ $nama }}
+                            @if($isHutang)
+                                <span class="ml-2 text-xs text-amber-400 font-normal">(wajib pilih manual)</span>
+                            @endif
+                        </div>
                         <div class="text-slate-500 text-sm">→</div>
                         <div class="flex-1">
-                            <select name="mapping[{{ $nama }}]" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+                            <select name="mapping[{{ $nama }}]" class="w-full px-3 py-2 bg-slate-700 border {{ $isHutang ? 'border-amber-500' : 'border-slate-600' }} rounded text-slate-100 text-xs focus:outline-none focus:border-blue-500">
                                 <option value="">— Pilih akun —</option>
                                 @foreach($akuns->groupBy('klasifikasi') as $klas => $group)
                                 <optgroup label="{{ $klas }}">
                                     @foreach($group as $akun)
+                                    @php
+                                        $akunIsHutang = str_contains(strtolower($akun->name), 'hutang') || str_contains(strtolower($akun->name), 'utang');
+                                        $shouldAutoSelect = !$isHutang && !$akunIsHutang && strtolower($akun->name) === strtolower($nama);
+                                    @endphp
                                     <option value="{{ $akun->id }}"
-                                        {{ strtolower($akun->name) === strtolower($nama) ? 'selected' : '' }}>
+                                        {{ $shouldAutoSelect ? 'selected' : '' }}>
                                         {{ $akun->kode }} — {{ $akun->name }}
                                     </option>
                                     @endforeach

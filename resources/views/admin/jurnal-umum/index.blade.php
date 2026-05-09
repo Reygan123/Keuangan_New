@@ -13,18 +13,17 @@
     }
 
     .ts-dropdown {
-        background-color: #1e293b !important;
-        /* slate-800 */
-        color: #f8fafc !important;
-    }
+    background-color: #0f172a !important;
+    color: #0f172a !important;
+}
 
     .ts-dropdown .active {
         background-color: #334155 !important;
     }
 
     .ts-dropdown .option {
-        color: #cbd5e1 !important;
-    }
+    color: #ffffff !important;
+}
 </style>
 
 @section('content')
@@ -143,25 +142,32 @@
                                         {{ number_format($jurnal->kredit, 0, ',', '.') }}
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        @php
-                                            $namaAkun = strtolower($jurnal->akun->name ?? '');
-                                            $canAdjust = false;
-                                            foreach ($allowedKeywords as $kw) {
-                                                if (str_contains($namaAkun, $kw)) {
-                                                    $canAdjust = true;
-                                                    break;
-                                                }
-                                            }
-                                        @endphp
-
-                                        @if ($canAdjust && !$jurnal->is_penyesuaian)
-                                            <button onclick="openAdjustModal({{ json_encode($jurnal) }})"
-                                                class="text-blue-400 hover:text-blue-300 font-medium text-xs">
-                                                Sesuaikan
+                                        <div class="flex gap-2 justify-end">
+                                            <button onclick="openEditModal({{ json_encode($jurnal) }})"
+                                                class="text-green-400 hover:text-green-300 font-medium text-xs">
+                                                Edit
                                             </button>
-                                        @elseif($jurnal->is_penyesuaian)
-                                            <span class="text-amber-500 text-[10px] font-bold uppercase">Adjusted</span>
-                                        @endif
+                                            
+                                            @php
+                                                $namaAkun = strtolower($jurnal->akun->name ?? '');
+                                                $canAdjust = false;
+                                                foreach ($allowedKeywords as $kw) {
+                                                    if (str_contains($namaAkun, $kw)) {
+                                                        $canAdjust = true;
+                                                        break;
+                                                    }
+                                                }
+                                            @endphp
+
+                                            @if ($canAdjust && !$jurnal->is_penyesuaian)
+                                                <button onclick="openAdjustModal({{ json_encode($jurnal) }})"
+                                                    class="text-blue-400 hover:text-blue-300 font-medium text-xs">
+                                                    Sesuaikan
+                                                </button>
+                                            @elseif($jurnal->is_penyesuaian)
+                                                <span class="text-amber-500 text-[10px] font-bold uppercase">Adjusted</span>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -257,6 +263,67 @@
                     </div>
                 </div>
 
+                <div id="editModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                    <div class="flex items-center justify-center min-h-screen px-4">
+                        <div class="fixed inset-0 bg-black opacity-50"></div>
+                        <div
+                            class="relative bg-slate-800 border border-slate-700 rounded-lg max-w-lg w-full p-6 shadow-2xl">
+                            <h3 class="text-xl font-bold text-slate-50 mb-4">Edit Jurnal Umum</h3>
+
+                            <form id="editForm" method="POST">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm text-slate-400 mb-1">Akun</label>
+                                        <select name="akun_id" id="edit_modal_akun_select" required>
+                                            @foreach ($akuns as $akun)
+                                                <option value="{{ $akun->id }}">{{ $akun->kode }} -
+                                                    {{ $akun->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm text-slate-400 mb-1">Tanggal</label>
+                                            <input type="date" name="tanggal_transaksi" id="edit_modal_tanggal"
+                                                class="w-full bg-slate-700 border-slate-600 rounded text-slate-100" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-slate-400 mb-1">Deskripsi</label>
+                                            <input type="text" name="deskripsi" id="edit_modal_deskripsi"
+                                                class="w-full bg-slate-700 border-slate-600 rounded text-slate-100">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm text-slate-400 mb-1">Debit</label>
+                                            <input type="number" name="debit" id="edit_modal_debit"
+                                                class="w-full bg-slate-700 border-slate-600 rounded text-slate-100" required step="0.01">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-slate-400 mb-1">Kredit</label>
+                                            <input type="number" name="kredit" id="edit_modal_kredit"
+                                                class="w-full bg-slate-700 border-slate-600 rounded text-slate-100" required step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <button type="button" onclick="closeEditModal()"
+                                        class="px-4 py-2 text-slate-400 hover:text-slate-200">Batal</button>
+                                    <button type="submit"
+                                        class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Simpan
+                                        Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 @if ($jurnalUmum->hasPages())
                     <div class="p-4 md:p-6 border-t border-slate-700">
                         <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -311,9 +378,14 @@
             });
 
             tsModal = new TomSelect("#modal_akun_select", {
-                create: false,
-                dropdownParent: 'body'
-            });
+    create: false,
+    dropdownParent: 'body'
+});
+
+new TomSelect("#edit_modal_akun_select", {
+    create: false,
+    dropdownParent: 'body'
+});
 
             // Simpan scroll position sebelum navigasi pagination
             document.querySelectorAll('a[href*="page="]').forEach(link => {
@@ -348,6 +420,26 @@
             debounceTimer = setTimeout(() => {
                 document.getElementById('filterForm').submit();
             }, 500);
+        }
+
+        function openEditModal(data) {
+            const form = document.getElementById('editForm');
+            form.action = `/admin/jurnal-umum/${data.id}`;
+
+            if (tsModal) tsModal.clearOptions();
+            if (tsModal) tsModal.setValue(String(data.akun_id));
+
+            document.getElementById('edit_modal_akun_select').value = data.akun_id;
+            document.getElementById('edit_modal_tanggal').value = data.tanggal_transaksi;
+            document.getElementById('edit_modal_deskripsi').value = data.deskripsi ?? '';
+            document.getElementById('edit_modal_debit').value = data.debit;
+            document.getElementById('edit_modal_kredit').value = data.kredit;
+
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
         }
     </script>
 @endsection

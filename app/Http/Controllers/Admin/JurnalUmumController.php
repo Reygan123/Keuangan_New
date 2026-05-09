@@ -157,6 +157,31 @@ class JurnalUmumController extends Controller
         return back()->with('success', 'Jurnal berhasil diubah menjadi Jurnal Penyesuaian.');
     }
 
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'akun_id' => 'required|exists:akuns,id',
+            'tanggal_transaksi' => 'required|date',
+            'deskripsi' => 'nullable|string',
+            'debit' => 'required|numeric|min:0',
+            'kredit' => 'required|numeric|min:0',
+        ]);
+
+        $jurnal = JurnalUmum::findOrFail($id);
+
+        DB::transaction(function () use ($request, $jurnal) {
+            $jurnal->update([
+                'akun_id' => $request->akun_id,
+                'tanggal_transaksi' => $request->tanggal_transaksi,
+                'deskripsi' => $request->deskripsi,
+                'debit' => $request->debit,
+                'kredit' => $request->kredit,
+            ]);
+        });
+
+        return back()->with('success', 'Jurnal berhasil diperbarui.');
+    }
+
     public function importForm(Request $request)
     {
         $currentUser = Auth::user();
