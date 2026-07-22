@@ -26,6 +26,14 @@
                 </div>
                 @endif
                 <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Tahun</label>
+                    <select name="tahun" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:border-slate-500">
+                        @foreach(range(2022, 2026) as $y)
+                        <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">File Excel (.xlsx)</label>
                     <input type="file" name="file" accept=".xlsx,.xls" required
                         class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:border-slate-500 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-slate-600 file:text-slate-100 file:text-xs">

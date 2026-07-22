@@ -87,13 +87,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('akuns/coa', [AkunController::class, 'coa'])->name('akuns.coa');
     Route::get('laporan/laba-rugi', [AkunController::class, 'labaRugi'])->name('laporan.laba_rugi');
+    Route::get('laporan/laba-rugi/export', [AkunController::class, 'exportLabaRugi'])->name('laporan.laba_rugi.export');
     Route::get('laporan/neraca', [AkunController::class, 'neraca'])->name('laporan.neraca');
+    Route::get('laporan/neraca/export', [AkunController::class, 'exportNeraca'])->name('laporan.neraca.export');
     Route::get('laporan/arus-kas', [AkunController::class, 'arusKas'])->name('laporan.arus_kas');
+    Route::get('laporan/arus-kas/export', [AkunController::class, 'exportArusKas'])->name('laporan.arus_kas.export');
     Route::get('laporan/ekuitas', [AkunController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
     Route::get('laporan/buku-kas', [AkunController::class, 'bukuKas'])->name('laporan.buku_kas');
     Route::get('laporan/buku-besar', [AkunController::class, 'bukuBesar'])->name('laporan.buku_besar');
+    Route::get('laporan/buku-besar/export', [AkunController::class, 'exportBukuBesar'])->name('laporan.buku_besar.export');
+    Route::get('laporan/buku-kas/export', [AkunController::class, 'exportBukuKas'])->name('laporan.buku_kas.export');
     Route::get('laporan/ekuitas', [AkunController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
     // Route::get('laporan/jurnal-umum', [JurnalUmumController::class, 'index'])->name('laporan.jurnal_umum');
+    Route::get('laporan/export-all', [AkunController::class, 'exportAllReports'])->name('laporan.export-all');
 
     Route::get('laporan/jurnal-umum', [JurnalUmumController::class, 'index'])->name('laporan.jurnal_umum');
     Route::put('jurnal-umum/{id}', [JurnalUmumController::class, 'update'])->name('jurnal-umum.update');

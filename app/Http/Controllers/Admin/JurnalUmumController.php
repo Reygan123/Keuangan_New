@@ -64,7 +64,7 @@ class JurnalUmumController extends Controller
         }
 
         // DEFAULT SORTING (Terbaru ke Terlama)
-        $sortOrder = $request->get('sort_order', 'desc'); // 'asc' untuk terlama ke terbaru, 'desc' untuk terbaru ke terlama
+        $sortOrder = $request->get('sort_order', 'asc'); // 'asc' untuk terlama ke terbaru, 'desc' untuk terbaru ke terlama
         $sortBy = $request->get('sort_by', 'tanggal_transaksi'); // default sort by tanggal
 
         // Apply sorting
@@ -193,47 +193,47 @@ class JurnalUmumController extends Controller
     }
 
     public function importPreview(Request $request)
-    {
-        // Redirect to import form if GET request
-        if ($request->method() === 'GET') {
-            return redirect()->route('admin.jurnal-umum.import.form');
-        }
-
-        $request->validate([
-            'file'     => 'required|file|mimes:xlsx,xls',
-            'usaha_id' => 'required|exists:usahas,id',
-        ]);
-
-        $currentUser = Auth::user();
-        $usahaSelected = $request->usaha_id;
-        $usahas = $currentUser->usahas()->get();
-        $akuns = Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get();
-
-        $path = $request->file('file')->store('imports');
-        $fullPath = Storage::path($path);
-
-        $parsed = $this->parseExcelJurnal($fullPath);
-
-        Session::put('import_file_path', $path);
-        Session::put('import_usaha_id', $usahaSelected);
-        Session::put('import_parsed', $parsed);
-
-        $namaAkunUnik = collect($parsed)
-            ->flatMap(fn($e) => [$e['nama_debit'], $e['nama_kredit']])
-            ->filter()
-            ->map(fn($n) => trim($n))
-            ->unique()
-            ->sort()
-            ->values();
-
-        return view('admin.jurnal-umum.import-mapping', compact(
-            'parsed',
-            'namaAkunUnik',
-            'akuns',
-            'usahas',
-            'usahaSelected'
-        ));
+{
+    if ($request->method() === 'GET') {
+        return redirect()->route('admin.jurnal-umum.import.form');
     }
+
+    $request->validate([
+        'file'     => 'required|file|mimes:xlsx,xls',
+        'usaha_id' => 'required|exists:usahas,id',
+        'tahun'    => 'required|integer|min:2022|max:2026',
+    ]);
+
+    $currentUser = Auth::user();
+    $usahaSelected = $request->usaha_id;
+    $usahas = $currentUser->usahas()->get();
+    $akuns = Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get();
+
+    $path = $request->file('file')->store('imports');
+    $fullPath = Storage::path($path);
+
+    $parsed = $this->parseExcelJurnal($fullPath, (int) $request->tahun);
+
+    Session::put('import_file_path', $path);
+    Session::put('import_usaha_id', $usahaSelected);
+    Session::put('import_parsed', $parsed);
+
+    $namaAkunUnik = collect($parsed)
+        ->flatMap(fn($e) => [$e['nama_debit'], $e['nama_kredit']])
+        ->filter()
+        ->map(fn($n) => trim($n))
+        ->unique()
+        ->sort()
+        ->values();
+
+    return view('admin.jurnal-umum.import-mapping', compact(
+        'parsed',
+        'namaAkunUnik',
+        'akuns',
+        'usahas',
+        'usahaSelected'
+    ));
+}
 
     public function importExecute(Request $request)
     {
@@ -297,100 +297,98 @@ class JurnalUmumController extends Controller
             ->with('success', 'Import jurnal berhasil. ' . count($parsed) . ' entri diimpor.');
     }
 
-    private function parseExcelJurnal(string $filePath): array
-    {
-        $wb = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
-        $ws = $wb->getActiveSheet();
-        $rows = $ws->toArray(null, true, false, false);
+   private function parseExcelJurnal(string $filePath, int $tahun = 2022): array
+{
+    $wb = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+    $ws = $wb->getActiveSheet();
+    $rows = $ws->toArray(null, true, false, false);
 
-        $entries = [];
-        $currentBulan = null;
-        $currentTahun = 2022;
+    $entries = [];
+    $currentBulan = null;
+    $currentTahun = $tahun;
+    $urutanGlobal = 0;
 
-        $bulanMap = [
-            'januari' => 1,
-            'februari' => 2,
-            'maret' => 3,
-            'april' => 4,
-            'mei' => 5,
-            'juni' => 6,
-            'juli' => 7,
-            'agustus' => 8,
-            'september' => 9,
-            'oktober' => 10,
-            'november' => 11,
-            'desember' => 12,
-        ];
+    $bulanMap = [
+        'januari' => 1, 'februari' => 2, 'maret' => 3,
+        'april' => 4, 'mei' => 5, 'juni' => 6,
+        'juli' => 7, 'agustus' => 8, 'september' => 9,
+        'oktober' => 10, 'november' => 11, 'desember' => 12,
+    ];
 
-        $headerPassed = false;
+    $headerPassed = false;
 
-        for ($i = 0; $i < count($rows); $i++) {
-            $row = $rows[$i];
-            $col0 = trim((string)($row[0] ?? ''));
-            $col2 = trim((string)($row[2] ?? ''));
-            $col3 = trim((string)($row[3] ?? ''));
-            $colF = $row[5] ?? null;
-            $colG = $row[6] ?? null;
+    for ($i = 0; $i < count($rows); $i++) {
+        $row = $rows[$i];
+        $col0 = trim((string)($row[0] ?? ''));
+        $col2 = trim((string)($row[2] ?? ''));
+        $colF = $row[5] ?? null;
 
-            if (!$headerPassed) {
-                if (strtolower($col0) === 'tanggal') {
-                    $headerPassed = true;
-                }
-                continue;
+        if (!$headerPassed) {
+            if (strtolower($col0) === 'tanggal') {
+                $headerPassed = true;
             }
+            continue;
+        }
 
-            $colLower = strtolower($col0);
-            if (isset($bulanMap[$colLower])) {
-                $currentBulan = $bulanMap[$colLower];
-                $tanggal = sprintf('%04d-%02d-01', $currentTahun, $currentBulan);
-
-                $namaDebit = $col2 ?: null;
-                $jumlah = is_numeric($colF) ? (float)$colF : null;
-
-                if ($namaDebit && $jumlah) {
-                    $nextRow = $rows[$i + 1] ?? [];
-                    $namaKredit = trim((string)($nextRow[3] ?? ''));
-
-                    if ($namaDebit || $namaKredit) {
-                        $entries[] = [
-                            'tanggal'     => $tanggal,
-                            'keterangan'  => $namaDebit,
-                            'nama_debit'  => $namaDebit,
-                            'nama_kredit' => $namaKredit ?: null,
-                            'jumlah'      => $jumlah,
-                        ];
-                        $i++;
-                    }
-                }
-                continue;
-            }
+        $colLower = strtolower($col0);
+        if (isset($bulanMap[$colLower])) {
+            $currentBulan = $bulanMap[$colLower];
 
             $namaDebit = $col2 ?: null;
             $jumlah = is_numeric($colF) ? (float)$colF : null;
 
-            if (!$namaDebit && !$jumlah) continue;
+            if ($namaDebit && $jumlah) {
+                $nextRow = $rows[$i + 1] ?? [];
+                $namaKredit = trim((string)($nextRow[3] ?? ''));
 
-            if ($currentBulan) {
-                $tanggal = sprintf('%04d-%02d-01', $currentTahun, $currentBulan);
-            } else {
-                $tanggal = date('Y-m-d');
+                if ($namaDebit || $namaKredit) {
+                    $menit = intdiv($urutanGlobal, 60);
+                    $detik = $urutanGlobal % 60;
+                    $tanggal = sprintf('%04d-%02d-01 00:%02d:%02d', $currentTahun, $currentBulan, $menit, $detik);
+                    $urutanGlobal++;
+
+                    $entries[] = [
+                        'tanggal'     => $tanggal,
+                        'keterangan'  => $namaDebit,
+                        'nama_debit'  => $namaDebit,
+                        'nama_kredit' => $namaKredit ?: null,
+                        'jumlah'      => $jumlah,
+                    ];
+                    $i++;
+                }
             }
-
-            $nextRow = $rows[$i + 1] ?? [];
-            $namaKredit = trim((string)($nextRow[3] ?? ''));
-
-            if (($namaDebit || $jumlah) && $namaKredit) {
-                $entries[] = [
-                    'tanggal'     => $tanggal,
-                    'keterangan'  => $namaDebit ?: 'Import',
-                    'nama_debit'  => $namaDebit,
-                    'nama_kredit' => $namaKredit,
-                    'jumlah'      => $jumlah,
-                ];
-                $i++;
-            }
+            continue;
         }
 
-        return $entries;
+        $namaDebit = $col2 ?: null;
+        $jumlah = is_numeric($colF) ? (float)$colF : null;
+
+        if (!$namaDebit && !$jumlah) continue;
+
+        if ($currentBulan) {
+            $menit = intdiv($urutanGlobal, 60);
+            $detik = $urutanGlobal % 60;
+            $tanggal = sprintf('%04d-%02d-01 00:%02d:%02d', $currentTahun, $currentBulan, $menit, $detik);
+            $urutanGlobal++;
+        } else {
+            $tanggal = date('Y-m-d H:i:s');
+        }
+
+        $nextRow = $rows[$i + 1] ?? [];
+        $namaKredit = trim((string)($nextRow[3] ?? ''));
+
+        if (($namaDebit || $jumlah) && $namaKredit) {
+            $entries[] = [
+                'tanggal'     => $tanggal,
+                'keterangan'  => $namaDebit ?: 'Import',
+                'nama_debit'  => $namaDebit,
+                'nama_kredit' => $namaKredit,
+                'jumlah'      => $jumlah,
+            ];
+            $i++;
+        }
     }
+
+    return $entries;
+}
 }

@@ -131,7 +131,7 @@
                                     <td class="px-4 py-3 text-slate-300">
                                         {{ \Carbon\Carbon::parse($jurnal->tanggal_transaksi)->format('d/m/Y') }}
                                     </td>
-                                    <td class="px-4 py-3 text-slate-300 text-xs">{{ $jurnal->akun->id ?? '' }} -
+                                    <td class="px-4 py-3 text-slate-300 text-xs">{{ $jurnal->akun->kode ?? '' }} -
                                         {{ $jurnal->akun->name ?? '' }}
                                     </td>
                                     <td class="px-4 py-3 text-slate-300">{{ $jurnal->deskripsi }}</td>
@@ -147,7 +147,7 @@
                                                 class="text-green-400 hover:text-green-300 font-medium text-xs">
                                                 Edit
                                             </button>
-                                            
+
                                             @php
                                                 $namaAkun = strtolower($jurnal->akun->name ?? '');
                                                 $canAdjust = false;

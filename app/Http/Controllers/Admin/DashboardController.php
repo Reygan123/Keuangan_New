@@ -13,41 +13,71 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
-    {
-        $currentUser = Auth::user();
-        $usahaSelected = $request->get('usaha_id');
-        $usahas = $currentUser->usahas()->get();
-
-        if (!$usahaSelected && $usahas->count() > 0) {
-            $usahaSelected = $usahas->first()->id;
-        }
-
-        $tanggalAwalBulan = Carbon::now()->startOfMonth();
-        $tanggalAkhirBulan = Carbon::now()->endOfMonth();
-        $tanggalAwalTahun = Carbon::now()->startOfYear();
-        $tanggalAkhirTahun = Carbon::now()->endOfYear();
-
-        $labaRugiBersih       = $this->hitungLabaRugiBersih($tanggalAwalBulan, $tanggalAkhirBulan, $usahaSelected);
-        $arusKasBersih        = $this->hitungArusKasBersih($tanggalAwalBulan, $tanggalAkhirBulan, $usahaSelected);
-        $totalAsetLancar      = $this->hitungTotalAsetLancar($usahaSelected);
-        $totalKewajibanLancar = $this->hitungTotalKewajibanLancar($usahaSelected);
-        $saldoKas             = $this->hitungSaldoKas($usahaSelected);
-        $saldoBank            = $this->hitungSaldoBank($usahaSelected);
-        $piutangBelumTertagih = $this->hitungPiutang($usahaSelected);
-        $utangBelumTerbayar   = $this->hitungUtang($usahaSelected);
-        $grafikArusKas        = $this->getGrafikArusKasBulanan($usahaSelected);
-        $pieChartBeban        = $this->getPieChartBeban($tanggalAwalBulan, $tanggalAkhirBulan, $usahaSelected);
-        $penerimaanTerakhir   = $this->getPenerimaanTerakhir($usahaSelected);
-        $pengeluaranTerakhir  = $this->getPengeluaranTerakhir($usahaSelected);
-
-        return view('admin.dashboard', compact(
-            'labaRugiBersih', 'arusKasBersih', 'totalAsetLancar', 'totalKewajibanLancar',
-            'saldoKas', 'saldoBank', 'piutangBelumTertagih', 'utangBelumTerbayar',
-            'grafikArusKas', 'pieChartBeban', 'penerimaanTerakhir', 'pengeluaranTerakhir',
-            'usahas', 'usahaSelected'
-        ));
+    private function getStartDate(Request $request)
+{
+    $start_date = $request->input('start_date');
+    if ($start_date) {
+        return Carbon::parse($start_date)->startOfDay();
     }
+    $bulanSelected = $request->input('bulan');
+    if ($bulanSelected) {
+        return Carbon::parse($bulanSelected . '-01')->startOfMonth()->startOfDay();
+    }
+    return Carbon::now()->startOfMonth();
+}
+
+private function getEndDate(Request $request)
+{
+    $end_date = $request->input('end_date');
+    if ($end_date) {
+        return Carbon::parse($end_date)->endOfDay();
+    }
+    $bulanSelected = $request->input('bulan');
+    if ($bulanSelected) {
+        return Carbon::parse($bulanSelected . '-01')->endOfMonth()->endOfDay();
+    }
+    return Carbon::now()->endOfMonth();
+}
+
+private function getTahun(Request $request)
+{
+    return $request->input('tahun', now()->year);
+}
+
+    public function index(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    $start_date = $this->getStartDate($request);
+    $end_date = $this->getEndDate($request);
+    $tahun = $this->getTahun($request);
+
+    $labaRugiBersih       = $this->hitungLabaRugiBersih($start_date, $end_date, $usahaSelected);
+    $arusKasBersih        = $this->hitungArusKasBersih($start_date, $end_date, $usahaSelected);
+    $totalAsetLancar      = $this->hitungTotalAsetLancar($usahaSelected);
+    $totalKewajibanLancar = $this->hitungTotalKewajibanLancar($usahaSelected);
+    $saldoKas             = $this->hitungSaldoKas($usahaSelected);
+    $saldoBank            = $this->hitungSaldoBank($usahaSelected);
+    $piutangBelumTertagih = $this->hitungPiutang($usahaSelected);
+    $utangBelumTerbayar   = $this->hitungUtang($usahaSelected);
+    $grafikArusKas = $this->getGrafikArusKasBulanan($usahaSelected, $tahun);
+    $pieChartBeban        = $this->getPieChartBeban($start_date, $end_date, $usahaSelected);
+    $penerimaanTerakhir   = $this->getPenerimaanTerakhir($usahaSelected);
+    $pengeluaranTerakhir  = $this->getPengeluaranTerakhir($usahaSelected);
+
+    return view('admin.dashboard', compact(
+        'labaRugiBersih', 'arusKasBersih', 'totalAsetLancar', 'totalKewajibanLancar',
+        'saldoKas', 'saldoBank', 'piutangBelumTertagih', 'utangBelumTerbayar',
+        'grafikArusKas', 'pieChartBeban', 'penerimaanTerakhir', 'pengeluaranTerakhir',
+        'usahas', 'usahaSelected', 'start_date', 'end_date', 'tahun'
+    ));
+}
 
     private function hitungSaldoDariJurnal($usahaId, array $kondisiAkun): float
     {
@@ -246,52 +276,53 @@ class DashboardController extends Controller
         return ($result->total_kredit ?? 0) - ($result->total_debit ?? 0);
     }
 
-    private function getGrafikArusKasBulanan($usahaId): array
-    {
-        if (!$usahaId) return [];
+    private function getGrafikArusKasBulanan($usahaId, $tahun = null)
+{
+    if (!$usahaId) return [];
 
-        $akunKasBank = Akun::where('usaha_id', $usahaId)
-            ->where('klasifikasi', 'ASET')
-            ->where(function ($q) {
-                $q->where('name', 'like', '%kas%')
-                    ->orWhere('name', 'like', '%bank%')
-                    ->orWhere('name', 'like', '%bca%')
-                    ->orWhere('name', 'like', '%bri%')
-                    ->orWhere('name', 'like', '%mandiri%');
-            })->pluck('id');
+    $tahun = $tahun ?? Carbon::now()->year;
 
-        $data = [];
-        $bulanSekarang = Carbon::now();
+    $akunKasBank = Akun::where('usaha_id', $usahaId)
+        ->where('klasifikasi', 'ASET')
+        ->where(function ($q) {
+            $q->where('name', 'like', '%kas%')
+                ->orWhere('name', 'like', '%bank%')
+                ->orWhere('name', 'like', '%bca%')
+                ->orWhere('name', 'like', '%bri%')
+                ->orWhere('name', 'like', '%mandiri%');
+        })->pluck('id');
 
-        for ($i = 5; $i >= 0; $i--) {
-            $bulan = $bulanSekarang->copy()->subMonths($i);
-            $awal = $bulan->copy()->startOfMonth();
-            $akhir = $bulan->copy()->endOfMonth();
+    $data = [];
 
-            if ($akunKasBank->isEmpty()) {
-                $penerimaan = 0;
-                $pengeluaran = 0;
-            } else {
-                $result = JurnalUmum::selectRaw('SUM(debit) as masuk, SUM(kredit) as keluar')
-                    ->where('usaha_id', $usahaId)
-                    ->whereIn('akun_id', $akunKasBank)
-                    ->whereBetween('tanggal_transaksi', [$awal, $akhir])
-                    ->where('deskripsi', 'not like', '%Saldo Awal%')
-                    ->first();
+    for ($i = 1; $i <= 12; $i++) {
+        $bulan = Carbon::create($tahun, $i, 1);
+        $awal = $bulan->copy()->startOfMonth();
+        $akhir = $bulan->copy()->endOfMonth();
 
-                $penerimaan = $result->masuk ?? 0;
-                $pengeluaran = $result->keluar ?? 0;
-            }
+        if ($akunKasBank->isEmpty()) {
+            $penerimaan = 0;
+            $pengeluaran = 0;
+        } else {
+            $result = JurnalUmum::selectRaw('SUM(debit) as masuk, SUM(kredit) as keluar')
+                ->where('usaha_id', $usahaId)
+                ->whereIn('akun_id', $akunKasBank)
+                ->whereBetween('tanggal_transaksi', [$awal, $akhir])
+                ->where('deskripsi', 'not like', '%Saldo Awal%')
+                ->first();
 
-            $data[] = [
-                'bulan'       => $bulan->format('M Y'),
-                'penerimaan'  => $penerimaan,
-                'pengeluaran' => $pengeluaran,
-            ];
+            $penerimaan = $result->masuk ?? 0;
+            $pengeluaran = $result->keluar ?? 0;
         }
 
-        return $data;
+        $data[] = [
+            'bulan'       => $bulan->format('M Y'),
+            'penerimaan'  => $penerimaan,
+            'pengeluaran' => $pengeluaran,
+        ];
     }
+
+    return $data;
+}
 
     private function getPieChartBeban($tanggalAwal, $tanggalAkhir, $usahaId)
     {

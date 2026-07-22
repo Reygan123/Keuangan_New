@@ -2,21 +2,65 @@
 
 @section('content')
 <div class="p-4 sm:p-6 max-w-7xl mx-auto">
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-        <h1 class="text-2xl font-bold text-white">Dashboard</h1>
-        <div class="flex items-center gap-3">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Dashboard</h1>
+            <p class="text-slate-400 text-sm mt-1">
+                Periode: {{ Carbon\Carbon::now()->translatedFormat('F Y') }}
+            </p>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
             @if($usahas && $usahas->count() > 0)
-            <form method="GET" action="{{ route('admin.dashboard') }}" class="flex gap-2">
-                <select name="usaha_id" onchange="this.form.submit()" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer">
-                    @foreach($usahas as $usaha)
-                    <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
-                    @endforeach
-                </select>
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-end gap-3">
+                <div class="flex-1 min-w-[150px]">
+                    <label class="text-[10px] uppercase tracking-wider text-slate-400 block mb-1.5 ml-1">Usaha</label>
+                    <select name="usaha_id" class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        @foreach($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex-1 min-w-[130px]">
+                    <label class="text-[10px] uppercase tracking-wider text-slate-400 block mb-1.5 ml-1">Mulai</label>
+                    <input type="date" name="start_date" value="{{ isset($start_date) ? $start_date->format('Y-m-d') : '' }}" class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="flex-1 min-w-[130px]">
+                    <label class="text-[10px] uppercase tracking-wider text-slate-400 block mb-1.5 ml-1">Akhir</label>
+                    <input type="date" name="end_date" value="{{ isset($end_date) ? $end_date->format('Y-m-d') : '' }}" class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="flex-1 min-w-[100px]">
+                    <label class="text-[10px] uppercase tracking-wider text-slate-400 block mb-1.5 ml-1">Tahun</label>
+                    <select name="tahun" class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        @for($y = now()->year + 1; $y >= now()->year - 5; $y--)
+                        <option value="{{ $y }}" {{ (isset($tahun) && $tahun == $y) ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-semibold transition-all shadow-lg shadow-blue-900/20">
+                        Filter
+                    </button>
+                    <a href="{{ route('admin.dashboard', ['usaha_id' => $usahaSelected]) }}" class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg transition-all">
+                        Reset
+                    </a>
+                </div>
             </form>
             @endif
-            <div class="text-slate-400 text-sm">
-                Periode: {{ Carbon\Carbon::now()->translatedFormat('F Y') }}
-            </div>
+
+            <!-- <div class="border-l border-slate-700 h-10 mx-2 hidden md:block"></div> -->
+
+            <a href="{{ route('admin.laporan.export-all', ['usaha_id' => $usahaSelected, 'start_date' => isset($start_date) ? $start_date->format('Y-m-d') : '', 'end_date' => isset($end_date) ? $end_date->format('Y-m-d') : '', 'tahun' => $tahun ?? now()->year]) }}"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg transition-all font-semibold h-[38px] inline-flex items-center gap-2 shadow-lg shadow-emerald-900/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                <span>Export Excel</span>
+            </a>
         </div>
     </div>
 
