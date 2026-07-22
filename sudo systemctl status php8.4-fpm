@@ -1,0 +1,19 @@
+[0;1;32m●[0m php8.4-fpm.service - The PHP 8.4 FastCGI Process Manager
+     Loaded: loaded (/lib/systemd/system/php8.4-fpm.service; enabled; vendor preset: enabled)
+     Active: [0;1;32mactive (running)[0m since Sun 2026-04-26 04:16:26 UTC; 24s ago
+       Docs: man:php-fpm8.4(8)
+    Process: 166107 ExecStartPost=/usr/lib/php/php-fpm-socket-helper install /run/php/php-fpm.sock /etc/php/8.4/fpm/pool.d/www.conf 84 (code=exited, status=0/SUCCESS)
+   Main PID: 166104 (php-fpm8.4)
+     Status: "Processes active: 0, idle: 2, Requests: 0, slow: 0, Traffic: 0.00req/sec"
+      Tasks: 3 (limit: 2216)
+     Memory: 11.5M
+        CPU: 61ms
+     CGroup: /system.slice/php8.4-fpm.service
+             ├─166104 "php-fpm: master process (/etc/php/8.4/fpm/php-fpm.conf)" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" ""
+             ├─166105 "php-fpm: pool www" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" ""
+             └─166106 "php-fpm: pool www" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" ""
+
+Apr 26 04:16:26 Web-Hexagon systemd[1]: php8.4-fpm.service: Deactivated successfully.
+Apr 26 04:16:26 Web-Hexagon systemd[1]: Stopped The PHP 8.4 FastCGI Process Manager.
+Apr 26 04:16:26 Web-Hexagon systemd[1]: Starting The PHP 8.4 FastCGI Process Manager...
+Apr 26 04:16:26 Web-Hexagon systemd[1]: Started The PHP 8.4 FastCGI Process Manager.

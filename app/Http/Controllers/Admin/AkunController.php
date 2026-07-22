@@ -1,0 +1,1120 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Akun;
+use App\Models\JurnalUmum;
+use App\Models\PembayaranDimuka;
+use App\Models\Usaha;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+class AkunController extends Controller
+{
+    public function index(Request $request)
+    {
+        $currentUser = Auth::user();
+        $usahaSelected = $request->get('usaha_id');
+
+        $usahas = $currentUser->usahas()->get();
+
+        $query = Akun::select('akuns.*');
+
+        if ($usahaSelected) {
+            $query->where('usaha_id', $usahaSelected);
+        } else {
+            if ($usahas->count() > 0) {
+                $query->whereIn('usaha_id', $usahas->pluck('id'));
+            } else {
+                $query->where('usaha_id', 0);
+            }
+        }
+
+        $query->orderBy('kode', 'asc');
+
+        $akuns = $query->selectSub(function ($subQuery) use ($usahaSelected, $usahas) {
+            $subQuery->selectRaw('CASE
+                WHEN akuns.klasifikasi IN ("ASET", "BEBAN") THEN COALESCE(SUM(T1.debit), 0) - COALESCE(SUM(T1.kredit), 0)
+                ELSE COALESCE(SUM(T1.kredit), 0) - COALESCE(SUM(T1.debit), 0)
+            END')
+                ->from('jurnal_umum', 'T1')
+                ->whereColumn('T1.akun_id', 'akuns.id');
+
+            if ($usahaSelected) {
+                $subQuery->where('T1.usaha_id', $usahaSelected);
+            } else {
+                if ($usahas->count() > 0) {
+                    $subQuery->whereIn('T1.usaha_id', $usahas->pluck('id'));
+                }
+            }
+        }, 'saldo')
+            ->get();
+
+        $currentUsaha = $usahas->firstWhere('id', $usahaSelected) ?? $usahas->first();
+
+        return view('admin.akuns.index', compact('akuns', 'usahas', 'usahaSelected', 'currentUsaha'));
+    }
+
+    public function store(Request $request)
+    {
+        $currentUser = Auth::user();
+        $usahaId = $request->get('usaha_id');
+
+        if (!$usahaId) {
+            return redirect()->route('admin.akuns.index')->with('error', 'Pilih usaha terlebih dahulu.');
+        }
+
+        if (!$currentUser->usahas()->where('usahas.id', $usahaId)->exists()) {
+            return redirect()->route('admin.akuns.index')->with('error', 'Anda tidak memiliki akses ke usaha ini.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'saldo' => 'required|numeric',
+            'klasifikasi' => 'required|string|in:ASET,KEWAJIBAN,EKUITAS,PENDAPATAN,BEBAN',
+            'sub_klasifikasi' => 'nullable|string|in:LANCAR,TETAP,JANGKA PANJANG',
+            'aktivitas_kas' => 'required|string|in:OPERASI,INVESTASI,PENDANAAN,TIDAK BERLAKU',
+            'nama_kelompok' => 'nullable|string|max:50',
+            'usaha_id' => 'required|exists:usahas,id'
+        ]);
+
+        DB::transaction(function () use ($validated, $usahaId) {
+            $kodePrefixMap = [
+                'ASET' => '1',
+                'KEWAJIBAN' => '2',
+                'EKUITAS' => '3',
+                'PENDAPATAN' => '4',
+                'BEBAN' => '6'
+            ];
+
+            $prefix = $kodePrefixMap[$validated['klasifikasi']] ?? '9';
+
+            $lastAkun = Akun::where('usaha_id', $usahaId)
+                ->where('klasifikasi', $validated['klasifikasi'])
+                ->orderBy('kode', 'desc')
+                ->first();
+
+            if ($lastAkun && $lastAkun->kode) {
+                $lastNumber = intval(substr($lastAkun->kode, 0, 2));
+                $newNumber = str_pad($lastNumber + 1, 2, '0', STR_PAD_LEFT);
+                $kode = $newNumber . '000';
+            } else {
+                $baseCodes = [
+                    'ASET' => '10000',
+                    'KEWAJIBAN' => '20000',
+                    'EKUITAS' => '30000',
+                    'PENDAPATAN' => '40000',
+                    'BEBAN' => '60000'
+                ];
+                $kode = $baseCodes[$validated['klasifikasi']] ?? '90000';
+            }
+
+            if ($validated['sub_klasifikasi']) {
+                $subBaseCodes = [
+                    'LANCAR' => '11000',
+                    'TETAP' => '12000',
+                    'JANGKA PANJANG' => '22000'
+                ];
+
+                if (isset($subBaseCodes[$validated['sub_klasifikasi']])) {
+                    $baseKode = $subBaseCodes[$validated['sub_klasifikasi']];
+
+                    $lastSubAkun = Akun::where('usaha_id', $usahaId)
+                        ->where('klasifikasi', $validated['klasifikasi'])
+                        ->where('sub_klasifikasi', $validated['sub_klasifikasi'])
+                        ->where('kode', 'like', substr($baseKode, 0, 2) . '%')
+                        ->orderBy('kode', 'desc')
+                        ->first();
+
+                    if ($lastSubAkun && $lastSubAkun->kode) {
+                        $lastSubNumber = intval($lastSubAkun->kode);
+                        $newSubNumber = $lastSubNumber + 1;
+                        $kode = str_pad($newSubNumber, 5, '0', STR_PAD_LEFT);
+                    } else {
+                        $kode = $baseKode;
+                    }
+                }
+            }
+
+            if ($validated['nama_kelompok']) {
+                $lastDetailAkun = Akun::where('usaha_id', $usahaId)
+                    ->where('klasifikasi', $validated['klasifikasi'])
+                    ->where('sub_klasifikasi', $validated['sub_klasifikasi'])
+                    ->where('nama_kelompok', $validated['nama_kelompok'])
+                    ->where('kode', 'like', substr($kode, 0, 3) . '%')
+                    ->orderBy('kode', 'desc')
+                    ->first();
+
+                if ($lastDetailAkun && $lastDetailAkun->kode) {
+                    $lastDetailNumber = intval($lastDetailAkun->kode);
+                    $newDetailNumber = $lastDetailNumber + 1;
+                    $kode = str_pad($newDetailNumber, 5, '0', STR_PAD_LEFT);
+                } else {
+                    $currentBase = intval(substr($kode, 0, 3)) * 100;
+                    $kode = str_pad($currentBase + 1, 5, '0', STR_PAD_LEFT);
+                }
+            }
+
+            $existingKode = Akun::where('usaha_id', $usahaId)
+                ->where('kode', $kode)
+                ->exists();
+
+            if ($existingKode) {
+                $counter = 1;
+                while ($existingKode) {
+                    $newNumber = intval($kode) + $counter;
+                    $kode = str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+                    $existingKode = Akun::where('usaha_id', $usahaId)
+                        ->where('kode', $kode)
+                        ->exists();
+                    $counter++;
+                }
+            }
+
+            $validated['kode'] = $kode;
+
+            $akun = Akun::create($validated);
+
+            if ($validated['saldo'] != 0) {
+                $this->catatSaldoAwal($akun, $validated['saldo'], $usahaId);
+            }
+        });
+
+        return redirect()->route('admin.akuns.index', ['usaha_id' => $usahaId])->with('success', 'Akun berhasil ditambahkan.');
+    }
+
+    private function catatSaldoAwal(Akun $akun, float $saldo, $usahaId)
+    {
+        $type = in_array($akun->klasifikasi, ['ASET', 'BEBAN']) ? 'DEBIT' : 'KREDIT';
+
+        JurnalUmum::create([
+            'akun_id' => $akun->id,
+            'tanggal_transaksi' => now(),
+            'deskripsi' => "Saldo Awal - " . $akun->name,
+            'debit' => $type === 'DEBIT' ? $saldo : 0,
+            'kredit' => $type === 'KREDIT' ? $saldo : 0,
+            'referensi_transaksi_id' => $akun->id,
+            'referensi_transaksi_tipe' => get_class($akun),
+            'usaha_id' => $usahaId,
+        ]);
+    }
+
+    public function update(Request $request, Akun $akun)
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $akun->usaha_id)->exists()) {
+            return redirect()->route('admin.akuns.index')->with('error', 'Anda tidak memiliki akses ke akun ini.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'kode' => 'required|string|max:10',
+            'klasifikasi' => 'required|string|in:ASET,KEWAJIBAN,EKUITAS,PENDAPATAN,BEBAN',
+            'sub_klasifikasi' => 'nullable|string|in:LANCAR,TETAP,JANGKA PANJANG',
+            'aktivitas_kas' => 'required|string|in:OPERASI,INVESTASI,PENDANAAN,TIDAK BERLAKU',
+            'nama_kelompok' => 'nullable|string|max:50',
+        ]);
+
+        $akun->update($validated);
+        return redirect()->route('admin.akuns.index', ['usaha_id' => $akun->usaha_id])->with('success', 'Akun berhasil diperbarui.');
+    }
+
+    public function destroy(Akun $akun)
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser->usahas()->where('usahas.id', $akun->usaha_id)->exists()) {
+            return redirect()->route('admin.akuns.index')->with('error', 'Anda tidak memiliki akses ke akun ini.');
+        }
+
+        DB::transaction(function () use ($akun) {
+            JurnalUmum::where('akun_id', $akun->id)
+                ->where('usaha_id', $akun->usaha_id)
+                ->delete();
+            $akun->delete();
+        });
+
+        return redirect()->route('admin.akuns.index', ['usaha_id' => $akun->usaha_id])->with('success', 'Akun berhasil dihapus.');
+    }
+
+    public function coa(Request $request)
+    {
+        $currentUser = Auth::user();
+        $usahaSelected = $request->get('usaha_id');
+
+        $usahas = $currentUser->usahas()->get();
+
+        if (!$usahaSelected && $usahas->count() > 0) {
+            $usahaSelected = $usahas->first()->id;
+        }
+
+        if (!$usahaSelected) {
+            $neracaGroups = collect();
+            $labaRugiGroups = collect();
+        } else {
+            $akuns = Akun::where('usaha_id', $usahaSelected)
+                ->orderBy('kode', 'asc')
+                ->get();
+
+            $groupedByClassification = $akuns->groupBy('klasifikasi');
+
+            $groupedAkuns = $groupedByClassification->map(function ($classificationGroup, $klasifikasi) {
+                if (in_array($klasifikasi, ['ASET', 'KEWAJIBAN'])) {
+                    return $classificationGroup->groupBy(function ($akun) {
+                        return $akun->sub_klasifikasi ?: 'Lainnya';
+                    });
+                }
+
+                return $classificationGroup->groupBy(function ($akun) {
+                    if (!empty($akun->sub_klasifikasi)) {
+                        return $akun->sub_klasifikasi;
+                    }
+                    return $akun->nama_kelompok ?: 'Lainnya';
+                });
+            });
+
+            $neracaGroups = collect([
+                'ASET' => $groupedAkuns->get('ASET', collect()),
+                'KEWAJIBAN' => $groupedAkuns->get('KEWAJIBAN', collect()),
+                'EKUITAS' => $groupedAkuns->get('EKUITAS', collect()),
+            ]);
+
+            $labaRugiGroups = collect([
+                'PENDAPATAN' => $groupedAkuns->get('PENDAPATAN', collect()),
+                'BEBAN' => $groupedAkuns->get('BEBAN', collect()),
+            ]);
+        }
+
+        return view('admin.akuns.coa', compact('neracaGroups', 'labaRugiGroups', 'usahas', 'usahaSelected'));
+    }
+
+    public function grafikTransaksi(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.grafik_transaksi')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $akuns = Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get();
+
+    $akun_id = $request->input('akun_id');
+    $akunSelected = $akun_id ? $akuns->firstWhere('id', $akun_id) : $akuns->first();
+
+    $tahun = $request->input('tahun', now()->year);
+
+    $bulanList = [
+        1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+        5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu',
+        9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+    ];
+
+    $pengeluaranPerBulan = array_fill(1, 12, 0);
+    $pemasukanPerBulan = array_fill(1, 12, 0);
+
+    if ($akunSelected) {
+        $mutasiData = JurnalUmum::selectRaw('MONTH(tanggal_transaksi) as bulan, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+            ->where('usaha_id', $usahaSelected)
+            ->where('akun_id', $akunSelected->id)
+            ->whereYear('tanggal_transaksi', $tahun)
+            ->groupBy('bulan')
+            ->get();
+
+        foreach ($mutasiData as $row) {
+            $bulan = (int) $row->bulan;
+            $pengeluaranPerBulan[$bulan] = $row->total_debit;
+            $pemasukanPerBulan[$bulan] = $row->total_kredit;
+        }
+    }
+
+    $chartLabels = array_values($bulanList);
+    $chartPengeluaran = array_values($pengeluaranPerBulan);
+    $chartPemasukan = array_values($pemasukanPerBulan);
+    $totalPengeluaran = array_sum($chartPengeluaran);
+    $totalPemasukan = array_sum($chartPemasukan);
+
+    return view('admin.laporan.grafik_transaksi', compact(
+        'usaha', 'akuns', 'akunSelected', 'chartLabels', 'chartPengeluaran', 'chartPemasukan',
+        'totalPengeluaran', 'totalPemasukan', 'tahun', 'usahas', 'usahaSelected'
+    ));
+}
+
+    public function labaRugi(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.laba_rugi')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $start_date_str = $request->input('start_date', now()->startOfYear()->toDateString());
+    $end_date_str = $request->input('end_date', now()->endOfYear()->toDateString());
+
+    $bulan_awal = Carbon::parse($start_date_str)->startOfDay();
+    $bulan_akhir = Carbon::parse($end_date_str)->endOfDay();
+
+    $akunNominal = Akun::where('usaha_id', $usahaSelected)
+        ->whereIn('klasifikasi', ['PENDAPATAN', 'BEBAN'])
+        ->orderBy('kode', 'asc')
+        ->get();
+
+    $mutasiData = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usahaSelected)
+        ->whereBetween('tanggal_transaksi', [$bulan_awal, $bulan_akhir])
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $labaRugiItems = [
+        'PENJUALAN_BERSIH' => [],
+        'HPP' => [],
+        'BEBAN_OPERASI' => [],
+        'PENDAPATAN_BEBAN_LAIN' => []
+    ];
+
+    $totalPenjualanBersih = 0;
+    $totalHpp = 0;
+    $totalBebanOperasi = 0;
+    $totalPendapatanLain = 0;
+    $totalBebanLain = 0;
+
+    foreach ($akunNominal as $akun) {
+        $mutasi = $mutasiData->get($akun->id);
+        $debit = $mutasi->total_debit ?? 0;
+        $kredit = $mutasi->total_kredit ?? 0;
+
+        $mutasiBersih = $akun->klasifikasi === 'BEBAN' ? ($debit - $kredit) : ($kredit - $debit);
+
+        if (abs($mutasiBersih) < 0.01) continue;
+
+        $item = [
+            'id' => $akun->id,
+            'name' => $akun->name,
+            'klasifikasi' => $akun->klasifikasi,
+            'kelompok' => $akun->nama_kelompok,
+            'mutasi_bersih' => $mutasiBersih,
+        ];
+
+        $akunNameUpper = strtoupper($akun->name);
+        $kelompokUpper = strtoupper($akun->nama_kelompok ?? '');
+
+        if ($akun->klasifikasi === 'PENDAPATAN') {
+            $isPendapatanLain = str_contains($akunNameUpper, 'BUNGA') || str_contains($akunNameUpper, 'LAIN') || str_contains($kelompokUpper, 'LAIN');
+            if ($isPendapatanLain) {
+                $totalPendapatanLain += $mutasiBersih;
+                $labaRugiItems['PENDAPATAN_BEBAN_LAIN'][] = $item;
+            } else {
+                $totalPenjualanBersih += $mutasiBersih;
+                $labaRugiItems['PENJUALAN_BERSIH'][] = $item;
+            }
+        } else {
+            $isHpp = str_contains($akunNameUpper, 'HPP') || str_contains($akunNameUpper, 'HARGA POKOK') || str_contains($kelompokUpper, 'HPP');
+            $isBebanLain = str_contains($akunNameUpper, 'BUNGA') || str_contains($akunNameUpper, 'LAIN') || str_contains($kelompokUpper, 'LAIN');
+            if ($isHpp) {
+                $totalHpp += $mutasiBersih;
+                $labaRugiItems['HPP'][] = $item;
+            } elseif ($isBebanLain) {
+                $totalBebanLain += $mutasiBersih;
+                $labaRugiItems['PENDAPATAN_BEBAN_LAIN'][] = $item;
+            } else {
+                $totalBebanOperasi += $mutasiBersih;
+                $labaRugiItems['BEBAN_OPERASI'][] = $item;
+            }
+        }
+    }
+
+    $labaKotor = $totalPenjualanBersih - $totalHpp;
+    $labaOperasi = $labaKotor - $totalBebanOperasi;
+    $pendapatanBebanLainBersih = $totalPendapatanLain - $totalBebanLain;
+    $labaBersih = $labaOperasi + $pendapatanBebanLainBersih;
+
+    return view('admin.laporan.laba_rugi', compact(
+        'usaha', 'labaRugiItems', 'totalPenjualanBersih', 'totalHpp', 'labaKotor',
+        'totalBebanOperasi', 'labaOperasi', 'totalPendapatanLain', 'totalBebanLain',
+        'pendapatanBebanLainBersih', 'labaBersih', 'start_date_str', 'end_date_str',
+        'usahas', 'usahaSelected'
+    ));
+}
+
+    public function neraca(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.neraca')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $tahun = $request->input('tahun', now()->year);
+    $tanggal_neraca = Carbon::create($tahun, 12, 31)->endOfDay();
+    $tahun_start = Carbon::create($tahun, 1, 1)->startOfDay();
+
+    $akuns = Akun::where('usaha_id', $usahaSelected)
+        ->whereIn('klasifikasi', ['ASET', 'KEWAJIBAN', 'EKUITAS'])
+        ->orderBy('kode', 'asc')
+        ->get();
+
+    $mutasiData = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usahaSelected)
+        ->where('tanggal_transaksi', '<=', $tanggal_neraca)
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $neracaItems = [
+        'ASET_LANCAR' => [],
+        'ASET_TETAP_BRUTO' => [],
+        'AKUMULASI_PENYUSUTAN' => [],
+        'KEWAJIBAN_LANCAR' => [],
+        'KEWAJIBAN_PANJANG' => [],
+        'EKUITAS' => []
+    ];
+
+    $totalAsetLancar = 0;
+    $totalAsetTetapBruto = 0;
+    $totalAkumulasiPenyusutan = 0;
+    $totalKewajibanLancar = 0;
+    $totalKewajibanPanjang = 0;
+    $totalEkuitas = 0;
+
+    foreach ($akuns as $akun) {
+        $mutasi = $mutasiData->get($akun->id);
+        $debit = $mutasi->total_debit ?? 0;
+        $kredit = $mutasi->total_kredit ?? 0;
+
+        $saldoAkhir = in_array($akun->klasifikasi, ['ASET']) ? ($debit - $kredit) : ($kredit - $debit);
+
+        if (abs($saldoAkhir) < 0.01) continue;
+
+        $item = [
+            'id' => $akun->id,
+            'name' => $akun->name,
+            'saldo_akhir' => $saldoAkhir,
+            'sub_klasifikasi' => $akun->sub_klasifikasi,
+            'nama_kelompok' => $akun->nama_kelompok
+        ];
+
+        if ($akun->klasifikasi === 'ASET') {
+            $isAkumulasi = str_contains(strtoupper($akun->name), 'AKUMULASI');
+            if ($isAkumulasi) {
+                $totalAkumulasiPenyusutan += $saldoAkhir;
+                $neracaItems['AKUMULASI_PENYUSUTAN'][] = $item;
+            } elseif ($akun->sub_klasifikasi === 'LANCAR') {
+                $totalAsetLancar += $saldoAkhir;
+                $neracaItems['ASET_LANCAR'][] = $item;
+            } else {
+                $totalAsetTetapBruto += $saldoAkhir;
+                $neracaItems['ASET_TETAP_BRUTO'][] = $item;
+            }
+        } elseif ($akun->klasifikasi === 'KEWAJIBAN') {
+            if ($akun->sub_klasifikasi === 'LANCAR') {
+                $totalKewajibanLancar += $saldoAkhir;
+                $neracaItems['KEWAJIBAN_LANCAR'][] = $item;
+            } else {
+                $totalKewajibanPanjang += $saldoAkhir;
+                $neracaItems['KEWAJIBAN_PANJANG'][] = $item;
+            }
+        } else {
+            $totalEkuitas += $saldoAkhir;
+            $neracaItems['EKUITAS'][] = $item;
+        }
+    }
+
+    $labaBersih = $this->hitungLabaBersih($tahun_start, $tanggal_neraca, $usahaSelected);
+    $totalEkuitas += $labaBersih;
+
+    $totalAsetTetapNeto = $totalAsetTetapBruto + $totalAkumulasiPenyusutan;
+    $totalAset = $totalAsetLancar + $totalAsetTetapNeto;
+    $totalKewajiban = $totalKewajibanLancar + $totalKewajibanPanjang;
+    $totalKewajibanEkuitas = $totalKewajiban + $totalEkuitas;
+
+    $statusSeimbang = abs($totalAset - $totalKewajibanEkuitas) < 1 ? 'Seimbang' : 'Tidak Seimbang';
+    $selisih = $totalAset - $totalKewajibanEkuitas;
+
+    return view('admin.laporan.neraca', compact(
+        'usaha', 'neracaItems', 'totalAsetLancar', 'totalAsetTetapBruto', 'totalAkumulasiPenyusutan',
+        'totalAsetTetapNeto', 'totalKewajibanLancar', 'totalKewajibanPanjang', 'totalEkuitas',
+        'totalAset', 'totalKewajiban', 'totalKewajibanEkuitas', 'labaBersih',
+        'statusSeimbang', 'selisih', 'tahun', 'usahas', 'usahaSelected'
+    ));
+}
+
+    private function hitungLabaBersih($start_date, $end_date, $usaha_id)
+{
+    $akunNominal = Akun::where('usaha_id', $usaha_id)
+        ->whereIn('klasifikasi', ['PENDAPATAN', 'BEBAN'])
+        ->get();
+
+    $mutasiData = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usaha_id)
+        ->whereBetween('tanggal_transaksi', [$start_date, $end_date])
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $totalPendapatan = 0;
+    $totalBeban = 0;
+
+    foreach ($akunNominal as $akun) {
+        $mutasi = $mutasiData->get($akun->id);
+        $debit = $mutasi ? $mutasi->total_debit : 0;
+        $kredit = $mutasi ? $mutasi->total_kredit : 0;
+
+        $mutasiBersih = $akun->klasifikasi === 'BEBAN' ? ($debit - $kredit) : ($kredit - $debit);
+
+        if ($akun->klasifikasi === 'PENDAPATAN') {
+            $totalPendapatan += $mutasiBersih;
+        } else {
+            $totalBeban += $mutasiBersih;
+        }
+    }
+
+    return $totalPendapatan - $totalBeban;
+}
+
+    public function arusKas(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.arus_kas')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $tahun = $request->input('tahun', now()->year);
+    $start_date = Carbon::create($tahun, 1, 1)->startOfDay();
+    $end_date = Carbon::create($tahun, 12, 31)->endOfDay();
+
+    $akunKasBank = Akun::where('usaha_id', $usahaSelected)
+        ->where('klasifikasi', 'ASET')
+        ->where(function ($q) {
+            $q->where('name', 'like', '%kas%')
+                ->orWhere('name', 'like', '%bank%')
+                ->orWhere('name', 'like', '%bca%')
+                ->orWhere('name', 'like', '%bri%')
+                ->orWhere('name', 'like', '%mandiri%');
+        })->get();
+
+    $saldoAwalMutasi = JurnalUmum::selectRaw('akun_id, SUM(debit) - SUM(kredit) as net')
+        ->whereIn('akun_id', $akunKasBank->pluck('id'))
+        ->where('usaha_id', $usahaSelected)
+        ->where('tanggal_transaksi', '<', $start_date)
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $saldoAwalKas = 0;
+    foreach ($akunKasBank as $akun) {
+        $saldoAwalKas += $saldoAwalMutasi->get($akun->id)->net ?? 0;
+    }
+
+    $jurnalKas = JurnalUmum::with('akun')
+        ->where('usaha_id', $usahaSelected)
+        ->whereBetween('tanggal_transaksi', [$start_date, $end_date])
+        ->whereHas('akun', fn($q) => $q->whereIn('aktivitas_kas', ['OPERASI', 'INVESTASI', 'PENDANAAN']))
+        ->where('deskripsi', 'not like', '%Saldo Awal%')
+        ->get();
+
+    $arusKas = [
+        'OPERASI'   => ['penerimaan' => 0, 'pengeluaran' => 0, 'transaksi' => []],
+        'INVESTASI' => ['penerimaan' => 0, 'pengeluaran' => 0, 'transaksi' => []],
+        'PENDANAAN' => ['penerimaan' => 0, 'pengeluaran' => 0, 'transaksi' => []],
+    ];
+
+    foreach ($jurnalKas as $jurnal) {
+        $akun = $jurnal->akun;
+        $aktivitas = $akun->aktivitas_kas;
+
+        if ($jurnal->debit > 0) {
+            if (in_array($akun->klasifikasi, ['ASET', 'BEBAN'])) {
+                $arusKas[$aktivitas]['pengeluaran'] += $jurnal->debit;
+                $arusKas[$aktivitas]['transaksi'][] = ['tanggal' => Carbon::parse($jurnal->tanggal_transaksi)->format('d/m/Y'), 'deskripsi' => $jurnal->deskripsi, 'jumlah' => $jurnal->debit, 'tipe' => 'pengeluaran'];
+            } else {
+                $arusKas[$aktivitas]['penerimaan'] += $jurnal->debit;
+                $arusKas[$aktivitas]['transaksi'][] = ['tanggal' => Carbon::parse($jurnal->tanggal_transaksi)->format('d/m/Y'), 'deskripsi' => $jurnal->deskripsi, 'jumlah' => $jurnal->debit, 'tipe' => 'penerimaan'];
+            }
+        } elseif ($jurnal->kredit > 0) {
+            if (in_array($akun->klasifikasi, ['KEWAJIBAN', 'EKUITAS', 'PENDAPATAN'])) {
+                $arusKas[$aktivitas]['penerimaan'] += $jurnal->kredit;
+                $arusKas[$aktivitas]['transaksi'][] = ['tanggal' => Carbon::parse($jurnal->tanggal_transaksi)->format('d/m/Y'), 'deskripsi' => $jurnal->deskripsi, 'jumlah' => $jurnal->kredit, 'tipe' => 'penerimaan'];
+            } else {
+                $arusKas[$aktivitas]['pengeluaran'] += $jurnal->kredit;
+                $arusKas[$aktivitas]['transaksi'][] = ['tanggal' => Carbon::parse($jurnal->tanggal_transaksi)->format('d/m/Y'), 'deskripsi' => $jurnal->deskripsi, 'jumlah' => $jurnal->kredit, 'tipe' => 'pengeluaran'];
+            }
+        }
+    }
+
+    $arusKasBersihOperasi   = $arusKas['OPERASI']['penerimaan']   - $arusKas['OPERASI']['pengeluaran'];
+    $arusKasBersihInvestasi = $arusKas['INVESTASI']['penerimaan'] - $arusKas['INVESTASI']['pengeluaran'];
+    $arusKasBersihPendanaan = $arusKas['PENDANAAN']['penerimaan'] - $arusKas['PENDANAAN']['pengeluaran'];
+    $totalArusKasBersih = $arusKasBersihOperasi + $arusKasBersihInvestasi + $arusKasBersihPendanaan;
+    $saldoAkhirKas = $saldoAwalKas + $totalArusKasBersih;
+
+    return view('admin.laporan.arus_kas', compact(
+        'usaha', 'arusKas', 'arusKasBersihOperasi', 'arusKasBersihInvestasi', 'arusKasBersihPendanaan',
+        'totalArusKasBersih', 'saldoAwalKas', 'saldoAkhirKas', 'tahun', 'usahas', 'usahaSelected'
+    ));
+}
+public function bukuBesar(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.buku_besar')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $akun_id = $request->input('akun_id');
+    $tahun = $request->input('tahun', now()->year);
+    $bulan = $request->input('bulan');
+
+    $start_date = $bulan
+        ? Carbon::parse($tahun . '-' . $bulan . '-01')->startOfMonth()->startOfDay()
+        : Carbon::create($tahun, 1, 1)->startOfDay();
+    $end_date = $bulan
+        ? Carbon::parse($tahun . '-' . $bulan . '-01')->endOfMonth()->endOfDay()
+        : Carbon::create($tahun, 12, 31)->endOfDay();
+
+    $akuns = Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get();
+
+    $akunSelected = $akun_id ? $akuns->firstWhere('id', $akun_id) : $akuns->first();
+
+    $bukuBesarData = [];
+    $saldoAwal = 0;
+
+    if ($akunSelected) {
+        $akun_id = $akunSelected->id;
+
+        $mutasiSebelum = JurnalUmum::selectRaw('SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+            ->where('akun_id', $akun_id)
+            ->where('usaha_id', $usahaSelected)
+            ->where('tanggal_transaksi', '<', $start_date)
+            ->first();
+
+        $debitSebelum = $mutasiSebelum->total_debit ?? 0;
+        $kreditSebelum = $mutasiSebelum->total_kredit ?? 0;
+
+        $saldoAwal = in_array($akunSelected->klasifikasi, ['ASET', 'BEBAN'])
+            ? ($debitSebelum - $kreditSebelum)
+            : ($kreditSebelum - $debitSebelum);
+
+        $jurnals = JurnalUmum::where('akun_id', $akun_id)
+            ->where('usaha_id', $usahaSelected)
+            ->whereBetween('tanggal_transaksi', [$start_date, $end_date])
+            ->orderBy('tanggal_transaksi')
+            ->orderBy('id')
+            ->get();
+
+        $saldoBerjalan = $saldoAwal;
+
+        foreach ($jurnals as $j) {
+            if (in_array($akunSelected->klasifikasi, ['ASET', 'BEBAN'])) {
+                $saldoBerjalan += ($j->debit - $j->kredit);
+            } else {
+                $saldoBerjalan += ($j->kredit - $j->debit);
+            }
+
+            $bukuBesarData[] = [
+                'tanggal'  => Carbon::parse($j->tanggal_transaksi)->format('d/m/Y'),
+                'deskripsi' => $j->deskripsi,
+                'debit'    => $j->debit,
+                'kredit'   => $j->kredit,
+                'saldo'    => $saldoBerjalan,
+                'is_penyesuaian' => $j->is_penyesuaian,
+            ];
+        }
+    }
+
+    $bulanList = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+    ];
+
+    return view('admin.laporan.buku_besar', compact(
+        'usaha', 'akuns', 'akunSelected', 'bukuBesarData',
+        'saldoAwal', 'tahun', 'bulan', 'bulanList',
+        'start_date', 'end_date', 'usahas', 'usahaSelected'
+    ));
+}
+
+public function perubahanEkuitas(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.perubahan_ekuitas')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $bulan_awal = $request->input('start_date', now()->startOfYear()->toDateString());
+    $bulan_akhir = $request->input('end_date', now()->endOfYear()->toDateString());
+
+    $start = Carbon::parse($bulan_awal)->startOfDay();
+    $end = Carbon::parse($bulan_akhir)->endOfDay();
+
+    $akunEkuitas = Akun::where('usaha_id', $usahaSelected)
+        ->where('klasifikasi', 'EKUITAS')
+        ->orderBy('kode')
+        ->get();
+
+    // Saldo SEBELUM periode -> dipakai untuk Modal Awal
+    $mutasiAwal = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usahaSelected)
+        ->where('tanggal_transaksi', '<', $start)
+        ->whereIn('akun_id', $akunEkuitas->pluck('id'))
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    // Mutasi SELAMA periode -> dipakai untuk Setoran, Laba Ditahan, Dividen, Prive
+    $mutasiPeriode = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usahaSelected)
+        ->whereBetween('tanggal_transaksi', [$start, $end])
+        ->whereIn('akun_id', $akunEkuitas->pluck('id'))
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $modalAwalCeo = 0; $modalAwalCto = 0;
+    $setoranCeo = 0; $setoranCto = 0;
+    $labaDitahan = 0; $dividen = 0;
+    $priveCeo = 0; $priveCto = 0;
+
+    foreach ($akunEkuitas as $akun) {
+        $kategori = $this->kategorikanAkunEkuitas($akun->name);
+        if (!$kategori) continue;
+
+        $mAwal = $mutasiAwal->get($akun->id);
+        $saldoAwalAkun = ($mAwal->total_kredit ?? 0) - ($mAwal->total_debit ?? 0);
+
+        $mPeriode = $mutasiPeriode->get($akun->id);
+        $debitP = $mPeriode->total_debit ?? 0;
+        $kreditP = $mPeriode->total_kredit ?? 0;
+
+        switch ($kategori) {
+            case 'modal_awal_ceo': $modalAwalCeo += $saldoAwalAkun; break;
+            case 'modal_awal_cto': $modalAwalCto += $saldoAwalAkun; break;
+            case 'setoran_ceo':    $setoranCeo += ($kreditP - $debitP); break;
+            case 'setoran_cto':    $setoranCto += ($kreditP - $debitP); break;
+            case 'laba_ditahan':   $labaDitahan += ($kreditP - $debitP); break;
+            // Dividen & Prive sifatnya kontra-ekuitas (normalnya dicatat Debit saat dibagikan)
+            case 'dividen':   $dividen  += ($debitP - $kreditP); break;
+            case 'prive_ceo': $priveCeo += ($debitP - $kreditP); break;
+            case 'prive_cto': $priveCto += ($debitP - $kreditP); break;
+        }
+    }
+
+    $labaTahunBerjalan = $this->hitungLabaBersih($start, $end, $usahaSelected);
+
+    $hasil1 = $modalAwalCeo + $modalAwalCto;                              // (1)+(2)
+    $hasil2 = $setoranCeo + $setoranCto + $labaDitahan + $labaTahunBerjalan; // (3)+(4)+(5)+(6)
+    $hasil3 = $dividen + $priveCeo + $priveCto;                           // (7)+(8)+(9)
+
+    $total = $hasil1 + $hasil2;
+    $modalAkhir = $total - $hasil3;
+
+    return view('admin.laporan.perubahan_ekuitas', compact(
+        'usaha',
+        'modalAwalCeo', 'modalAwalCto', 'hasil1',
+        'setoranCeo', 'setoranCto', 'labaDitahan', 'labaTahunBerjalan', 'hasil2',
+        'dividen', 'priveCeo', 'priveCto', 'hasil3',
+        'total', 'modalAkhir',
+        'bulan_awal', 'bulan_akhir', 'usahas', 'usahaSelected'
+    ));
+}
+
+private function kategorikanAkunEkuitas($namaAkun)
+{
+    $nama = strtoupper($namaAkun);
+
+    if (str_contains($nama, 'MODAL AWAL') && str_contains($nama, 'CEO')) return 'modal_awal_ceo';
+    if (str_contains($nama, 'MODAL AWAL') && str_contains($nama, 'CTO')) return 'modal_awal_cto';
+    if (str_contains($nama, 'SETORAN') && str_contains($nama, 'CEO')) return 'setoran_ceo';
+    if (str_contains($nama, 'SETORAN') && str_contains($nama, 'CTO')) return 'setoran_cto';
+    if (str_contains($nama, 'LABA DITAHAN')) return 'laba_ditahan';
+    if (str_contains($nama, 'DIVIDEN')) return 'dividen';
+    if (str_contains($nama, 'PRIVE') && str_contains($nama, 'CEO')) return 'prive_ceo';
+    if (str_contains($nama, 'PRIVE') && str_contains($nama, 'CTO')) return 'prive_cto';
+
+    return null;
+}
+
+
+    public function bukuKas(Request $request)
+    {
+        $currentUser = Auth::user();
+        $usahaSelected = $request->get('usaha_id');
+
+        $usahas = $currentUser->usahas()->get();
+
+        if (!$usahaSelected && $usahas->count() > 0) {
+            $usahaSelected = $usahas->first()->id;
+        }
+
+        if (!$usahaSelected) {
+            return redirect()->route('admin.laporan.buku_kas')->with('error', 'Pilih usaha terlebih dahulu.');
+        }
+
+        $usaha = Usaha::find($usahaSelected);
+
+        if (!$usaha) {
+            return redirect()->route('admin.laporan.buku_kas')->with('error', 'Usaha tidak ditemukan.');
+        }
+
+        $akun_id = $request->input('akun_id');
+        $bulan = $request->input('bulan', now()->format('Y-m'));
+
+        $start_date = Carbon::parse($bulan)->startOfMonth()->startOfDay();
+        $end_date = Carbon::parse($bulan)->endOfMonth()->endOfDay();
+
+        $akunKasBank = Akun::where('usaha_id', $usahaSelected)
+            ->whereIn('klasifikasi', ['ASET'])
+            ->where(function ($query) {
+                $query->where('name', 'like', '%kas%')
+                    ->orWhere('name', 'like', '%bank%')
+                    ->orWhere('name', 'like', '%bca%')
+                    ->orWhere('name', 'like', '%bri%')
+                    ->orWhere('name', 'like', '%mandiri%');
+            })
+            ->get();
+
+        if (!$akun_id && $akunKasBank->count() > 0) {
+            $akun_id = $akunKasBank->first()->id;
+        }
+
+        $akunSelected = Akun::where('usaha_id', $usahaSelected)->find($akun_id);
+        $saldoAwal = $akunSelected ? $akunSelected->saldo : 0;
+
+        $transaksiKas = JurnalUmum::with(['akun', 'referensiTransaksi'])
+            ->where('akun_id', $akun_id)
+            ->where('usaha_id', $usahaSelected)
+            ->whereBetween('tanggal_transaksi', [$start_date, $end_date])
+            ->where('deskripsi', 'not like', '%Saldo Awal%')
+            ->orderBy('tanggal_transaksi')
+            ->orderBy('id')
+            ->get();
+
+        $saldoBerjalan = $saldoAwal;
+        $bukuKas = [];
+
+        foreach ($transaksiKas as $jurnal) {
+            $debit = $jurnal->debit;
+            $kredit = $jurnal->kredit;
+
+            if ($debit > 0) {
+                $saldoBerjalan += $debit;
+                $tipe = 'penerimaan';
+                $jumlah = $debit;
+            } else {
+                $saldoBerjalan -= $kredit;
+                $tipe = 'pengeluaran';
+                $jumlah = $kredit;
+            }
+
+            $akunLawan = $this->getAkunLawan($jurnal, $usahaSelected);
+
+            $bukuKas[] = [
+                'tanggal' => $jurnal->tanggal_transaksi->format('d/m/Y'),
+                'deskripsi' => $jurnal->deskripsi,
+                'akun_lawan' => $akunLawan,
+                'debit' => $debit,
+                'kredit' => $kredit,
+                'saldo_berjalan' => $saldoBerjalan,
+                'tipe' => $tipe
+            ];
+        }
+
+        $totalPenerimaan = $transaksiKas->sum('debit');
+        $totalPengeluaran = $transaksiKas->sum('kredit');
+        $saldoAkhir = $saldoAwal + $totalPenerimaan - $totalPengeluaran;
+
+        return view('admin.laporan.buku_kas', compact(
+            'usaha',
+            'bukuKas',
+            'akunKasBank',
+            'akunSelected',
+            'saldoAwal',
+            'saldoAkhir',
+            'totalPenerimaan',
+            'totalPengeluaran',
+            'bulan',
+            'akun_id',
+            'usahas',
+            'usahaSelected'
+        ));
+    }
+
+    private function getAkunLawan($jurnal, $usaha_id)
+    {
+        $referensi = $jurnal->referensiTransaksi;
+
+        if ($referensi) {
+            if (method_exists($referensi, 'akunLawan')) {
+                $akunLawan = $referensi->akunLawan;
+                return $akunLawan ? $akunLawan->name : 'Akun Lawan';
+            }
+
+            if (method_exists($referensi, 'akunPayment')) {
+                $akunPayment = $referensi->akunPayment;
+                return $akunPayment ? $akunPayment->name : 'Akun Payment';
+            }
+        }
+
+        $transaksiLawan = JurnalUmum::where('usaha_id', $usaha_id)
+            ->where('id', '!=', $jurnal->id)
+            ->where('tanggal_transaksi', $jurnal->tanggal_transaksi)
+            ->where('deskripsi', $jurnal->deskripsi)
+            ->where(function ($query) use ($jurnal) {
+                $query->where('debit', $jurnal->kredit)
+                    ->orWhere('kredit', $jurnal->debit);
+            })
+            ->first();
+
+        if ($transaksiLawan) {
+            $akunLawan = $transaksiLawan->akun;
+            return $akunLawan ? $akunLawan->name : 'Akun Lawan';
+        }
+
+        return 'Tidak Diketahui';
+    }
+
+    public function neracaLajur(Request $request)
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
+    $usahas = $currentUser->usahas()->get();
+
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
+    }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.neraca_lajur')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    $tahun = $request->input('tahun', now()->year);
+    $end_date = Carbon::create($tahun, 12, 31)->endOfDay();
+
+    $akuns = Akun::where('usaha_id', $usahaSelected)->orderBy('kode')->get();
+
+    $mutasiData = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usahaSelected)
+        ->where('tanggal_transaksi', '<=', $end_date)
+        ->where(function ($q) { $q->whereNull('is_penyesuaian')->orWhere('is_penyesuaian', false); })
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $penyesuaianData = JurnalUmum::selectRaw('akun_id, SUM(debit) as total_debit, SUM(kredit) as total_kredit')
+        ->where('usaha_id', $usahaSelected)
+        ->where('tanggal_transaksi', '<=', $end_date)
+        ->where('is_penyesuaian', true)
+        ->groupBy('akun_id')
+        ->get()->keyBy('akun_id');
+
+    $rows = [];
+
+    foreach ($akuns as $akun) {
+        $mutasi = $mutasiData->get($akun->id);
+        $totalDebit = $mutasi->total_debit ?? 0;
+        $totalKredit = $mutasi->total_kredit ?? 0;
+
+        $isDebitNormal = in_array($akun->klasifikasi, ['ASET', 'BEBAN']);
+        $ns_net = $isDebitNormal ? ($totalDebit - $totalKredit) : ($totalKredit - $totalDebit);
+        $ns_debit = $ns_net > 0 ? $ns_net : 0;
+        $ns_kredit = $ns_net < 0 ? abs($ns_net) : 0;
+
+        $penyesuaian = $penyesuaianData->get($akun->id);
+        $jp_debit = $penyesuaian->total_debit ?? 0;
+        $jp_kredit = $penyesuaian->total_kredit ?? 0;
+
+        $nssd_net = $ns_net + ($isDebitNormal ? ($jp_debit - $jp_kredit) : ($jp_kredit - $jp_debit));
+        $nssd = $nssd_net > 0 ? $nssd_net : 0;
+        $nssk = $nssd_net < 0 ? abs($nssd_net) : 0;
+
+        if ($ns_debit == 0 && $ns_kredit == 0 && $jp_debit == 0 && $jp_kredit == 0) continue;
+
+        $lr_debit = 0; $lr_kredit = 0; $n_debit = 0; $n_kredit = 0;
+        if (in_array($akun->klasifikasi, ['PENDAPATAN', 'BEBAN'])) {
+            $lr_debit = $nssd; $lr_kredit = $nssk;
+        } else {
+            $n_debit = $nssd; $n_kredit = $nssk;
+        }
+
+        $rows[] = [
+            'kode' => $akun->kode, 'name' => $akun->name,
+            'ns_debit' => $ns_debit, 'ns_kredit' => $ns_kredit,
+            'jp_debit' => $jp_debit, 'jp_kredit' => $jp_kredit,
+            'nssd' => $nssd, 'nssk' => $nssk,
+            'lr_debit' => $lr_debit, 'lr_kredit' => $lr_kredit,
+            'n_debit' => $n_debit, 'n_kredit' => $n_kredit,
+            'klasifikasi' => $akun->klasifikasi,
+        ];
+    }
+
+    usort($rows, fn($a, $b) => $a['kode'] <=> $b['kode']);
+
+    $totals = [
+        'ns_debit'  => array_sum(array_column($rows, 'ns_debit')),
+        'ns_kredit' => array_sum(array_column($rows, 'ns_kredit')),
+        'jp_debit'  => array_sum(array_column($rows, 'jp_debit')),
+        'jp_kredit' => array_sum(array_column($rows, 'jp_kredit')),
+        'nssd'      => array_sum(array_column($rows, 'nssd')),
+        'nssk'      => array_sum(array_column($rows, 'nssk')),
+        'lr_debit'  => array_sum(array_column($rows, 'lr_debit')),
+        'lr_kredit' => array_sum(array_column($rows, 'lr_kredit')),
+        'n_debit'   => array_sum(array_column($rows, 'n_debit')),
+        'n_kredit'  => array_sum(array_column($rows, 'n_kredit')),
+    ];
+
+    $labaUsaha = $totals['lr_kredit'] - $totals['lr_debit'];
+
+    return view('admin.laporan.neraca-lajur', compact(
+        'usaha', 'rows', 'totals', 'labaUsaha', 'tahun', 'usahas', 'usahaSelected'
+    ));
+}
+}
