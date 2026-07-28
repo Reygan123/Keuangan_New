@@ -1,35 +1,35 @@
 @extends('layouts.admin.app')
 
 @section('content')
-    <div class="p-4 sm:p-6 max-w-6xl mx-auto">
-        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-6">Edit Penjualan</h1>
+    <div class="p-4 sm:p-6 max-w-6xl mx-auto bg-[#F5F7FA] font-sans">
+        <h1 class="text-2xl sm:text-3xl font-bold text-[#0A192F] mb-6">Edit Penjualan</h1>
 
-        <div class="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/60 p-4 mb-6">
+        <div class="bg-white rounded-2xl border border-[#EEF2F6] shadow-[0_4px_20px_rgba(15,23,42,0.04)] p-4 mb-6">
             <div class="flex items-center gap-3">
-                <div class="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
-                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-[#EAF3FB] border border-[#005198]/20 rounded-xl p-3">
+                    <svg class="w-5 h-5 text-[#005198]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-slate-400 text-xs">Usaha</p>
-                    <p class="text-white font-semibold">{{ $usahas->where('id', $selectedUsahaId)->first()->nama ?? '' }}
+                    <p class="text-[#94A3B8] text-xs">Usaha</p>
+                    <p class="text-[#0A192F] font-semibold">{{ $usahas->where('id', $selectedUsahaId)->first()->nama ?? '' }}
                     </p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/60 p-4 sm:p-6">
+        <div class="bg-white rounded-2xl border border-[#EEF2F6] shadow-[0_4px_20px_rgba(15,23,42,0.04)] p-4 sm:p-6">
             <form action="{{ route('admin.penjualans.update', $penjualan) }}" method="POST" id="form-penjualan">
                 @csrf
                 @method('PUT')
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     <div>
-                        <label class="block text-slate-300 text-xs font-semibold uppercase mb-2">Label Transaksi</label>
+                        <label class="block text-[#334155] text-xs font-semibold uppercase mb-2">Label Transaksi</label>
                         <select name="label_id"
-                            class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition">
+                            class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-sm focus:outline-none focus:border-[#005198] focus:ring-1 focus:ring-[#005198]/20 transition">
                             @foreach ($labels as $l)
                                 <option value="{{ $l->id }}" @selected($penjualan->label_id == $l->id)>
                                     {{ $l->name ?? $l->nama_label }}</option>
@@ -37,9 +37,9 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-300 text-xs font-semibold uppercase mb-2">Pelanggan</label>
+                        <label class="block text-[#334155] text-xs font-semibold uppercase mb-2">Pelanggan</label>
                         <select name="pelanggan_id"
-                            class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition">
+                            class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-sm focus:outline-none focus:border-[#005198] focus:ring-1 focus:ring-[#005198]/20 transition">
                             <option value="">-- Pilih Pelanggan --</option>
                             @foreach ($pelanggans as $p)
                                 <option value="{{ $p->id }}" @selected($penjualan->pelanggan_id == $p->id)>{{ $p->name ?? $p->nama }}
@@ -48,9 +48,9 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-300 text-xs font-semibold uppercase mb-2">Akun Pembayaran</label>
+                        <label class="block text-[#334155] text-xs font-semibold uppercase mb-2">Akun Pembayaran</label>
                         <select name="akun_payment_id"
-                            class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition">
+                            class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-sm focus:outline-none focus:border-[#005198] focus:ring-1 focus:ring-[#005198]/20 transition">
                             @foreach ($akuns as $a)
                                 <option value="{{ $a->id }}" @selected($penjualan->akun_payment_id == $a->id)>{{ $a->name }}
                                 </option>
@@ -58,30 +58,30 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-300 text-xs font-semibold uppercase mb-2">Tanggal</label>
+                        <label class="block text-[#334155] text-xs font-semibold uppercase mb-2">Tanggal</label>
                         <input type="date" name="tanggal" value="{{ $penjualan->tanggal }}"
-                            class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition">
+                            class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-sm focus:outline-none focus:border-[#005198] focus:ring-1 focus:ring-[#005198]/20 transition">
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <h3 class="text-slate-300 text-xs font-semibold uppercase mb-3">Daftar Produk Terjual</h3>
-                    <div class="bg-slate-900/30 rounded-lg border border-slate-700/60 overflow-x-auto">
+                    <h3 class="text-[#334155] text-xs font-semibold uppercase mb-3">Daftar Produk Terjual</h3>
+                    <div class="bg-[#F8FAFC] rounded-xl border border-[#EEF2F6] overflow-x-auto">
                         <table class="min-w-full text-sm" id="produk-rows-table">
-                            <thead class="bg-slate-900/50">
+                            <thead class="bg-white border-b border-[#EEF2F6]">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-slate-300 text-xs font-semibold">Produk</th>
-                                    <th class="px-3 py-2 text-left text-slate-300 text-xs font-semibold">Qty</th>
-                                    <th class="px-3 py-2 text-left text-slate-300 text-xs font-semibold">Harga Satuan</th>
-                                    <th class="px-3 py-2 text-center text-slate-300 text-xs font-semibold">Aksi</th>
+                                    <th class="px-3 py-2 text-left text-[#334155] text-xs font-semibold">Produk</th>
+                                    <th class="px-3 py-2 text-left text-[#334155] text-xs font-semibold">Qty</th>
+                                    <th class="px-3 py-2 text-left text-[#334155] text-xs font-semibold">Harga Satuan</th>
+                                    <th class="px-3 py-2 text-center text-[#334155] text-xs font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="produk-rows" class="divide-y divide-slate-700/60">
+                            <tbody id="produk-rows" class="divide-y divide-[#EEF2F6]">
                                 @foreach ($penjualan->detailProduks as $detail)
-                                    <tr class="produk-row bg-slate-800/20 hover:bg-slate-800/40 transition">
+                                    <tr class="produk-row bg-white hover:bg-[#F8FAFC] transition">
                                         <td class="px-3 py-2">
                                             <select name="product_id[]"
-                                                class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                                                class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-xs focus:outline-none focus:border-[#005198]">
                                                 @foreach ($products as $prod)
                                                     <option value="{{ $prod->id }}" @selected($detail->product_id == $prod->id)>
                                                         {{ $prod->nama ?? $prod->name }}</option>
@@ -91,16 +91,16 @@
                                         <td class="px-3 py-2">
                                             <input type="number" name="kuantitas[]" step="0.01" min="0"
                                                 value="{{ $detail->kuantitas }}"
-                                                class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-xs input-qty focus:outline-none focus:border-blue-500">
+                                                class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-xs input-qty focus:outline-none focus:border-[#005198]">
                                         </td>
                                         <td class="px-3 py-2">
                                             <input type="number" name="harga_satuan[]" step="0.01" min="0"
                                                 value="{{ $detail->harga_satuan }}"
-                                                class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-xs input-harga focus:outline-none focus:border-blue-500">
+                                                class="w-full rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-2 text-xs input-harga focus:outline-none focus:border-[#005198]">
                                         </td>
                                         <td class="px-3 py-2 text-center">
                                             <button type="button"
-                                                class="btn-remove-row px-2 py-1 bg-red-600/80 hover:bg-red-600 text-white rounded text-xs transition">Hapus</button>
+                                                class="btn-remove-row px-2 py-1 bg-[#FEF2F2] hover:bg-[#FFE4E6] text-[#E11D48] rounded text-xs font-semibold transition">Hapus</button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -109,30 +109,30 @@
                     </div>
                     <div class="mt-3 flex justify-between items-center">
                         <button type="button" id="btn-add-row"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition">
+                            class="bg-[#005198] hover:bg-[#003d73] text-white font-semibold px-4 py-2 rounded-lg text-sm transition">
                             Tambah Produk
                         </button>
                         <div class="text-right">
-                            <p class="text-slate-400 text-xs">Total:</p>
-                            <p id="total-display" class="text-xl sm:text-2xl font-bold text-white">Rp
+                            <p class="text-[#94A3B8] text-xs">Total:</p>
+                            <p id="total-display" class="text-xl sm:text-2xl font-bold text-[#0A192F]">Rp
                                 {{ number_format($penjualan->jumlah, 0, ',', '.') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-slate-300 text-xs font-semibold uppercase mb-2">Keterangan</label>
+                    <label class="block text-[#334155] text-xs font-semibold uppercase mb-2">Keterangan</label>
                     <textarea name="keterangan" rows="2"
-                        class="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg text-white text-sm px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition">{{ $penjualan->keterangan }}</textarea>
+                        class="w-full bg-white border border-[#E2E8F0] rounded-lg text-[#0F172A] text-sm px-3 py-2 focus:outline-none focus:border-[#005198] focus:ring-1 focus:ring-[#005198]/20 transition">{{ $penjualan->keterangan }}</textarea>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 justify-end">
                     <button type="submit"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-lg text-sm transition">
+                        class="bg-[#059669] hover:bg-[#047857] text-white font-semibold px-6 py-2 rounded-lg text-sm transition">
                         Perbarui
                     </button>
                     <a href="{{ route('admin.penjualans.index') }}"
-                        class="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-2 rounded-lg text-sm text-center transition">
+                        class="bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] text-[#334155] font-semibold px-6 py-2 rounded-lg text-sm text-center transition">
                         Batal
                     </a>
                 </div>

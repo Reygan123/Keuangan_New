@@ -1,13 +1,14 @@
+
 @extends('layouts.admin.app')
 
 @section('content')
 <script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
-<div class="min-h-screen bg-slate-900">
+<div class="min-h-screen bg-[#F5F7FA]">
     <div class="p-4 md:p-6 lg:p-8">
         <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Edit Surat Pemberitahuan</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-[#0F172A]">Edit Surat Pemberitahuan</h1>
             @if($usahas->count() > 1)
-            <select id="usahaSelect" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" onchange="changeUsaha()">
+            <select id="usahaSelect" class="px-4 py-2 bg-white border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" onchange="changeUsaha()">
                 @foreach($usahas as $usahaItem)
                 <option value="{{ $usahaItem->id }}" {{ $currentUsaha && $currentUsaha->id == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
                 @endforeach
@@ -15,7 +16,7 @@
             @endif
         </div>
 
-        <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+        <div class="bg-white rounded-lg border border-[#EEF2F6] overflow-hidden">
             <form action="{{ route('admin.surat-pemberitahuan.update', $suratPemberitahuan->id) }}" method="POST" id="suratForm">
                 @csrf
                 @method('PUT')
@@ -27,14 +28,14 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Surat <span class="text-red-400">*</span></label>
-                            <input type="text" name="nomor_surat" id="nomor_surat" value="{{ old('nomor_surat', $suratPemberitahuan->nomor_surat) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('nomor_surat') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Nomor Surat <span class="text-red-400">*</span></label>
+                            <input type="text" name="nomor_surat" id="nomor_surat" value="{{ old('nomor_surat', $suratPemberitahuan->nomor_surat) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('nomor_surat') border-red-500 @enderror" required>
                             @error('nomor_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Status <span class="text-red-400">*</span></label>
-                            <select name="status" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('status') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Status <span class="text-red-400">*</span></label>
+                            <select name="status" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('status') border-red-500 @enderror" required>
                                 <option value="draft" {{ old('status', $suratPemberitahuan->status) == 'draft' ? 'selected' : '' }}>Draft</option>
                                 <option value="active" {{ old('status', $suratPemberitahuan->status) == 'active' ? 'selected' : '' }}>Active</option>
                                 <option value="archived" {{ old('status', $suratPemberitahuan->status) == 'archived' ? 'selected' : '' }}>Archived</option>
@@ -43,69 +44,69 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul (Indonesia) <span class="text-red-400">*</span></label>
-                            <input type="text" name="judul_indonesia" value="{{ old('judul_indonesia', $suratPemberitahuan->judul_indonesia) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('judul_indonesia') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Judul (Indonesia) <span class="text-red-400">*</span></label>
+                            <input type="text" name="judul_indonesia" value="{{ old('judul_indonesia', $suratPemberitahuan->judul_indonesia) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('judul_indonesia') border-red-500 @enderror" required>
                             @error('judul_indonesia')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul (Inggris) <span class="text-red-400">*</span></label>
-                            <input type="text" name="judul_inggris" value="{{ old('judul_inggris', $suratPemberitahuan->judul_inggris) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('judul_inggris') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Judul (Inggris) <span class="text-red-400">*</span></label>
+                            <input type="text" name="judul_inggris" value="{{ old('judul_inggris', $suratPemberitahuan->judul_inggris) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('judul_inggris') border-red-500 @enderror" required>
                             @error('judul_inggris')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Tanggal Surat <span class="text-red-400">*</span></label>
-                            <input type="date" name="tanggal_surat" value="{{ old('tanggal_surat', \Carbon\Carbon::parse($suratPemberitahuan->tanggal_surat)->format('Y-m-d')) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('tanggal_surat') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Tanggal Surat <span class="text-red-400">*</span></label>
+                            <input type="date" name="tanggal_surat" value="{{ old('tanggal_surat', \Carbon\Carbon::parse($suratPemberitahuan->tanggal_surat)->format('Y-m-d')) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('tanggal_surat') border-red-500 @enderror" required>
                             @error('tanggal_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Tempat Surat <span class="text-red-400">*</span></label>
-                            <input type="text" name="tempat_surat" value="{{ old('tempat_surat', $suratPemberitahuan->tempat_surat) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('tempat_surat') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Tempat Surat <span class="text-red-400">*</span></label>
+                            <input type="text" name="tempat_surat" value="{{ old('tempat_surat', $suratPemberitahuan->tempat_surat) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('tempat_surat') border-red-500 @enderror" required>
                             @error('tempat_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Nama Penandatangan <span class="text-red-400">*</span></label>
-                            <input type="text" name="nama_penandatangan" value="{{ old('nama_penandatangan', $suratPemberitahuan->nama_penandatangan) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('nama_penandatangan') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Nama Penandatangan <span class="text-red-400">*</span></label>
+                            <input type="text" name="nama_penandatangan" value="{{ old('nama_penandatangan', $suratPemberitahuan->nama_penandatangan) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('nama_penandatangan') border-red-500 @enderror" required>
                             @error('nama_penandatangan')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Jabatan Penandatangan <span class="text-red-400">*</span></label>
-                            <input type="text" name="jabatan_penandatangan" value="{{ old('jabatan_penandatangan', $suratPemberitahuan->jabatan_penandatangan) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('jabatan_penandatangan') border-red-500 @enderror" required>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Jabatan Penandatangan <span class="text-red-400">*</span></label>
+                            <input type="text" name="jabatan_penandatangan" value="{{ old('jabatan_penandatangan', $suratPemberitahuan->jabatan_penandatangan) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('jabatan_penandatangan') border-red-500 @enderror" required>
                             @error('jabatan_penandatangan')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">NIP Penandatangan</label>
-                            <input type="text" name="nip_penandatangan" value="{{ old('nip_penandatangan', $suratPemberitahuan->nip_penandatangan) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500">
+                            <label class="block text-sm font-medium text-[#475569] mb-2">NIP Penandatangan</label>
+                            <input type="text" name="nip_penandatangan" value="{{ old('nip_penandatangan', $suratPemberitahuan->nip_penandatangan) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]">
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Kepada <span class="text-red-400">*</span></label>
-                            <textarea name="kepada" rows="2" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('kepada') border-red-500 @enderror" required>{{ old('kepada', $suratPemberitahuan->kepada) }}</textarea>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Kepada <span class="text-red-400">*</span></label>
+                            <textarea name="kepada" rows="2" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('kepada') border-red-500 @enderror" required>{{ old('kepada', $suratPemberitahuan->kepada) }}</textarea>
                             @error('kepada')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Isi Surat <span class="text-red-400">*</span></label>
-                            <textarea name="isi_surat" id="isi_surat" rows="4" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('isi_surat') border-red-500 @enderror" required>{{ old('isi_surat', $suratPemberitahuan->isi_surat) }}</textarea>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Isi Surat <span class="text-red-400">*</span></label>
+                            <textarea name="isi_surat" id="isi_surat" rows="4" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('isi_surat') border-red-500 @enderror" required>{{ old('isi_surat', $suratPemberitahuan->isi_surat) }}</textarea>
                             @error('isi_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Penutup <span class="text-red-400">*</span></label>
-                            <textarea name="penutup" id="penutup" rows="3" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('penutup') border-red-500 @enderror" required>{{ old('penutup', $suratPemberitahuan->penutup) }}</textarea>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Penutup <span class="text-red-400">*</span></label>
+                            <textarea name="penutup" id="penutup" rows="3" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('penutup') border-red-500 @enderror" required>{{ old('penutup', $suratPemberitahuan->penutup) }}</textarea>
                             @error('penutup')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
 
-                    <div class="bg-slate-700/50 rounded-lg p-4">
+                    <div class="bg-[#F8FAFC] rounded-lg p-4">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-slate-100">Daftar Peserta Magang</h3>
-                            <button type="button" id="addPesertaBtn" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded transition">
+                            <h3 class="text-lg font-semibold text-[#0F172A]">Daftar Peserta Magang</h3>
+                            <button type="button" id="addPesertaBtn" class="px-3 py-1 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-medium rounded transition">
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
@@ -115,11 +116,11 @@
 
                         <div id="pesertaContainer" class="space-y-3">
                             @foreach($suratPemberitahuan->pesertaMagangs as $index => $peserta)
-                            <div class="bg-slate-800 p-4 rounded border border-slate-600 peserta-item" data-index="{{ $index }}">
+                            <div class="bg-white p-4 rounded border border-[#EEF2F6] peserta-item" data-index="{{ $index }}">
                                 <input type="hidden" name="peserta[{{ $index }}][id]" value="{{ $peserta->id }}">
                                 <div class="flex justify-between items-start mb-3">
-                                    <h4 class="text-sm font-medium text-slate-200">Peserta #{{ $index + 1 }}</h4>
-                                    <button type="button" class="text-red-400 hover:text-red-300 remove-peserta-btn" onclick="removePeserta({{ $index }})">
+                                    <h4 class="text-sm font-medium text-[#0F172A]">Peserta #{{ $index + 1 }}</h4>
+                                    <button type="button" class="text-red-400 hover:text-[#DC2626] remove-peserta-btn" onclick="removePeserta({{ $index }})">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>
@@ -127,16 +128,16 @@
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-400 mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
-                                        <input type="text" name="peserta[{{ $index }}][nama_lengkap]" value="{{ old('peserta.' . $index . '.nama_lengkap', $peserta->nama_lengkap) }}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                                        <label class="block text-xs font-medium text-[#64748B] mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
+                                        <input type="text" name="peserta[{{ $index }}][nama_lengkap]" value="{{ old('peserta.' . $index . '.nama_lengkap', $peserta->nama_lengkap) }}" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-400 mb-1">Asal Perguruan Tinggi <span class="text-red-400">*</span></label>
-                                        <input type="text" name="peserta[{{ $index }}][asal_perguruan_tinggi]" value="{{ old('peserta.' . $index . '.asal_perguruan_tinggi', $peserta->asal_perguruan_tinggi) }}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                                        <label class="block text-xs font-medium text-[#64748B] mb-1">Asal Perguruan Tinggi <span class="text-red-400">*</span></label>
+                                        <input type="text" name="peserta[{{ $index }}][asal_perguruan_tinggi]" value="{{ old('peserta.' . $index . '.asal_perguruan_tinggi', $peserta->asal_perguruan_tinggi) }}" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-400 mb-1">Posisi <span class="text-red-400">*</span></label>
-                                        <input type="text" name="peserta[{{ $index }}][posisi]" value="{{ old('peserta.' . $index . '.posisi', $peserta->posisi) }}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                                        <label class="block text-xs font-medium text-[#64748B] mb-1">Posisi <span class="text-red-400">*</span></label>
+                                        <input type="text" name="peserta[{{ $index }}][posisi]" value="{{ old('peserta.' . $index . '.posisi', $peserta->posisi) }}" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                                     </div>
                                 </div>
                             </div>
@@ -147,9 +148,9 @@
                     </div>
                 </div>
 
-                <div class="px-6 py-4 border-t border-slate-700 bg-slate-700/30 flex gap-3 justify-end">
-                    <a href="{{ route('admin.surat-pemberitahuan.index', ['usaha_id' => $currentUsaha?->id]) }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Batal</a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">Update</button>
+                <div class="px-6 py-4 border-t border-[#EEF2F6] bg-white flex gap-3 justify-end">
+                    <a href="{{ route('admin.surat-pemberitahuan.index', ['usaha_id' => $currentUsaha?->id]) }}" class="px-4 py-2 bg-[#F8FAFC] hover:bg-[#EEF2F6] text-[#0F172A] text-sm font-medium rounded-lg transition">Batal</a>
+                    <button type="submit" class="px-4 py-2 bg-[#3B41E3] hover:bg-[#343AC7] text-white text-sm font-medium rounded-lg transition">Update</button>
                 </div>
             </form>
         </div>
@@ -199,10 +200,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Template untuk peserta baru
     function getPesertaTemplate(index) {
         return `
-        <div class="bg-slate-800 p-4 rounded border border-slate-600 peserta-item" data-index="${index}">
+        <div class="bg-white p-4 rounded border border-[#EEF2F6] peserta-item" data-index="${index}">
             <div class="flex justify-between items-start mb-3">
-                <h4 class="text-sm font-medium text-slate-200">Peserta #${index + 1}</h4>
-                <button type="button" class="text-red-400 hover:text-red-300 remove-peserta-btn" onclick="removePeserta(${index})">
+                <h4 class="text-sm font-medium text-[#0F172A]">Peserta #${index + 1}</h4>
+                <button type="button" class="text-red-400 hover:text-[#DC2626] remove-peserta-btn" onclick="removePeserta(${index})">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -210,16 +211,16 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
-                    <input type="text" name="peserta[${index}][nama_lengkap]" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-xs font-medium text-[#64748B] mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
+                    <input type="text" name="peserta[${index}][nama_lengkap]" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Asal Perguruan Tinggi <span class="text-red-400">*</span></label>
-                    <input type="text" name="peserta[${index}][asal_perguruan_tinggi]" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-xs font-medium text-[#64748B] mb-1">Asal Perguruan Tinggi <span class="text-red-400">*</span></label>
+                    <input type="text" name="peserta[${index}][asal_perguruan_tinggi]" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Posisi <span class="text-red-400">*</span></label>
-                    <input type="text" name="peserta[${index}][posisi]" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-xs font-medium text-[#64748B] mb-1">Posisi <span class="text-red-400">*</span></label>
+                    <input type="text" name="peserta[${index}][posisi]" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                 </div>
             </div>
         </div>

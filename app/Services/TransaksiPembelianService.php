@@ -15,6 +15,10 @@ use Carbon\Carbon;
 
 class TransaksiPembelianService
 {
+    public function __construct(
+        private TransaksiPajakService $pajakService
+    ) {}
+
     private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi)
     {
         $isDebit = $type === 'DEBIT';
@@ -73,6 +77,8 @@ class TransaksiPembelianService
             ->where('referensi_transaksi_tipe', get_class($transaksi))
             ->where('usaha_id', $transaksi->usaha_id)
             ->delete();
+
+        $this->pajakService->hapusPajak($transaksi);
     }
 
     public function reverseStokDanHpp(Transaksi $transaksi): void
@@ -113,21 +119,21 @@ class TransaksiPembelianService
         return "{$prefix}-{$tahun}{$bulan}-{$random}";
     }
 
-    private function buatDokumenPembelian(Transaksi $transaksi)
+    private function buatDokumenPembelian(Transaksi $transaksi, float $totalPajak = 0)
     {
         $isKredit = $transaksi->akunPayment->klasifikasi === 'KEWAJIBAN';
 
-        if ($isKredit) {
-            Invoice::create([
-                'transaksi_id' => $transaksi->id,
-                'nomor_invoice' => $this->generateNomorDokumen('INV-PBL'),
-                'tanggal_jatuh_tempo' => Carbon::parse($transaksi->tanggal)->addDays(30),
-                'jumlah_pajak' => 0,
-                'terms_pembayaran' => '30 hari',
-                'status_invoice' => 'unpaid',
-                'usaha_id' => $transaksi->usaha_id,
-            ]);
-        } else {
+       if ($isKredit) {
+        Invoice::create([
+            'transaksi_id' => $transaksi->id,
+            'nomor_invoice' => $this->generateNomorDokumen('INV-PBL'),
+            'tanggal_jatuh_tempo' => Carbon::parse($transaksi->tanggal)->addDays(30),
+            'jumlah_pajak' => $totalPajak,   // ← sekarang terisi
+            'terms_pembayaran' => '30 hari',
+            'status_invoice' => 'unpaid',
+            'usaha_id' => $transaksi->usaha_id,
+        ]);
+    } else {
             Nota::create([
                 'transaksi_id' => $transaksi->id,
                 'nomor_nota' => $this->generateNomorDokumen('NOTA-PBL'),
@@ -149,70 +155,86 @@ class TransaksiPembelianService
     }
 
     public function prosesPembelian(Transaksi $transaksi)
-    {
-        DB::transaction(function () use ($transaksi) {
-            $transaksi->load(['detailProduks.product', 'akunPayment', 'label']);
+{
+    DB::transaction(function () use ($transaksi) {
+        $transaksi->load(['detailProduks.product', 'akunPayment', 'label']);
 
-            $total = (float) $transaksi->jumlah;
-            $aturan = AturanAutomation::where('label_id', $transaksi->label_id)
-                ->where('usaha_id', $transaksi->usaha_id)
-                ->first();
+        $total = (float) $transaksi->jumlah;
+        $aturan = AturanAutomation::where('label_id', $transaksi->label_id)
+            ->where('usaha_id', $transaksi->usaha_id)
+            ->first();
 
-            if (!$aturan) {
-                throw new \Exception("Aturan Automation untuk label ID {$transaksi->label_id} tidak ditemukan.");
-            }
+        if (!$aturan) {
+            throw new \Exception("Aturan Automation untuk label ID {$transaksi->label_id} tidak ditemukan.");
+        }
 
-            $akunDebit = Akun::where('id', $aturan->akun_debit_id)
-                ->where('usaha_id', $transaksi->usaha_id)
-                ->first();
-            $akunKreditFinal = $transaksi->akunPayment;
+        $akunDebit = Akun::where('id', $aturan->akun_debit_id)
+            ->where('usaha_id', $transaksi->usaha_id)
+            ->first();
+        $akunKreditFinal = $transaksi->akunPayment;
 
-            if (!$akunDebit || !$akunKreditFinal) {
-                throw new \Exception("Akun Debit (dari Aturan) atau Akun Kredit (dari Akun Pembayaran) tidak valid.");
-            }
+        if (!$akunDebit || !$akunKreditFinal) {
+            throw new \Exception("Akun Debit (dari Aturan) atau Akun Kredit (dari Akun Pembayaran) tidak valid.");
+        }
 
-            $this->catatJurnal(
+        $this->catatJurnal(
+            $transaksi, $akunDebit, $total, 'DEBIT',
+            'Pembelian ' . $transaksi->label->name . ' (Debit Persediaan/Aset)'
+        );
+
+        $jurnalKredit = $this->catatJurnal(
+            $transaksi, $akunKreditFinal, $total, 'KREDIT',
+            'Pembelian ' . $transaksi->label->name . ' (Kredit Akun Pembayaran/Utang)'
+        );
+
+        // === INTEGRASI PAJAK — PER PRODUK (1 LOOP SAJA) ===
+        $totalPajak = 0.0;
+        foreach ($transaksi->detailProduks as $detail) {
+            $lineTotal = (float) $detail->kuantitas * (float) $detail->harga_satuan;
+
+            $hasilPajak = $this->pajakService->terapkanPajak(
+                $transaksi->usaha_id,
+                null,
+                $detail->product_id,
+                $lineTotal,
+                $transaksi->tanggal,
+                'Pembelian ' . ($detail->product->nama ?? 'Produk'),
                 $transaksi,
-                $akunDebit,
-                $total,
-                'DEBIT',
-                'Pembelian ' . $transaksi->label->name . ' (Debit Persediaan/Aset)'
+                $jurnalKredit->id
             );
 
-            $this->catatJurnal(
-                $transaksi,
-                $akunKreditFinal,
-                $total,
-                'KREDIT',
-                'Pembelian ' . $transaksi->label->name . ' (Kredit Akun Pembayaran/Utang)'
-            );
+            foreach ($hasilPajak as $tp) {
+                $totalPajak += (float) $tp->jumlah_pajak;
+            }
+        }
 
-            foreach ($transaksi->detailProduks as $detail) {
-                $prod = $detail->product->fresh();
-                $qty = (float)$detail->kuantitas;
-                $hargaBeliUnit = (float)($detail->harga_satuan ?? 0);
+        // === Update Stok & HPP (loop terpisah, tidak ada hubungan sama pajak) ===
+        foreach ($transaksi->detailProduks as $detail) {
+            $prod = $detail->product->fresh();
+            $qty = (float)$detail->kuantitas;
+            $hargaBeliUnit = (float)($detail->harga_satuan ?? 0);
 
-                if (Schema::hasColumn($prod->getTable(), 'stok')) {
-                    $stokLama = (float)($prod->stok ?? 0);
-                    $hppLama = (float)($prod->hpp_unit_rata2 ?? 0);
+            if (Schema::hasColumn($prod->getTable(), 'stok')) {
+                $stokLama = (float)($prod->stok ?? 0);
+                $hppLama = (float)($prod->hpp_unit_rata2 ?? 0);
 
-                    $totalNilaiLama = $stokLama * $hppLama;
-                    $totalNilaiBaru = $qty * $hargaBeliUnit;
-                    $stokTotalBaru = $stokLama + $qty;
+                $totalNilaiLama = $stokLama * $hppLama;
+                $totalNilaiBaru = $qty * $hargaBeliUnit;
+                $stokTotalBaru = $stokLama + $qty;
 
-                    if ($stokTotalBaru > 0) {
-                        $hppUnitBaru = ($totalNilaiLama + $totalNilaiBaru) / $stokTotalBaru;
-                        $prod->hpp_unit_rata2 = $hppUnitBaru;
-                    } else {
-                        $prod->hpp_unit_rata2 = $hargaBeliUnit;
-                    }
-
-                    $prod->stok = $stokTotalBaru;
-                    $prod->save();
+                if ($stokTotalBaru > 0) {
+                    $hppUnitBaru = ($totalNilaiLama + $totalNilaiBaru) / $stokTotalBaru;
+                    $prod->hpp_unit_rata2 = $hppUnitBaru;
+                } else {
+                    $prod->hpp_unit_rata2 = $hargaBeliUnit;
                 }
-            }
 
-            $this->buatDokumenPembelian($transaksi);
-        });
-    }
+                $prod->stok = $stokTotalBaru;
+                $prod->save();
+            }
+        }
+
+        $this->buatDokumenPembelian($transaksi, $totalPajak);
+    });
+}
 }

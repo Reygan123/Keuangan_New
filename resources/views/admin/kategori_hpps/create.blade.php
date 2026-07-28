@@ -1,61 +1,75 @@
 @extends('layouts.admin.app')
 
 @section('content')
-<div class="p-4 md:p-6 max-w-2xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-xl md:text-2xl font-bold text-white">Tambah Kategori HPP</h1>
-        <p class="text-xs md:text-sm text-slate-400 mt-1">Buat kategori HPP baru untuk pengelompokan produk</p>
+<div class="space-y-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Tambah Kategori HPP</h1>
+            <p class="text-[14px] text-[#64748B] mt-1">Buat kategori HPP baru untuk pengelompokan produk</p>
+        </div>
+        <a href="{{ route('admin.kategori_hpps.index') }}" class="flex items-center gap-2 text-[#64748B] hover:text-[#0F172A] transition-colors text-[13px] font-medium bg-white px-4 py-2 rounded-xl border border-[#EEF2F6] shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Kembali
+        </a>
     </div>
 
-    <form action="{{ route('admin.kategori_hpps.store') }}" method="POST" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-6 shadow-lg">
-        @csrf
+    <!-- Form Container -->
+    <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] overflow-hidden">
+        <div class="p-6 md:p-8">
+            <form action="{{ route('admin.kategori_hpps.store') }}" method="POST" class="space-y-6">
+                @csrf
 
-        @if(count($usahas) > 1)
-        <div class="mb-5">
-            <label for="usaha_id" class="block text-sm font-medium text-slate-200 mb-2">Usaha</label>
-            <select name="usaha_id" id="usaha_id" required class="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all @error('usaha_id') border-red-500 @enderror">
-                <option value="">-- Pilih Usaha --</option>
-                @foreach ($usahas as $usaha)
-                    <option value="{{ $usaha->id }}" {{ old('usaha_id') == $usaha->id ? 'selected' : '' }}>
-                        {{ $usaha->nama }}
-                    </option>
-                @endforeach
-            </select>
-            @error('usaha_id')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        @else
-        <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
-        @endif
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    @if(isset($usahas) && count($usahas) > 1)
+                    <div class="md:col-span-2">
+                        <label for="usaha_id" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Usaha <span class="text-[#E11D48]">*</span></label>
+                        <select name="usaha_id" id="usaha_id" required class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all appearance-none cursor-pointer @error('usaha_id') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                            <option value="">-- Pilih Usaha --</option>
+                            @foreach ($usahas as $usaha)
+                                <option value="{{ $usaha->id }}" {{ old('usaha_id') == $usaha->id ? 'selected' : '' }}>
+                                    {{ $usaha->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('usaha_id')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    @elseif(isset($usahas) && count($usahas) > 0)
+                    <input type="hidden" name="usaha_id" value="{{ $usahas->first()->id ?? '' }}">
+                    @endif
 
-        <div class="mb-5">
-            <label for="name" class="block text-sm font-medium text-slate-200 mb-2">Kategori HPP</label>
-            <input type="text" name="name" id="name" value="{{ old('name') }}" required placeholder="Contoh: Makanan Berat"
-                   class="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all @error('name') border-red-500 @enderror">
-            @error('name')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                    <div class="md:col-span-2">
+                        <label for="name" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Kategori HPP <span class="text-[#E11D48]">*</span></label>
+                        <input type="text" name="name" id="name" value="{{ old('name') }}" required placeholder="Contoh: Makanan Berat"
+                               class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] placeholder-[#94A3B8] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all @error('name') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                        @error('name')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-        <div class="mb-6">
-            <label for="kategori" class="block text-sm font-medium text-slate-200 mb-2">Kategori</label>
-            <input type="text" name="kategori" id="kategori" value="{{ old('kategori') }}" required placeholder="Contoh: FOOD_MAIN"
-                   class="w-full bg-slate-700/50 border border-slate-600/50 text-white text-sm rounded-lg px-3 py-2 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all @error('kategori') border-red-500 @enderror">
-            <p class="text-slate-400 text-xs mt-1">Digunakan untuk pengelompokan internal.</p>
-            @error('kategori')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                    <div class="md:col-span-2">
+                        <label for="kategori" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Kategori <span class="text-[#E11D48]">*</span></label>
+                        <input type="text" name="kategori" id="kategori" value="{{ old('kategori') }}" required placeholder="Contoh: FOOD_MAIN"
+                               class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] placeholder-[#94A3B8] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all @error('kategori') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                        <p class="text-[#64748B] text-[12px] mt-1.5">Digunakan untuk pengelompokan internal.</p>
+                        @error('kategori')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
 
-        <div class="flex flex-col sm:flex-row gap-3 pt-4">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm px-6 py-2 rounded-lg transition-colors duration-200">
-                Simpan
-            </button>
-            <a href="{{ route('admin.kategori_hpps.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white font-medium text-sm px-6 py-2 rounded-lg text-center transition-colors duration-200">
-                Batal
-            </a>
+                <div class="pt-6 border-t border-[#EEF2F6] flex justify-end gap-3 mt-6">
+                    <a href="{{ route('admin.kategori_hpps.index') }}" class="px-5 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] font-semibold rounded-xl transition-colors duration-200 text-[13px]">
+                        Batal
+                    </a>
+                    <button type="submit" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-colors duration-200 text-[13px]">
+                        Simpan
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 @endsection

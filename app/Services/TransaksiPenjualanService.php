@@ -13,11 +13,15 @@ use Carbon\Carbon;
 
 class TransaksiPenjualanService
 {
-    private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi)
+    public function __construct(
+        private TransaksiPajakService $pajakService
+    ) {}
+
+    private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi): JurnalUmum
     {
         $isDebit = $type === 'DEBIT';
 
-        JurnalUmum::create([
+        $jurnal = JurnalUmum::create([
             'akun_id' => $akun->id,
             'tanggal_transaksi' => $transaksi->tanggal,
             'deskripsi' => $deskripsi,
@@ -31,21 +35,15 @@ class TransaksiPenjualanService
         $multiplier = 0;
 
         if ($type === 'DEBIT') {
-            if (in_array($akun->klasifikasi, ['ASET', 'BEBAN'])) {
-                $multiplier = 1;
-            } else {
-                $multiplier = -1;
-            }
+            $multiplier = in_array($akun->klasifikasi, ['ASET', 'BEBAN']) ? 1 : -1;
         } elseif ($type === 'KREDIT') {
-            if (in_array($akun->klasifikasi, ['KEWAJIBAN', 'PENDAPATAN', 'EKUITAS'])) {
-                $multiplier = 1;
-            } else {
-                $multiplier = -1;
-            }
+            $multiplier = in_array($akun->klasifikasi, ['KEWAJIBAN', 'PENDAPATAN', 'EKUITAS']) ? 1 : -1;
         }
 
         $akun->saldo = (float)$akun->saldo + ($jumlah * $multiplier);
         $akun->save();
+
+        return $jurnal;
     }
 
     public function reverseJurnal(Transaksi $transaksi): void
@@ -60,7 +58,6 @@ class TransaksiPenjualanService
             if (!$akun) continue;
 
             $jumlah = $jurnal->debit + $jurnal->kredit;
-
             $type = ($jurnal->debit > 0) ? 'KREDIT' : 'DEBIT';
             $deskripsi = "Pembalikan Jurnal Transaksi #" . $transaksi->id . " - " . $jurnal->deskripsi;
 
@@ -71,6 +68,8 @@ class TransaksiPenjualanService
             ->where('referensi_transaksi_tipe', get_class($transaksi))
             ->where('usaha_id', $transaksi->usaha_id)
             ->delete();
+
+        $this->pajakService->hapusPajak($transaksi); // ← TAMBAHAN
     }
 
     public function reverseStokDanHpp(Transaksi $transaksi): void
@@ -84,8 +83,7 @@ class TransaksiPenjualanService
             if (Schema::hasColumn($prod->getTable(), 'stok')) {
                 $fresh = $prod->fresh();
                 $stokNow = (float)($fresh->stok ?? 0);
-                $newStok = $stokNow + $qty;
-                $prod->stok = $newStok;
+                $prod->stok = $stokNow + $qty;
                 $prod->save();
             }
         }
@@ -117,7 +115,7 @@ class TransaksiPenjualanService
 
             $isCreditSale = strtolower($akunDebitFinal->klasifikasi) === 'aset' && Str::contains(strtolower($akunDebitFinal->name), 'piutang');
 
-            $this->catatJurnal(
+            $jurnalDebit = $this->catatJurnal(
                 $transaksi,
                 $akunDebitFinal,
                 $total,
@@ -133,13 +131,39 @@ class TransaksiPenjualanService
                 'Pencatatan Penjualan - Kredit Akun Pendapatan: ' . $akunKreditRevenue->name
             );
 
+            // === INTEGRASI PAJAK — PER PRODUK (PPN Keluaran) ===
+            // Baris DEBIT (Kas/Piutang) otomatis BERTAMBAH sesuai pajak yang kena.
+            $totalPajak = 0.0;
+
+            foreach ($transaksi->detailProduks as $detail) {
+                $lineTotal = (float) $detail->kuantitas * (float) $detail->harga_satuan;
+
+                $hasilPajak = $this->pajakService->terapkanPajak(
+                    $transaksi->usaha_id,
+                    null,
+                    $detail->product_id,
+                    $lineTotal,
+                    $transaksi->tanggal,
+                    'Penjualan ' . ($detail->product->nama ?? 'Produk'),
+                    $transaksi,
+                    $jurnalDebit->id
+                );
+
+                foreach ($hasilPajak as $tp) {
+                    $totalPajak += (float) $tp->jumlah_pajak;
+                }
+            }
+
+            $totalDiterima = $total + $totalPajak;
+
+            // === DOKUMEN: Invoice atau Receipt, sekarang ikut cerminkan pajak ===
             if ($isCreditSale) {
                 $nomor = 'INV-' . Carbon::now()->format('Y') . '-' . str_pad((string) rand(1000, 9999), 4, '0', STR_PAD_LEFT);
                 DB::table('invoices')->insert([
                     'transaksi_id' => $transaksi->id,
                     'nomor_invoice' => $nomor,
                     'tanggal_jatuh_tempo' => Carbon::parse($transaksi->tanggal)->addDays(30)->format('Y-m-d'),
-                    'jumlah_pajak' => 0,
+                    'jumlah_pajak' => $totalPajak,
                     'terms_pembayaran' => '30 hari',
                     'status_invoice' => 'unpaid',
                     'usaha_id' => $transaksi->usaha_id,
@@ -152,7 +176,7 @@ class TransaksiPenjualanService
                     'transaksi_id' => $transaksi->id,
                     'nomor_receipt' => $nomor,
                     'mesin_kasir_id' => null,
-                    'jumlah_dibayar' => $total,
+                    'jumlah_dibayar' => $totalDiterima,
                     'kembalian' => 0,
                     'usaha_id' => $transaksi->usaha_id,
                     'created_at' => now(),
@@ -160,6 +184,7 @@ class TransaksiPenjualanService
                 ]);
             }
 
+            // === HPP & Update Stok (tidak berubah, tidak terpengaruh pajak) ===
             foreach ($transaksi->detailProduks as $detail) {
                 $prod = $detail->product;
                 $qty = (float)$detail->kuantitas;
@@ -170,8 +195,7 @@ class TransaksiPenjualanService
                 if (Schema::hasColumn($prod->getTable(), 'stok')) {
                     $fresh = $prod->fresh();
                     $stokNow = (float)($fresh->stok ?? 0);
-                    $newStok = $stokNow - $qty;
-                    $prod->stok = $newStok;
+                    $prod->stok = $stokNow - $qty;
                     $prod->save();
                 }
 
@@ -184,10 +208,7 @@ class TransaksiPenjualanService
 
                     if ($akunPersediaan) {
                         $this->catatJurnal(
-                            $transaksi,
-                            $akunPersediaan,
-                            $lineHpp,
-                            'KREDIT',
+                            $transaksi, $akunPersediaan, $lineHpp, 'KREDIT',
                             'Kredit Persediaan - HPP Produk: ' . $prod->nama
                         );
                     }
@@ -204,10 +225,7 @@ class TransaksiPenjualanService
 
                     if ($akunHpp) {
                         $this->catatJurnal(
-                            $transaksi,
-                            $akunHpp,
-                            $lineHpp,
-                            'DEBIT',
+                            $transaksi, $akunHpp, $lineHpp, 'DEBIT',
                             'Debit Beban HPP Produk: ' . $prod->nama
                         );
                     }

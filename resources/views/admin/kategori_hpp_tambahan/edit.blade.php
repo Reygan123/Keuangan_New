@@ -1,94 +1,112 @@
 @extends('layouts.admin.app')
 
 @section('content')
-<div class="p-4 sm:p-6 max-w-2xl mx-auto">
-    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-6">Edit Biaya HPP Tambahan</h1>
-
-    <form action="{{ route('admin.kategori_hpp_tambahan.update', $kategoriHppTambahan) }}" method="POST" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 p-5 sm:p-6 rounded-lg shadow-lg space-y-4">
-        @csrf
-        @method('PUT')
-
-        @if(count($usahas) > 1)
+<div class="space-y-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
         <div>
-            <label for="usaha_id" class="text-slate-300 block mb-2 text-sm font-medium">Usaha</label>
-            <select name="usaha_id" id="usaha_id" required class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('usaha_id') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                <option value="">-- Pilih Usaha --</option>
-                @foreach ($usahas as $usaha)
-                    <option value="{{ $usaha->id }}" {{ old('usaha_id', $kategoriHppTambahan->usaha_id) == $usaha->id ? 'selected' : '' }}>
-                        {{ $usaha->nama }}
-                    </option>
-                @endforeach
-            </select>
-            @error('usaha_id')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
+            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Edit Biaya HPP Tambahan</h1>
+            <p class="text-[14px] text-[#64748B] mt-1">{{ $kategoriHppTambahan->name }}</p>
         </div>
-        @else
-        <input type="hidden" name="usaha_id" id="usaha_id" value="{{ $usahas->first()->id ?? $kategoriHppTambahan->usaha_id }}">
-        @endif
+        <a href="{{ route('admin.kategori_hpp_tambahan.index') }}" class="flex items-center gap-2 text-[#64748B] hover:text-[#0F172A] transition-colors text-[13px] font-medium bg-white px-4 py-2 rounded-xl border border-[#EEF2F6] shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Kembali
+        </a>
+    </div>
 
-        <div>
-            <label for="kategori_hpp_id" class="text-slate-300 block mb-2 text-sm font-medium">Kategori HPP</label>
-            <select name="kategori_hpp_id" id="kategori_hpp_id" required
-                    class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('kategori_hpp_id') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                <option value="">-- Pilih Kategori --</option>
-                @foreach ($kategoriHpps as $kategori)
-                    <option value="{{ $kategori->id }}"
-                        {{ old('kategori_hpp_id', $kategoriHppTambahan->kategori_hpp_id) == $kategori->id ? 'selected' : '' }}>
-                        {{ $kategori->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('kategori_hpp_id')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+    <!-- Form Container -->
+    <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] overflow-hidden">
+        <div class="p-6 md:p-8">
+            <form action="{{ route('admin.kategori_hpp_tambahan.update', $kategoriHppTambahan) }}" method="POST" class="space-y-6">
+                @csrf
+                @method('PUT')
 
-        <div>
-            <label for="name" class="text-slate-300 block mb-2 text-sm font-medium">Nama Biaya</label>
-            <input type="text" name="name" id="name"
-                   value="{{ old('name', $kategoriHppTambahan->name) }}" required
-                   class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('name') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-            @error('name')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    @if(isset($usahas) && count($usahas) > 1)
+                    <div class="md:col-span-2">
+                        <label for="usaha_id" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Usaha <span class="text-[#E11D48]">*</span></label>
+                        <select name="usaha_id" id="usaha_id" required class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all appearance-none cursor-pointer @error('usaha_id') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                            <option value="">-- Pilih Usaha --</option>
+                            @foreach ($usahas as $usaha)
+                                <option value="{{ $usaha->id }}" {{ old('usaha_id', $kategoriHppTambahan->usaha_id) == $usaha->id ? 'selected' : '' }}>
+                                    {{ $usaha->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('usaha_id')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    @elseif(isset($usahas) && count($usahas) > 0)
+                    <input type="hidden" name="usaha_id" id="usaha_id" value="{{ $usahas->first()->id ?? $kategoriHppTambahan->usaha_id }}">
+                    @endif
 
-        <div>
-            <label for="unit_cost" class="text-slate-300 block mb-2 text-sm font-medium">Biaya/Unit (Rp)</label>
-            <input type="number" name="unit_cost" id="unit_cost" value="{{ old('unit_cost', $kategoriHppTambahan->unit_cost) }}" required min="0" step="any"
-                   class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('unit_cost') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-            @error('unit_cost')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                    <div class="md:col-span-2">
+                        <label for="kategori_hpp_id" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Kategori HPP <span class="text-[#E11D48]">*</span></label>
+                        <select name="kategori_hpp_id" id="kategori_hpp_id" required class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all appearance-none cursor-pointer @error('kategori_hpp_id') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                            <option value="">-- Pilih Kategori --</option>
+                            @if(isset($kategoriHpps))
+                                @foreach ($kategoriHpps as $kategori)
+                                    <option value="{{ $kategori->id }}"
+                                        {{ old('kategori_hpp_id', $kategoriHppTambahan->kategori_hpp_id) == $kategori->id ? 'selected' : '' }}>
+                                        {{ $kategori->name }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('kategori_hpp_id')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-        <div>
-            <label for="akun_biaya_id" class="text-slate-300 block mb-2 text-sm font-medium">Akun Beban/Biaya</label>
-            <select name="akun_biaya_id" id="akun_biaya_id" required
-                    class="w-full rounded-lg bg-slate-700/50 border border-slate-600/50 text-white px-3 py-2 text-sm @error('akun_biaya_id') border-red-500 @enderror focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all">
-                <option value="">-- Pilih Akun --</option>
-                @foreach ($akunBiaya as $akun)
-                    <option value="{{ $akun->id }}"
-                        {{ old('akun_biaya_id', $kategoriHppTambahan->akun_biaya_id) == $akun->id ? 'selected' : '' }}>
-                        {{ $akun->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('akun_biaya_id')
-                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                    <div>
+                        <label for="name" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Nama Biaya <span class="text-[#E11D48]">*</span></label>
+                        <input type="text" name="name" id="name" value="{{ old('name', $kategoriHppTambahan->name) }}" required
+                               class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] placeholder-[#94A3B8] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all @error('name') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                        @error('name')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-        <div class="flex gap-3 pt-4">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors">
-                Update
-            </button>
-            <a href="{{ route('admin.kategori_hpp_tambahan.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-sm transition-colors">
-                Batal
-            </a>
+                    <div>
+                        <label for="unit_cost" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Biaya/Unit (Rp) <span class="text-[#E11D48]">*</span></label>
+                        <input type="number" name="unit_cost" id="unit_cost" value="{{ old('unit_cost', $kategoriHppTambahan->unit_cost) }}" required min="0" step="any"
+                               class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all @error('unit_cost') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                        @error('unit_cost')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="akun_biaya_id" class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Akun Beban/Biaya <span class="text-[#E11D48]">*</span></label>
+                        <select name="akun_biaya_id" id="akun_biaya_id" required class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all appearance-none cursor-pointer @error('akun_biaya_id') border-[#F43F5E] focus:border-[#F43F5E] focus:ring-[#FFE4E6] @enderror">
+                            <option value="">-- Pilih Akun --</option>
+                            @if(isset($akunBiaya))
+                                @foreach ($akunBiaya as $akun)
+                                    <option value="{{ $akun->id }}"
+                                        {{ old('akun_biaya_id', $kategoriHppTambahan->akun_biaya_id) == $akun->id ? 'selected' : '' }}>
+                                        {{ $akun->name }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('akun_biaya_id')
+                            <p class="text-[#F43F5E] text-[12px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-[#EEF2F6] flex justify-end gap-3 mt-6">
+                    <a href="{{ route('admin.kategori_hpp_tambahan.index') }}" class="px-5 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] font-semibold rounded-xl transition-colors duration-200 text-[13px]">
+                        Batal
+                    </a>
+                    <button type="submit" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-colors duration-200 text-[13px]">
+                        Update Biaya
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
 <script>

@@ -1,94 +1,150 @@
 @extends('layouts.admin.app')
 
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+<style>
+    .ts-control {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+        border-radius: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+    }
+
+    .ts-dropdown {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #e2e8f0 !important;
+        border-radius: 0.75rem !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .ts-dropdown .active {
+        background-color: #f1f5f9 !important;
+    }
+
+    .ts-dropdown .option {
+        color: #334155 !important;
+    }
+</style>
+
 @section('content')
-<div class="p-3 sm:p-5">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <h1 class="text-xl font-semibold text-slate-100">Nota</h1>
-        <div class="flex gap-2">
-            @if($usahas->count() > 1)
-            <select id="usahaFilter" class="px-3 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded focus:outline-none focus:border-slate-600" onchange="filterByUsaha()">
-                @foreach($usahas as $usahaItem)
-                <option value="{{ $usahaItem->id }}" {{ $currentUsaha && $currentUsaha->id == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
-                @endforeach
-            </select>
+<div class="min-h-screen bg-slate-50 text-slate-900 p-4 sm:p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Daftar Nota</h1>
+                <p class="text-slate-500 text-sm">Kelola dan lihat histori nota transaksi usaha</p>
+            </div>
+            <a href="{{ route('admin.nota.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-[#005198] hover:bg-[#003d73] text-white text-sm font-semibold rounded-xl shadow-sm transition-all h-fit">
+                + Tambah Nota Baru
+            </a>
+        </div>
+
+        @if (session('success'))
+        <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium shadow-sm">
+            {{ session('success') }}
+        </div>
+        @endif
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm">
+            <form method="GET" action="{{ route('admin.nota.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="filterForm">
+                @if (isset($usahas) && $usahas->count() > 0)
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Usaha</label>
+                    <select name="usaha_id" onchange="this.form.submit()" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer">
+                        <option value="">Semua Usaha</option>
+                        @foreach ($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ request('usaha_id') == $usaha->id ? 'selected' : '' }}>
+                            {{ $usaha->nama }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Tanggal Mulai</label>
+                    <input type="date" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}" onchange="this.form.submit()" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Tanggal Selesai</label>
+                    <input type="date" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}" onchange="this.form.submit()" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Pencarian</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor nota/pelanggan..." onkeyup="debouncedSubmit()" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50/80 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3.5 font-semibold text-slate-600 uppercase tracking-wider text-xs">Nomor Nota</th>
+                            <th class="px-4 py-3.5 font-semibold text-slate-600 uppercase tracking-wider text-xs">Tanggal</th>
+                            <th class="px-4 py-3.5 font-semibold text-slate-600 uppercase tracking-wider text-xs">Pelanggan</th>
+                            <th class="px-4 py-3.5 font-semibold text-slate-600 uppercase tracking-wider text-xs text-right">Total</th>
+                            <th class="px-4 py-3.5 font-semibold text-slate-600 uppercase tracking-wider text-xs hidden md:table-cell">Keterangan</th>
+                            <th class="px-4 py-3.5 font-semibold text-slate-600 uppercase tracking-wider text-xs text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        @forelse($notas as $n)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3.5 font-semibold text-slate-900">{{ $n->nomor_nota }}</td>
+                            <td class="px-4 py-3.5 text-slate-700">{{ \Carbon\Carbon::parse($n->tanggal)->format('d M Y') }}</td>
+                            <td class="px-4 py-3.5 text-slate-800 font-medium">{{ $n->pelanggan ?? '-' }}</td>
+                            <td class="px-4 py-3.5 text-right font-semibold text-slate-900 font-mono">Rp {{ number_format($n->total, 0, ',', '.') }}</td>
+                            <td class="px-4 py-3.5 text-slate-500 hidden md:table-cell text-xs">{{ Str::limit($n->keterangan, 35) ?? '-' }}</td>
+                            <td class="px-4 py-3.5 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('admin.nota.edit', $n->id) }}" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/80 rounded-lg text-xs font-semibold transition-colors">
+                                        Edit
+                                    </a>
+                                    <form action="{{ route('admin.nota.destroy', $n->id) }}" method="POST" onsubmit="return confirm('Hapus nota ini?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-lg text-xs font-semibold transition-colors">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500 text-sm">
+                                Belum ada data nota yang ditemukan.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if(isset($notas) && method_exists($notas, 'hasPages') && $notas->hasPages())
+            <div class="px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                {{ $notas->links() }}
+            </div>
             @endif
-            <a href="{{ route('admin.nota.create', ['usaha_id' => $currentUsaha?->id]) }}" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm rounded transition">+ Tambah</a>
         </div>
     </div>
-
-    @if(session('success'))
-        <div class="mb-3 p-3 bg-green-500 bg-opacity-20 text-green-300 text-sm rounded border border-green-500 border-opacity-30">{{ session('success') }}</div>
-    @endif
-
-    @if($errors->any())
-        <div class="mb-3 p-3 bg-red-500 bg-opacity-20 text-red-300 text-sm rounded border border-red-500 border-opacity-30">
-            @foreach($errors->all() as $error) <div>{{ $error }}</div> @endforeach
-        </div>
-    @endif
-
-    <div class="mb-3">
-        <input type="text" id="searchInput" placeholder="Cari nomor nota..." class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm px-3 py-2 rounded focus:outline-none focus:border-slate-500 placeholder-slate-400">
-    </div>
-
-    @if($notas->count() > 0)
-    <div class="overflow-x-auto rounded border border-slate-700">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-800">
-                <tr class="border-b border-slate-700">
-                    <th class="px-3 py-2 text-left text-slate-300 font-medium">No Nota</th>
-                    <th class="px-3 py-2 text-left text-slate-300 font-medium hidden sm:table-cell">Jenis</th>
-                    <th class="px-3 py-2 text-left text-slate-300 font-medium">Transaksi</th>
-                    <th class="px-3 py-2 text-center text-slate-300 font-medium">Tunai</th>
-                    <th class="px-3 py-2 text-center text-slate-300 font-medium">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                @forelse($notas as $nota)
-                <tr class="border-b border-slate-700 hover:bg-slate-800 hover:bg-opacity-50 transition">
-                    <td class="px-3 py-2 text-slate-300 font-medium">{{ $nota->nomor_nota }}</td>
-                    <td class="px-3 py-2 text-slate-300 text-xs hidden sm:table-cell">{{ $nota->jenis_nota }}</td>
-                    <td class="px-3 py-2 text-slate-300 text-xs">{{ $nota->transaksi->keterangan ?? '-' }}</td>
-                    <td class="px-3 py-2 text-center text-slate-300 text-xs">{{ $nota->is_tunai ? 'Ya' : 'Tidak' }}</td>
-                    <td class="px-3 py-2 text-center">
-                        <div class="flex justify-center gap-1">
-                            <a href="{{ route('admin.nota.edit', $nota->id) }}" class="px-2 py-1 bg-slate-700 hover:bg-amber-600 text-slate-100 text-xs rounded transition">Edit</a>
-                            <form action="{{ route('admin.nota.destroy', $nota->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="px-2 py-1 bg-slate-700 hover:bg-red-600 text-slate-100 text-xs rounded transition">Hapus</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="5" class="px-3 py-3 text-center text-slate-400 text-sm">Tidak ada data</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    @else
-    <div class="bg-slate-800 border border-slate-700 rounded p-6 text-center">
-        <svg class="w-12 h-12 text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        <p class="text-slate-400 mb-2">Tidak ada nota</p>
-        <a href="{{ route('admin.nota.create', ['usaha_id' => $currentUsaha?->id]) }}" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm rounded transition inline-block">Tambah Nota</a>
-    </div>
-    @endif
 </div>
 
 <script>
-function filterByUsaha() {
-    const usahaId = document.getElementById('usahaFilter').value;
-    window.location.href = '{{ route("admin.nota.index") }}?usaha_id=' + usahaId;
-}
-
-document.getElementById('searchInput').addEventListener('keyup', function() {
-    const search = this.value.toLowerCase();
-    document.querySelectorAll('#tableBody tr').forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(search) ? '' : 'none';
-    });
-});
+    let timeout = null;
+    function debouncedSubmit() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            document.getElementById('filterForm').submit();
+        }, 500);
+    }
 </script>
 @endsection

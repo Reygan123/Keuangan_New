@@ -2,14 +2,14 @@
 
 @section('content')
     <div class="p-4 sm:p-6 max-w-5xl mx-auto">
-        <h1 class="text-2xl font-bold text-white mb-6">Tambah Pembelian</h1>
+        <h1 class="text-2xl font-bold text-slate-900 mb-6">Tambah Pembelian</h1>
 
-        <div class="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/60 p-4 mb-6">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 mb-6">
             <form method="GET" action="{{ route('admin.pembelians.create') }}" class="flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
-                    <label class="block text-slate-400 text-xs font-semibold mb-1">Pilih Usaha</label>
+                    <label class="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">Pilih Usaha</label>
                     <select name="usaha_id" onchange="this.form.submit()"
-                        class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        class="w-full bg-white border border-slate-300 text-slate-900 px-3.5 py-2 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
                         <option value="">-- Pilih Usaha --</option>
                         @foreach ($usahas as $usaha)
                             <option value="{{ $usaha->id }}" {{ $selectedUsahaId == $usaha->id ? 'selected' : '' }}>
@@ -19,22 +19,22 @@
                 </div>
             </form>
             @if ($selectedUsahaId)
-                <p class="text-slate-300 text-xs mt-2">Transaksi akan dicatat untuk usaha: <span
-                        class="font-semibold">{{ $usahas->where('id', $selectedUsahaId)->first()->nama ?? '' }}</span></p>
+                <p class="text-slate-600 text-xs mt-2.5">Transaksi akan dicatat untuk usaha: <span
+                        class="font-semibold text-slate-900">{{ $usahas->where('id', $selectedUsahaId)->first()->nama ?? '' }}</span></p>
             @endif
         </div>
 
         @if (!$selectedUsahaId)
-            <div class="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/60 p-8 text-center">
-                <p class="text-slate-400 text-sm">Pilih usaha terlebih dahulu untuk membuat transaksi</p>
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 text-center">
+                <p class="text-slate-500 text-sm">Pilih usaha terlebih dahulu untuk membuat transaksi</p>
             </div>
         @else
             <form action="{{ route('admin.pembelians.store') }}" method="POST" id="form-pembelian" class="space-y-4">
                 @csrf
 
                 @if ($errors->any())
-                    <div class="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg text-sm">
-                        <strong class="block mb-2">Error Validasi!</strong>
+                    <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl text-sm shadow-sm">
+                        <strong class="block mb-2 font-semibold">Error Validasi!</strong>
                         <ul class="list-disc list-inside space-y-1">
                             @foreach ($errors->all() as $error)
                                 @if (!Str::startsWith($error, 'kuantitas.') && !Str::startsWith($error, 'harga_satuan.'))
@@ -45,36 +45,36 @@
                     </div>
                 @endif
 
-                <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input type="hidden" name="usaha_id" value="{{ $selectedUsahaId }}">
                         <div>
-                            <label class="text-slate-300 block mb-2 text-sm font-medium">Label</label>
+                            <label class="text-slate-700 block mb-2 text-xs font-semibold uppercase tracking-wider">Label</label>
                             <select name="label_id"
-                                class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                                class="w-full bg-white border border-slate-300 text-slate-900 px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
                                 @foreach ($labels as $l)
                                     <option value="{{ $l->id }}">{{ $l->nama_label }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="text-slate-300 block mb-2 text-sm font-medium">Supplier</label>
+                            <label class="text-slate-700 block mb-2 text-xs font-semibold uppercase tracking-wider">Supplier</label>
                             <select name="supplier_id"
-                                class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                                class="w-full bg-white border border-slate-300 text-slate-900 px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
                                 @foreach ($suppliers as $s)
                                     <option value="{{ $s->id }}">{{ $s->nama }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="text-slate-300 block mb-2 text-sm font-medium">Tanggal</label>
+                            <label class="text-slate-700 block mb-2 text-xs font-semibold uppercase tracking-wider">Tanggal</label>
                             <input type="date" name="tanggal" value="{{ date('Y-m-d') }}"
-                                class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                                class="w-full bg-white border border-slate-300 text-slate-900 px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
                         </div>
                         <div>
-                            <label class="text-slate-300 block mb-2 text-sm font-medium">Akun Pembayaran</label>
+                            <label class="text-slate-700 block mb-2 text-xs font-semibold uppercase tracking-wider">Akun Pembayaran</label>
                             <select name="akun_payment_id"
-                                class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                                class="w-full bg-white border border-slate-300 text-slate-900 px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
                                 @foreach ($akuns as $a)
                                     <option value="{{ $a->id }}">{{ $a->name }}</option>
                                 @endforeach
@@ -83,27 +83,27 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-lg p-4">
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-5">
                     <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-sm font-semibold text-white uppercase">Detail Produk</h2>
+                        <h2 class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Detail Produk</h2>
                         <button type="button" id="btn-add-row"
-                            class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Tambah</button>
+                            class="px-3.5 py-1.5 bg-[#005198] hover:bg-[#003d73] text-white rounded-xl text-xs font-semibold transition-all shadow-sm">Tambah</button>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
                         <table class="min-w-full text-xs">
-                            <thead class="bg-slate-900">
+                            <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-slate-300">Produk</th>
-                                    <th class="px-3 py-2 text-left text-slate-300 w-24">Qty</th>
-                                    <th class="px-3 py-2 text-left text-slate-300 w-32">Harga Satuan</th>
-                                    <th class="px-3 py-2 text-center text-slate-300 w-16">Aksi</th>
+                                    <th class="px-3 py-2.5 text-left text-slate-600 font-semibold uppercase tracking-wider">Produk</th>
+                                    <th class="px-3 py-2.5 text-left text-slate-600 font-semibold uppercase tracking-wider w-24">Qty</th>
+                                    <th class="px-3 py-2.5 text-left text-slate-600 font-semibold uppercase tracking-wider w-32">Harga Satuan</th>
+                                    <th class="px-3 py-2.5 text-center text-slate-600 font-semibold uppercase tracking-wider w-16">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="produk-rows" class="divide-y divide-slate-700">
+                            <tbody id="produk-rows" class="divide-y divide-slate-100 bg-white">
                                 <tr class="produk-row">
                                     <td class="px-3 py-2">
                                         <select name="product_id[]"
-                                            class="w-full bg-slate-700/50 border border-slate-700 text-white px-2 py-1 rounded text-xs">
+                                            class="w-full bg-white border border-slate-300 text-slate-900 px-2.5 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-600">
                                             @foreach ($products as $p)
                                                 <option value="{{ $p->id }}">{{ $p->nama ?? $p->name }}</option>
                                             @endforeach
@@ -111,37 +111,37 @@
                                     </td>
                                     <td class="px-3 py-2"><input type="number" name="kuantitas[]" step="0.01"
                                             min="0" value="1"
-                                            class="w-full bg-slate-700/50 border border-slate-700 text-white px-2 py-1 rounded text-xs input-qty">
+                                            class="w-full bg-white border border-slate-300 text-slate-900 px-2.5 py-1.5 rounded-lg text-xs input-qty focus:outline-none focus:border-blue-600">
                                     </td>
                                     <td class="px-3 py-2"><input type="number" name="harga_satuan[]" step="0.01"
                                             min="0" value="0"
-                                            class="w-full bg-slate-700/50 border border-slate-700 text-white px-2 py-1 rounded text-xs input-harga">
+                                            class="w-full bg-white border border-slate-300 text-slate-900 px-2.5 py-1.5 rounded-lg text-xs input-harga focus:outline-none focus:border-blue-600">
                                     </td>
                                     <td class="px-3 py-2 text-center"><button type="button"
-                                            class="btn-remove-row px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">X</button>
+                                            class="btn-remove-row px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold transition-all">X</button>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3 flex justify-end items-center gap-3">
-                        <span class="text-slate-300 text-sm">Total:</span>
-                        <span id="total-display" class="text-lg font-semibold text-white">Rp 0</span>
+                    <div class="mt-4 flex justify-end items-center gap-3">
+                        <span class="text-slate-600 text-sm font-medium">Total:</span>
+                        <span id="total-display" class="text-lg font-bold text-slate-900">Rp 0</span>
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-slate-300 block mb-2 text-sm font-medium">Keterangan</label>
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-5">
+                    <label class="text-slate-700 block mb-2 text-xs font-semibold uppercase tracking-wider">Keterangan</label>
                     <textarea name="keterangan"
-                        class="w-full bg-slate-700/50 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        class="w-full bg-white border border-slate-300 text-slate-900 px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition-all"
                         rows="2"></textarea>
                 </div>
 
-                <div class="flex gap-3">
+                <div class="flex gap-3 justify-end pt-2">
                     <button type="submit"
-                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Simpan</button>
+                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm shadow-sm transition-all">Simpan</button>
                     <a href="{{ route('admin.pembelians.index') }}"
-                        class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Batal</a>
+                        class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm border border-slate-200 transition-all">Batal</a>
                 </div>
             </form>
         @endif

@@ -1,180 +1,169 @@
 @extends('layouts.admin.app')
 
 @section('content')
-<div class="min-h-screen bg-slate-900">
-    <div class="p-4 md:p-6 lg:p-8">
-        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Daftar Invoice</h1>
-            <a href="{{ route('admin.invoices.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Tambah Invoice
-            </a>
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Daftar Invoice</h1>
+            <p class="text-[14px] text-[#64748B] mt-1">Kelola data tagihan dan invoice</p>
         </div>
+        <a href="{{ route('admin.invoices.create', ['usaha_id' => $currentUsaha?->id]) }}" class="w-full md:w-auto bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold px-4 py-2.5 rounded-xl transition-colors duration-200 shadow-sm flex items-center justify-center gap-2 text-[13px]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>Tambah Invoice</span>
+        </a>
+    </div>
 
-        @if(session('success'))
-            <div class="mb-4 p-4 bg-green-900/50 border border-green-700 text-green-200 text-sm rounded-lg flex justify-between items-center">
-                <span>{{ session('success') }}</span>
-                <button class="text-green-200 hover:text-green-100" onclick="this.parentElement.style.display='none'">×</button>
-            </div>
-        @endif
+    @if(session('success'))
+    <div class="p-4 bg-[#ECFDF5] border border-[#10B981]/20 text-[#10B981] rounded-[16px] flex items-start gap-3 text-[13px] font-medium">
+        <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span>{{ session('success') }}</span>
+    </div>
+    @endif
 
-        @if(session('error'))
-            <div class="mb-4 p-4 bg-red-900/50 border border-red-700 text-red-200 text-sm rounded-lg flex justify-between items-center">
-                <span>{{ session('error') }}</span>
-                <button class="text-red-200 hover:text-red-100" onclick="this.parentElement.style.display='none'">×</button>
-            </div>
-        @endif
+    @if(session('error'))
+    <div class="p-4 bg-[#FEF2F2] border border-[#F43F5E]/20 text-[#F43F5E] rounded-[16px] flex items-start gap-3 text-[13px] font-medium">
+        <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
 
-        <div class="mb-4 flex flex-col sm:flex-row gap-3">
+    <!-- Filters & Search -->
+    <div class="bg-white rounded-[20px] border border-[#EEF2F6] p-4 shadow-[0_4px_16px_rgba(15,23,42,0.02)]">
+        <div class="flex flex-col sm:flex-row gap-3">
             @if($usahas->count() > 1)
-            <div>
-                <select id="usahaFilter" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" onchange="filterByUsaha()">
-                    @foreach($usahas as $usahaItem)
+            <select id="usahaFilter" onchange="filterByUsaha()" class="appearance-none bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] font-medium focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all cursor-pointer min-w-[180px]">
+                @foreach($usahas as $usahaItem)
                     <option value="{{ $usahaItem->id }}" {{ $currentUsaha && $currentUsaha->id == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
-                    @endforeach
-                </select>
-            </div>
+                @endforeach
+            </select>
             @endif
-        </div>
 
-        <div class="mb-6 flex flex-col sm:flex-row gap-3">
-            <div class="flex-1">
-                <input type="text" id="searchInput" placeholder="Cari nomor invoice..." class="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 placeholder-slate-500">
-            </div>
-            <select id="statusFilter" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500">
+            <select id="statusFilter" class="appearance-none bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] font-medium focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all cursor-pointer min-w-[140px]">
                 <option value="">Semua Status</option>
                 <option value="pending">Pending</option>
                 <option value="paid">Paid</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="overdue">Overdue</option>
             </select>
-            <button onclick="resetFilters()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Reset</button>
-        </div>
-
-        @if($invoices->count() > 0)
-        <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-700/50 border-b border-slate-700">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-slate-300 font-semibold">No</th>
-                            <th class="px-4 py-3 text-left text-slate-300 font-semibold">Nomor Invoice</th>
-                            <th class="px-4 py-3 text-left text-slate-300 font-semibold">Pelanggan/Supplier</th>
-                            <th class="px-4 py-3 text-right text-slate-300 font-semibold">Jumlah</th>
-                            <th class="px-4 py-3 text-right text-slate-300 font-semibold">Total</th>
-                            <th class="px-4 py-3 text-left text-slate-300 font-semibold">Status</th>
-                            <th class="px-4 py-3 text-center text-slate-300 font-semibold">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700">
-                        @forelse($invoices as $key => $invoice)
-                        <tr class="hover:bg-slate-700/30 transition invoice-row" data-status="{{ $invoice->status_invoice }}">
-                            <td class="px-4 py-3 text-slate-300">{{ $invoices->firstItem() + $key }}</td>
-                            <td class="px-4 py-3 text-slate-200 font-medium">{{ $invoice->nomor_invoice }}</td>
-                            <td class="px-4 py-3 text-slate-300">
-                                @if($invoice->transaksi)
-                                    @if($invoice->transaksi->pelanggan)
-                                        <span class="text-xs px-2 py-1 bg-blue-900/50 text-blue-200 rounded">Pelanggan</span>
-                                        {{ $invoice->transaksi->pelanggan->nama }}
-                                    @elseif($invoice->transaksi->supplier)
-                                        <span class="text-xs px-2 py-1 bg-amber-900/50 text-amber-200 rounded">Supplier</span>
-                                        {{ $invoice->transaksi->supplier->nama }}
-                                    @else
-                                        -
-                                    @endif
-                                @else
-                                    <span class="text-xs px-2 py-1 bg-slate-700 text-slate-200 rounded">Client</span>
-                                    {{ $invoice->to_client_name }}
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-right text-slate-300">
-                                @if($invoice->transaksi)
-                                    Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}
-                                @else
-                                    Rp {{ number_format($invoice->subtotal, 0, ',', '.') }}
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-right text-slate-200 font-medium">
-                                @if($invoice->transaksi)
-                                    Rp {{ number_format($invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
-                                @else
-                                    Rp {{ number_format($invoice->total + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
-                                @endif
-                            </td>
-                            <td class="px-4 py-3">
-                                @switch($invoice->status_invoice)
-                                    @case('pending')
-                                        <span class="text-xs px-2 py-1 bg-amber-900/50 text-amber-200 rounded">Pending</span>
-                                        @break
-                                    @case('paid')
-                                        <span class="text-xs px-2 py-1 bg-green-900/50 text-green-200 rounded">Paid</span>
-                                        @break
-                                    @case('cancelled')
-                                        <span class="text-xs px-2 py-1 bg-red-900/50 text-red-200 rounded">Cancelled</span>
-                                        @break
-                                    @case('overdue')
-                                        <span class="text-xs px-2 py-1 bg-slate-700 text-slate-200 rounded">Overdue</span>
-                                        @break
-                                @endswitch
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex justify-center gap-2">
-                                    <a href="{{ route('admin.invoices.show', $invoice->id) }}" class="inline-flex items-center justify-center w-8 h-8 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded transition" title="Detail">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
-                                    <a href="{{ route('admin.invoices.edit', $invoice->id) }}" class="inline-flex items-center justify-center w-8 h-8 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 rounded transition" title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
-                                    </a>
-                                    <form action="{{ route('admin.invoices.destroy', $invoice->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center justify-center w-8 h-8 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded transition" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-slate-400">Tidak ada data invoice</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            @if($invoices->hasPages())
-            <div class="px-4 py-4 border-t border-slate-700 bg-slate-700/20">
-                {{ $invoices->links() }}
-            </div>
-            @endif
-        </div>
-        @else
-        <div class="bg-slate-800 rounded-lg border border-slate-700 p-8 md:p-12 text-center">
-            <svg class="w-12 h-12 md:w-16 md:h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p class="text-slate-400 text-base md:text-lg mb-3 font-medium">Tidak ada invoice</p>
-            <p class="text-slate-500 text-sm mb-6">Mulai dengan membuat invoice baru</p>
-            <a href="{{ route('admin.invoices.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-blue-600/50 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            
+            <div class="flex-1 relative">
+                <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                Tambah Invoice
-            </a>
+                <input type="text" id="searchInput" placeholder="Cari nomor invoice..." class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl pl-11 pr-4 py-2.5 placeholder-[#94A3B8] text-[13px] font-medium focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all">
+            </div>
+
+            <button onclick="resetFilters()" class="px-5 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] rounded-xl text-[13px] font-semibold transition-colors duration-200 border border-[#EEF2F6] flex items-center justify-center whitespace-nowrap">
+                Reset
+            </button>
+        </div>
+    </div>
+
+    @if($invoices->count() > 0)
+    <div class="bg-white rounded-[20px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#F8FAFC] border-b border-[#EEF2F6]">
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider">No</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Nomor Invoice</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Pelanggan/Supplier</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider text-right">Total</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#EEF2F6]">
+                    @foreach($invoices as $key => $invoice)
+                    <tr class="invoice-row hover:bg-[#F8FAFC] transition-colors" data-status="{{ $invoice->status_invoice }}">
+                        <td class="px-6 py-4 text-[13px] text-[#64748B]">{{ $invoices->firstItem() + $key }}</td>
+                        <td class="px-6 py-4 text-[13px] font-bold text-[#0F172A] invoice-no">{{ $invoice->nomor_invoice }}</td>
+                        <td class="px-6 py-4 text-[13px] text-[#0F172A]">
+                            @if($invoice->transaksi)
+                                @if($invoice->transaksi->pelanggan)
+                                    <span class="inline-flex px-2 py-0.5 text-[11px] font-bold rounded bg-[#EFF6FF] text-[#3B82F6] uppercase tracking-wide mr-2">Pelanggan</span>
+                                    {{ $invoice->transaksi->pelanggan->nama }}
+                                @elseif($invoice->transaksi->supplier)
+                                    <span class="inline-flex px-2 py-0.5 text-[11px] font-bold rounded bg-[#FFFBEB] text-[#D97706] uppercase tracking-wide mr-2">Supplier</span>
+                                    {{ $invoice->transaksi->supplier->nama }}
+                                @else
+                                    <span class="text-[#94A3B8]">-</span>
+                                @endif
+                            @else
+                                <span class="inline-flex px-2 py-0.5 text-[11px] font-bold rounded bg-[#F1F5F9] text-[#475569] uppercase tracking-wide mr-2">Client</span>
+                                {{ $invoice->to_client_name }}
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-[13px] font-bold text-[#0F172A] text-right">
+                            @if($invoice->transaksi)
+                                Rp {{ number_format($invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
+                            @else
+                                Rp {{ number_format($invoice->total + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            @switch($invoice->status_invoice)
+                                @case('pending')
+                                    <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-lg uppercase tracking-wide bg-[#FFFBEB] text-[#D97706]">Pending</span>
+                                    @break
+                                @case('paid')
+                                    <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-lg uppercase tracking-wide bg-[#ECFDF5] text-[#10B981]">Paid</span>
+                                    @break
+                                @case('cancelled')
+                                    <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-lg uppercase tracking-wide bg-[#FEF2F2] text-[#E11D48]">Cancelled</span>
+                                    @break
+                                @case('overdue')
+                                    <span class="inline-flex px-2.5 py-1 text-[11px] font-bold rounded-lg uppercase tracking-wide bg-[#F1F5F9] text-[#475569]">Overdue</span>
+                                    @break
+                            @endswitch
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('admin.invoices.show', $invoice->id) }}" class="px-3 py-1.5 bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#2563EB] font-semibold rounded-lg transition-colors text-[12px] border border-[#BFDBFE]">
+                                    Detail
+                                </a>
+                                <a href="{{ route('admin.invoices.edit', $invoice->id) }}" class="px-3 py-1.5 bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#D97706] font-semibold rounded-lg transition-colors text-[12px] border border-[#FDE68A]">
+                                    Edit
+                                </a>
+                                <form action="{{ route('admin.invoices.destroy', $invoice->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus invoice ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="px-3 py-1.5 bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#E11D48] font-semibold rounded-lg transition-colors text-[12px] border border-[#FECDD3]">
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        @if($invoices->hasPages())
+        <div class="px-6 py-4 border-t border-[#EEF2F6] bg-[#F8FAFC]">
+            {{ $invoices->links() }}
         </div>
         @endif
     </div>
+    @else
+    <div class="bg-white rounded-[20px] border border-[#EEF2F6] p-12 text-center shadow-[0_4px_16px_rgba(15,23,42,0.02)]">
+        <svg class="w-16 h-16 text-[#94A3B8] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-[15px] text-[#0F172A] font-bold mb-2">Tidak ada invoice</p>
+        <p class="text-[13px] text-[#64748B] mb-6">Mulai dengan membuat invoice baru.</p>
+        <a href="{{ route('admin.invoices.create', ['usaha_id' => $currentUsaha?->id]) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-colors duration-200 text-[13px]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Tambah Invoice
+        </a>
+    </div>
+    @endif
 </div>
 
 <script>
@@ -195,7 +184,7 @@ function filterRows() {
     const rows = document.querySelectorAll('.invoice-row');
 
     rows.forEach(row => {
-        const invoiceNo = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const invoiceNo = row.querySelector('.invoice-no').textContent.toLowerCase();
         const status = row.getAttribute('data-status');
 
         const matchSearch = invoiceNo.includes(searchTerm);

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AkunController;
 use App\Http\Controllers\Admin\AturanAutomationController;
+use App\Http\Controllers\Admin\AturanPajakController;
 use App\Http\Controllers\Admin\BeritaAcaraController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DokumenController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Admin\KuitansiController;
 use App\Http\Controllers\Admin\LabelTransaksiController;
 use App\Http\Controllers\Admin\MutasiRekeningController;
 use App\Http\Controllers\Admin\NotaController;
+use App\Http\Controllers\Admin\PajakController;
 use App\Http\Controllers\Admin\PDFController;
 use App\Http\Controllers\Admin\PelangganController;
 use App\Http\Controllers\Admin\PembayaranDimukaController;
@@ -98,16 +100,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('laporan/jurnal-umum', [JurnalUmumController::class, 'index'])->name('laporan.jurnal_umum');
     Route::put('jurnal-umum/{id}/adjust', [JurnalUmumController::class, 'updateToAdjustment'])->name('jurnal-umum.adjust');
     Route::get('jurnal-umum/import', [JurnalUmumController::class, 'importForm'])->name('jurnal-umum.import.form');
-Route::post('jurnal-umum/import/preview', [JurnalUmumController::class, 'importPreview'])->name('jurnal-umum.import.preview');
-Route::post('jurnal-umum/import/execute', [JurnalUmumController::class, 'importExecute'])->name('jurnal-umum.import.execute');
-Route::get('jurnal-penyesuaian/create', [JurnalUmumController::class, 'createPenyesuaian'])->name('jurnal-penyesuaian.create');
-Route::post('jurnal-penyesuaian', [JurnalUmumController::class, 'storePenyesuaian'])->name('jurnal-penyesuaian.store');
-Route::delete('jurnal-penyesuaian/{id}', [JurnalUmumController::class, 'destroyPenyesuaian'])->name('jurnal-penyesuaian.destroy');
+    Route::post('jurnal-umum/import/preview', [JurnalUmumController::class, 'importPreview'])->name('jurnal-umum.import.preview');
+    Route::post('jurnal-umum/import/execute', [JurnalUmumController::class, 'importExecute'])->name('jurnal-umum.import.execute');
+    Route::get('jurnal-penyesuaian/create', [JurnalUmumController::class, 'createPenyesuaian'])->name('jurnal-penyesuaian.create');
+    Route::post('jurnal-penyesuaian', [JurnalUmumController::class, 'storePenyesuaian'])->name('jurnal-penyesuaian.store');
+    Route::delete('jurnal-penyesuaian/{id}', [JurnalUmumController::class, 'destroyPenyesuaian'])->name('jurnal-penyesuaian.destroy');
 
-Route::get('laporan/perubahan-ekuitas-v2', [AkunController::class, 'perubahanEkuitasV2'])->name('laporan.perubahan_ekuitas_v2');
+    Route::get('laporan/perubahan-ekuitas-v2', [AkunController::class, 'perubahanEkuitasV2'])->name('laporan.perubahan_ekuitas_v2');
 
     Route::get('jurnal-penyesuaian', [JurnalUmumController::class, 'indexPenyesuaian'])->name('jurnal-penyesuaian');
     Route::get('laporan/neraca-lajur', [AkunController::class, 'neracaLajur'])->name('laporan.neraca_lajur');
+
+    Route::resource('aturan_pajaks', AturanPajakController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    Route::get('laporan/pajak', [PajakController::class, 'rekap'])->name('laporan.pajak');
+    Route::post('laporan/pajak/{id}/setor', [PajakController::class, 'setor'])->name('laporan.pajak.setor');
+    Route::post('laporan/pajak/setor-massal', [PajakController::class, 'setorMassal'])->name('laporan.pajak.setor-massal');
+    Route::get('laporan/pajak/export', [PajakController::class, 'export'])->name('laporan.pajak.export');
 
     Route::get('/dokumen', [DokumenController::class, 'index'])->name('dokumen.index');
 
@@ -184,7 +193,7 @@ Route::get('laporan/perubahan-ekuitas-v2', [AkunController::class, 'perubahanEku
         ->name('surat.import');
     Route::get('surat/export', [SuratController::class, 'export'])
         ->name('surat.export');
-        Route::get('surat/export-pdf', [SuratController::class, 'exportPdf']) // Tambah route PDF
+    Route::get('surat/export-pdf', [SuratController::class, 'exportPdf']) // Tambah route PDF
         ->name('surat.export-pdf');
 });
 

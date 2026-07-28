@@ -1,13 +1,14 @@
+
 @extends('layouts.admin.app')
 
 @section('content')
 <script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
-<div class="min-h-screen bg-slate-900">
+<div class="min-h-screen bg-[#F5F7FA]">
     <div class="p-4 md:p-6 lg:p-8">
         <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-100">Buat Surat Pemberitahuan Baru</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-[#0F172A]">Buat Surat Pemberitahuan Baru</h1>
             @if($usahas->count() > 1)
-            <select id="usahaSelect" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" onchange="changeUsaha()">
+            <select id="usahaSelect" class="px-4 py-2 bg-white border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" onchange="changeUsaha()">
                 @foreach($usahas as $usahaItem)
                 <option value="{{ $usahaItem->id }}" {{ $currentUsaha && $currentUsaha->id == $usahaItem->id ? 'selected' : '' }}>{{ $usahaItem->nama }}</option>
                 @endforeach
@@ -15,7 +16,7 @@
             @endif
         </div>
 
-        <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+        <div class="bg-white rounded-lg border border-[#EEF2F6] overflow-hidden">
             <form action="{{ route('admin.surat-pemberitahuan.store', ['usaha_id' => $currentUsaha?->id]) }}" method="POST" id="suratForm">
                 @csrf
                 <input type="hidden" name="usaha_id" value="{{ $currentUsaha?->id }}">
@@ -30,22 +31,22 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Surat <span class="text-red-400">*</span></label>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Nomor Surat <span class="text-red-400">*</span></label>
                             <div class="flex gap-2">
-                                <input type="text" name="nomor_surat" id="nomor_surat" value="{{ old('nomor_surat') }}" class="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('nomor_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
-                                <button type="button" id="generateBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition" {{ !$currentUsaha ? 'disabled' : '' }}>
+                                <input type="text" name="nomor_surat" id="nomor_surat" value="{{ old('nomor_surat') }}" class="flex-1 px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('nomor_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                                <button type="button" id="generateBtn" class="px-4 py-2 bg-[#F8FAFC] hover:bg-[#EEF2F6] text-[#0F172A] text-sm font-medium rounded-lg transition" {{ !$currentUsaha ? 'disabled' : '' }}>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                     </svg>
                                 </button>
                             </div>
                             @error('nomor_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
-                            <p class="text-slate-400 text-xs mt-1">Format: 11.001/SBT/HR/PTHXGN/MM/YYYY</p>
+                            <p class="text-[#64748B] text-xs mt-1">Format: 11.001/SBT/HR/PTHXGN/MM/YYYY</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Status <span class="text-red-400">*</span></label>
-                            <select name="status" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Status <span class="text-red-400">*</span></label>
+                            <select name="status" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required {{ !$currentUsaha ? 'disabled' : '' }}>
                                 <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                                 <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
                                 <option value="archived" {{ old('status') == 'archived' ? 'selected' : '' }}>Archived</option>
@@ -54,71 +55,71 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul (Indonesia) <span class="text-red-400">*</span></label>
-                            <input type="text" name="judul_indonesia" value="{{ old('judul_indonesia', 'SURAT PEMBERITAHUAN DITERIMA MAGANG') }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('judul_indonesia') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Judul (Indonesia) <span class="text-red-400">*</span></label>
+                            <input type="text" name="judul_indonesia" value="{{ old('judul_indonesia', 'SURAT PEMBERITAHUAN DITERIMA MAGANG') }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('judul_indonesia') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
                             @error('judul_indonesia')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul (Inggris) <span class="text-red-400">*</span></label>
-                            <input type="text" name="judul_inggris" value="{{ old('judul_inggris', 'NOTIFICATION LETTER OF INTERNSHIP ACCEPTED') }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('judul_inggris') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Judul (Inggris) <span class="text-red-400">*</span></label>
+                            <input type="text" name="judul_inggris" value="{{ old('judul_inggris', 'NOTIFICATION LETTER OF INTERNSHIP ACCEPTED') }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('judul_inggris') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
                             @error('judul_inggris')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Tanggal Surat <span class="text-red-400">*</span></label>
-                            <input type="date" name="tanggal_surat" value="{{ old('tanggal_surat', date('Y-m-d')) }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('tanggal_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Tanggal Surat <span class="text-red-400">*</span></label>
+                            <input type="date" name="tanggal_surat" value="{{ old('tanggal_surat', date('Y-m-d')) }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('tanggal_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
                             @error('tanggal_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Tempat Surat <span class="text-red-400">*</span></label>
-                            <input type="text" name="tempat_surat" value="{{ old('tempat_surat', 'Bandung') }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('tempat_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Tempat Surat <span class="text-red-400">*</span></label>
+                            <input type="text" name="tempat_surat" value="{{ old('tempat_surat', 'Bandung') }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('tempat_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
                             @error('tempat_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Nama Penandatangan <span class="text-red-400">*</span></label>
-                            <input type="text" name="nama_penandatangan" value="{{ old('nama_penandatangan') }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('nama_penandatangan') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Nama Penandatangan <span class="text-red-400">*</span></label>
+                            <input type="text" name="nama_penandatangan" value="{{ old('nama_penandatangan') }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('nama_penandatangan') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
                             @error('nama_penandatangan')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Jabatan Penandatangan <span class="text-red-400">*</span></label>
-                            <input type="text" name="jabatan_penandatangan" value="{{ old('jabatan_penandatangan') }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('jabatan_penandatangan') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Jabatan Penandatangan <span class="text-red-400">*</span></label>
+                            <input type="text" name="jabatan_penandatangan" value="{{ old('jabatan_penandatangan') }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('jabatan_penandatangan') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>
                             @error('jabatan_penandatangan')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">NIP Penandatangan</label>
-                            <input type="text" name="nip_penandatangan" value="{{ old('nip_penandatangan') }}" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500" {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">NIP Penandatangan</label>
+                            <input type="text" name="nip_penandatangan" value="{{ old('nip_penandatangan') }}" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" {{ !$currentUsaha ? 'disabled' : '' }}>
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Kepada <span class="text-red-400">*</span></label>
-                            <textarea name="kepada" rows="2" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('kepada') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>{{ old('kepada', 'Kepada Yth.') }}</textarea>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Kepada <span class="text-red-400">*</span></label>
+                            <textarea name="kepada" rows="2" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('kepada') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>{{ old('kepada', 'Kepada Yth.') }}</textarea>
                             @error('kepada')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Isi Surat <span class="text-red-400">*</span></label>
-                            <textarea name="isi_surat" id="isi_surat" rows="4" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('isi_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>{{ old('isi_surat', 'Dengan hormat,
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Isi Surat <span class="text-red-400">*</span></label>
+                            <textarea name="isi_surat" id="isi_surat" rows="4" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('isi_surat') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>{{ old('isi_surat', 'Dengan hormat,
 
 Bersama surat ini, kami informasikan bahwa setelah melalui proses seleksi administrasi dan wawancara, berikut adalah daftar peserta yang dinyatakan diterima untuk melaksanakan Program Magang Hub Kemnaker di lingkungan PT Hexagon Karyatama Indonesia.') }}</textarea>
                             @error('isi_surat')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Penutup <span class="text-red-400">*</span></label>
-                            <textarea name="penutup" id="penutup" rows="3" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg focus:outline-none focus:border-blue-500 @error('penutup') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>{{ old('penutup', 'Demikian pemberitahuan ini kami sampaikan. Atas perhatian dan kerja sama yang baik, kami ucapkan terima kasih.') }}</textarea>
+                            <label class="block text-sm font-medium text-[#475569] mb-2">Penutup <span class="text-red-400">*</span></label>
+                            <textarea name="penutup" id="penutup" rows="3" class="w-full px-4 py-2 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] text-sm rounded-lg focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3] @error('penutup') border-red-500 @enderror" required {{ !$currentUsaha ? 'disabled' : '' }}>{{ old('penutup', 'Demikian pemberitahuan ini kami sampaikan. Atas perhatian dan kerja sama yang baik, kami ucapkan terima kasih.') }}</textarea>
                             @error('penutup')<p class="text-red-400 text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
 
-                    <div class="bg-slate-700/50 rounded-lg p-4">
+                    <div class="bg-[#F8FAFC] rounded-lg p-4">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-slate-100">Daftar Peserta Magang</h3>
-                            <button type="button" id="addPesertaBtn" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded transition" {{ !$currentUsaha ? 'disabled' : '' }}>
+                            <h3 class="text-lg font-semibold text-[#0F172A]">Daftar Peserta Magang</h3>
+                            <button type="button" id="addPesertaBtn" class="px-3 py-1 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-medium rounded transition" {{ !$currentUsaha ? 'disabled' : '' }}>
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
@@ -134,9 +135,9 @@ Bersama surat ini, kami informasikan bahwa setelah melalui proses seleksi admini
                     </div>
                 </div>
 
-                <div class="px-6 py-4 border-t border-slate-700 bg-slate-700/30 flex gap-3 justify-end">
-                    <a href="{{ route('admin.surat-pemberitahuan.index', ['usaha_id' => $currentUsaha?->id]) }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">Batal</a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition" {{ !$currentUsaha ? 'disabled' : '' }}>Simpan</button>
+                <div class="px-6 py-4 border-t border-[#EEF2F6] bg-white flex gap-3 justify-end">
+                    <a href="{{ route('admin.surat-pemberitahuan.index', ['usaha_id' => $currentUsaha?->id]) }}" class="px-4 py-2 bg-[#F8FAFC] hover:bg-[#EEF2F6] text-[#0F172A] text-sm font-medium rounded-lg transition">Batal</a>
+                    <button type="submit" class="px-4 py-2 bg-[#3B41E3] hover:bg-[#343AC7] text-white text-sm font-medium rounded-lg transition" {{ !$currentUsaha ? 'disabled' : '' }}>Simpan</button>
                 </div>
             </form>
         </div>
@@ -200,10 +201,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Template untuk peserta
     function getPesertaTemplate(index) {
         return `
-        <div class="bg-slate-800 p-4 rounded border border-slate-600 peserta-item" data-index="${index}">
+        <div class="bg-white p-4 rounded border border-[#EEF2F6] peserta-item" data-index="${index}">
             <div class="flex justify-between items-start mb-3">
-                <h4 class="text-sm font-medium text-slate-200">Peserta #${index + 1}</h4>
-                <button type="button" class="text-red-400 hover:text-red-300 remove-peserta-btn" onclick="removePeserta(${index})">
+                <h4 class="text-sm font-medium text-[#0F172A]">Peserta #${index + 1}</h4>
+                <button type="button" class="text-red-400 hover:text-[#DC2626] remove-peserta-btn" onclick="removePeserta(${index})">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -211,16 +212,16 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
-                    <input type="text" name="peserta[${index}][nama_lengkap]" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-xs font-medium text-[#64748B] mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
+                    <input type="text" name="peserta[${index}][nama_lengkap]" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Asal Perguruan Tinggi <span class="text-red-400">*</span></label>
-                    <input type="text" name="peserta[${index}][asal_perguruan_tinggi]" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-xs font-medium text-[#64748B] mb-1">Asal Perguruan Tinggi <span class="text-red-400">*</span></label>
+                    <input type="text" name="peserta[${index}][asal_perguruan_tinggi]" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Posisi <span class="text-red-400">*</span></label>
-                    <input type="text" name="peserta[${index}][posisi]" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-xs font-medium text-[#64748B] mb-1">Posisi <span class="text-red-400">*</span></label>
+                    <input type="text" name="peserta[${index}][posisi]" class="w-full px-3 py-1.5 bg-[#F5F7FA] border border-[#EEF2F6] text-[#0F172A] text-xs rounded focus:outline-none focus:border-[#3B41E3] focus:ring-1 focus:ring-[#3B41E3]" required>
                 </div>
             </div>
         </div>

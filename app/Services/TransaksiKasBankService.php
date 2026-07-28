@@ -9,11 +9,15 @@ use Illuminate\Support\Facades\DB;
 
 class TransaksiKasBankService
 {
-    private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi)
+    public function __construct(
+        private TransaksiPajakService $pajakService
+    ) {}
+
+    private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi): JurnalUmum
     {
         $isDebit = $type === 'DEBIT';
 
-        JurnalUmum::create([
+        $jurnal = JurnalUmum::create([
             'akun_id' => $akun->id,
             'tanggal_transaksi' => $transaksi->tanggal,
             'deskripsi' => $deskripsi,
@@ -25,6 +29,8 @@ class TransaksiKasBankService
         ]);
 
         $this->recalculateAkunSaldo($akun->id);
+
+        return $jurnal;
     }
 
     protected function recalculateAkunSaldo($akunId)
@@ -52,6 +58,9 @@ class TransaksiKasBankService
                   ->where('usaha_id', $transaksi->usaha_id)
                   ->delete();
 
+        // Hapus juga record pajak terkait (baris jurnal pajaknya sudah ikut terhapus di atas)
+        $this->pajakService->hapusPajak($transaksi);
+
         foreach ($akunIdsToRecalculate as $akunId) {
             $this->recalculateAkunSaldo($akunId);
         }
@@ -74,8 +83,10 @@ class TransaksiKasBankService
             $deskripsiKasBank = "Transaksi {$tipeUtama} untuk {$akunLawan->name}";
             $deskripsiLawan = "Transaksi {$tipeUtama} dari/ke {$akunKasBank->name}";
 
+            $jurnalKasBank = null;
+
             if ($tipeUtama === 'PENERIMAAN') {
-                $this->catatJurnal(
+                $jurnalKasBank = $this->catatJurnal(
                     $transaksi,
                     $akunKasBank,
                     $jumlah,
@@ -100,7 +111,7 @@ class TransaksiKasBankService
                     $deskripsiLawan . ' (Debit Akun Lawan)'
                 );
 
-                $this->catatJurnal(
+                $jurnalKasBank = $this->catatJurnal(
                     $transaksi,
                     $akunKasBank,
                     $jumlah,
@@ -110,6 +121,20 @@ class TransaksiKasBankService
             } else {
                 throw new \Exception("Tipe utama transaksi tidak valid: {$tipeUtama}");
             }
+
+            // === INTEGRASI PAJAK ===
+            // Cek apakah label ini punya Aturan Pajak. Kalau ada, baris Kas/Bank
+            // otomatis dikurangi (untuk PPh) dan/atau ditambah baris PPN.
+            $this->pajakService->terapkanPajak(
+                $transaksi->usaha_id,
+                $transaksi->label_id,
+                null,
+                $jumlah,
+                $transaksi->tanggal,
+                $deskripsiKasBank,
+                $transaksi,
+                $jurnalKasBank?->id
+            );
 
             $transaksi->status = 'PROCESSED';
             $transaksi->save();

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class JurnalUmumController extends Controller
 {
@@ -293,6 +294,8 @@ public function destroyPenyesuaian($id)
         $request->validate([
             'file'     => 'required|file|mimes:xlsx,xls',
             'usaha_id' => 'required|exists:usahas,id',
+            'bulan'    => 'required|integer|min:1|max:12',
+            'tahun'    => 'required|integer|min:2000|max:2100',
         ]);
 
         $currentUser = Auth::user();
@@ -303,7 +306,15 @@ public function destroyPenyesuaian($id)
         $path = $request->file('file')->store('imports');
         $fullPath = Storage::path($path);
 
-        $parsed = $this->parseExcelJurnal($fullPath);
+        $parsed = $this->parseExcelJurnal($fullPath, (int) $request->tahun);
+
+        $bulanDipilih = (int) $request->bulan;
+        $tahunDipilih = (int) $request->tahun;
+
+        $parsed = array_values(array_filter($parsed, function ($entri) use ($bulanDipilih, $tahunDipilih) {
+            $tanggal = Carbon::parse($entri['tanggal']);
+            return $tanggal->month === $bulanDipilih && $tanggal->year === $tahunDipilih;
+        }));
 
         Session::put('import_file_path', $path);
         Session::put('import_usaha_id', $usahaSelected);
@@ -388,7 +399,7 @@ public function destroyPenyesuaian($id)
             ->with('success', 'Import jurnal berhasil. ' . count($parsed) . ' entri diimpor.');
     }
 
-    private function parseExcelJurnal(string $filePath): array
+    private function parseExcelJurnal(string $filePath, ?int $tahun = null): array
     {
         $wb = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
         $ws = $wb->getActiveSheet();
@@ -396,7 +407,7 @@ public function destroyPenyesuaian($id)
 
         $entries = [];
         $currentBulan = null;
-        $currentTahun = date('Y');
+        $currentTahun = $tahun ?? (int) date('Y');
 
         $bulanMap = [
             'januari' => 1,

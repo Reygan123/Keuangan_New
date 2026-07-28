@@ -1,72 +1,96 @@
 @extends('layouts.admin.app')
 
 @section('content')
-<div class="p-3 sm:p-5">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
-        <h1 class="text-xl font-semibold text-slate-100">Edit Receipt</h1>
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Edit Receipt</h1>
+            <p class="text-[14px] text-[#64748B] mt-1">{{ $receipt->nomor_receipt }}</p>
+        </div>
         @if($usahas->count() > 1)
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 text-sm">Usaha:</span>
-            <span class="text-slate-200 text-sm font-medium">{{ $currentUsaha->nama }}</span>
+        <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-xl px-4 py-2.5 flex items-center gap-2">
+            <span class="text-[13px] text-[#64748B] font-medium">Usaha:</span>
+            <span class="text-[13px] text-[#0F172A] font-bold">{{ $currentUsaha->nama }}</span>
         </div>
         @endif
     </div>
 
-    @if($errors->any())
-        <div class="mb-4 p-3 bg-red-500 bg-opacity-20 text-red-300 text-sm rounded border border-red-500 border-opacity-30">
-            @foreach($errors->all() as $error) <div>{{ $error }}</div> @endforeach
-        </div>
-    @endif
+    <div class="bg-white rounded-[20px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] overflow-hidden">
+        <form action="{{ route('admin.receipts.update', $receipt->id) }}" method="POST" id="receiptForm">
+            @csrf
+            @method('PUT')
+            <div class="p-6 space-y-6">
+                @if($errors->any())
+                    <div class="p-4 bg-[#FEF2F2] border border-[#F43F5E]/20 text-[#F43F5E] rounded-[16px] flex items-start gap-3 text-[13px] font-medium">
+                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        <div>
+                            @foreach($errors->all() as $error) <div>{{ $error }}</div> @endforeach
+                        </div>
+                    </div>
+                @endif
 
-    <form action="{{ route('admin.receipts.update', $receipt->id) }}" method="POST" id="receiptForm" class="space-y-4">
-        @csrf
-        @method('PUT')
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">No Receipt</label>
+                        <input type="text" name="nomor_receipt" class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all" value="{{ old('nomor_receipt', $receipt->nomor_receipt) }}" required>
+                    </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">No Receipt</label>
-                <input type="text" name="nomor_receipt" class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm px-3 py-2 rounded focus:outline-none focus:border-slate-500" value="{{ old('nomor_receipt', $receipt->nomor_receipt) }}" required>
+                    <div>
+                        <label class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Transaksi <span class="text-[#E11D48]">*</span></label>
+                        <select id="transaksi_id" name="transaksi_id" class="w-full appearance-none bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all cursor-pointer" required>
+                            <option value="">Pilih Transaksi</option>
+                            @foreach($transaksis as $transaksi)
+                                <option value="{{ $transaksi->id }}" data-jumlah="{{ $transaksi->jumlah }}" {{ old('transaksi_id', $receipt->transaksi_id) == $transaksi->id ? 'selected' : '' }}>
+                                    @if($transaksi->pelanggan) {{ $transaksi->pelanggan->nama }} @elseif($transaksi->supplier) {{ $transaksi->supplier->nama }} @else Umum @endif - Rp {{ number_format($transaksi->jumlah, 0, ',', '.') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Total</label>
+                        <div class="flex">
+                            <span class="px-4 py-2.5 bg-[#F1F5F9] border border-[#EEF2F6] border-r-0 text-[#64748B] text-[13px] rounded-l-xl font-medium">Rp</span>
+                            <input type="text" id="total_transaksi" class="flex-1 bg-[#F1F5F9] border border-[#EEF2F6] text-[#64748B] rounded-r-xl px-4 py-2.5 text-[13px] font-medium" value="{{ number_format($receipt->transaksi->jumlah, 0, ',', '.') }}" readonly>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Jumlah Dibayar <span class="text-[#E11D48]">*</span></label>
+                        <div class="flex">
+                            <span class="px-4 py-2.5 bg-[#F1F5F9] border border-[#EEF2F6] border-r-0 text-[#64748B] text-[13px] rounded-l-xl font-medium">Rp</span>
+                            <input type="number" id="jumlah_dibayar" name="jumlah_dibayar" class="flex-1 bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-r-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all" value="{{ old('jumlah_dibayar', $receipt->jumlah_dibayar) }}" min="0" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Kembalian</label>
+                        <div class="flex">
+                            <span class="px-4 py-2.5 bg-[#F1F5F9] border border-[#EEF2F6] border-r-0 text-[#64748B] text-[13px] rounded-l-xl font-medium">Rp</span>
+                            <input type="number" id="kembalian" name="kembalian" class="flex-1 bg-[#F1F5F9] border border-[#EEF2F6] text-[#64748B] rounded-r-xl px-4 py-2.5 text-[13px] font-medium" value="{{ old('kembalian', $receipt->kembalian) }}" readonly>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[13px] font-semibold text-[#0F172A] mb-1.5">Mesin Kasir</label>
+                        <input type="text" name="mesin_kasir_id" class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all" value="{{ old('mesin_kasir_id', $receipt->mesin_kasir_id) }}">
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Transaksi <span class="text-red-400">*</span></label>
-                <select id="transaksi_id" name="transaksi_id" class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm px-3 py-2 rounded focus:outline-none focus:border-slate-500" required>
-                    <option value="">Pilih Transaksi</option>
-                    @foreach($transaksis as $transaksi)
-                        <option value="{{ $transaksi->id }}" data-jumlah="{{ $transaksi->jumlah }}" {{ old('transaksi_id', $receipt->transaksi_id) == $transaksi->id ? 'selected' : '' }}>
-                            @if($transaksi->pelanggan) {{ $transaksi->pelanggan->nama }} @elseif($transaksi->supplier) {{ $transaksi->supplier->nama }} @else Umum @endif - Rp {{ number_format($transaksi->jumlah, 0, ',', '.') }}
-                        </option>
-                    @endforeach
-                </select>
+            <div class="px-6 py-4 border-t border-[#EEF2F6] bg-[#F8FAFC] flex justify-end gap-3 flex-wrap">
+                <a href="{{ route('admin.receipts.index', ['usaha_id' => $currentUsaha->id]) }}" class="px-5 py-2.5 bg-white hover:bg-[#F8FAFC] text-[#0F172A] font-semibold rounded-xl transition-colors duration-200 text-[13px] border border-[#EEF2F6]">
+                    Batal
+                </a>
+                <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="px-5 py-2.5 bg-white hover:bg-[#F8FAFC] text-[#2563EB] font-semibold rounded-xl transition-colors duration-200 text-[13px] border border-[#EEF2F6]">
+                    Lihat Detail
+                </a>
+                <button type="submit" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-colors duration-200 text-[13px]">
+                    Update Receipt
+                </button>
             </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Total</label>
-                <input type="text" id="total_transaksi" class="w-full bg-slate-600 border border-slate-500 text-slate-100 text-sm px-3 py-2 rounded" value="{{ number_format($receipt->transaksi->jumlah, 0, ',', '.') }}" readonly>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Jumlah Dibayar <span class="text-red-400">*</span></label>
-                <input type="number" id="jumlah_dibayar" name="jumlah_dibayar" class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm px-3 py-2 rounded focus:outline-none focus:border-slate-500" value="{{ old('jumlah_dibayar', $receipt->jumlah_dibayar) }}" min="0" step="0.01" required>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Kembalian</label>
-                <input type="number" id="kembalian" name="kembalian" class="w-full bg-slate-600 border border-slate-500 text-slate-100 text-sm px-3 py-2 rounded" value="{{ old('kembalian', $receipt->kembalian) }}" readonly>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Mesin Kasir</label>
-                <input type="text" name="mesin_kasir_id" class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm px-3 py-2 rounded focus:outline-none focus:border-slate-500" value="{{ old('mesin_kasir_id', $receipt->mesin_kasir_id) }}">
-            </div>
-        </div>
-
-        <div class="flex gap-2 pt-2">
-            <button type="submit" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-slate-100 text-sm rounded transition">Update</button>
-            <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm rounded transition">Lihat Detail</a>
-            <a href="{{ route('admin.receipts.index', ['usaha_id' => $currentUsaha->id]) }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm rounded transition">Batal</a>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -81,7 +105,7 @@ document.getElementById('jumlah_dibayar').addEventListener('input', hitung);
 
 function hitung() {
     const opt = document.getElementById('transaksi_id').options[document.getElementById('transaksi_id').selectedIndex];
-    const total = parseFloat(opt.dataset.jumlah) || 0;
+    const total = parseFloat(opt?.dataset?.jumlah) || 0;
     const dibayar = parseFloat(document.getElementById('jumlah_dibayar').value) || 0;
     const kembalian = Math.max(0, dibayar - total);
     document.getElementById('kembalian').value = kembalian.toFixed(2);

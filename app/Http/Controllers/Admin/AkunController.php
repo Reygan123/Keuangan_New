@@ -884,108 +884,118 @@ private function kategorikanAkunEkuitas($namaAkun)
 
 
     public function bukuKas(Request $request)
-    {
-        $currentUser = Auth::user();
-        $usahaSelected = $request->get('usaha_id');
+{
+    $currentUser = Auth::user();
+    $usahaSelected = $request->get('usaha_id');
 
-        $usahas = $currentUser->usahas()->get();
+    $usahas = $currentUser->usahas()->get();
 
-        if (!$usahaSelected && $usahas->count() > 0) {
-            $usahaSelected = $usahas->first()->id;
-        }
-
-        if (!$usahaSelected) {
-            return redirect()->route('admin.laporan.buku_kas')->with('error', 'Pilih usaha terlebih dahulu.');
-        }
-
-        $usaha = Usaha::find($usahaSelected);
-
-        if (!$usaha) {
-            return redirect()->route('admin.laporan.buku_kas')->with('error', 'Usaha tidak ditemukan.');
-        }
-
-        $akun_id = $request->input('akun_id');
-        $bulan = $request->input('bulan', now()->format('Y-m'));
-
-        $start_date = Carbon::parse($bulan)->startOfMonth()->startOfDay();
-        $end_date = Carbon::parse($bulan)->endOfMonth()->endOfDay();
-
-        $akunKasBank = Akun::where('usaha_id', $usahaSelected)
-            ->whereIn('klasifikasi', ['ASET'])
-            ->where(function ($query) {
-                $query->where('name', 'like', '%kas%')
-                    ->orWhere('name', 'like', '%bank%')
-                    ->orWhere('name', 'like', '%bca%')
-                    ->orWhere('name', 'like', '%bri%')
-                    ->orWhere('name', 'like', '%mandiri%');
-            })
-            ->get();
-
-        if (!$akun_id && $akunKasBank->count() > 0) {
-            $akun_id = $akunKasBank->first()->id;
-        }
-
-        $akunSelected = Akun::where('usaha_id', $usahaSelected)->find($akun_id);
-        $saldoAwal = $akunSelected ? $akunSelected->saldo : 0;
-
-        $transaksiKas = JurnalUmum::with(['akun', 'referensiTransaksi'])
-            ->where('akun_id', $akun_id)
-            ->where('usaha_id', $usahaSelected)
-            ->whereBetween('tanggal_transaksi', [$start_date, $end_date])
-            ->where('deskripsi', 'not like', '%Saldo Awal%')
-            ->orderBy('tanggal_transaksi')
-            ->orderBy('id')
-            ->get();
-
-        $saldoBerjalan = $saldoAwal;
-        $bukuKas = [];
-
-        foreach ($transaksiKas as $jurnal) {
-            $debit = $jurnal->debit;
-            $kredit = $jurnal->kredit;
-
-            if ($debit > 0) {
-                $saldoBerjalan += $debit;
-                $tipe = 'penerimaan';
-                $jumlah = $debit;
-            } else {
-                $saldoBerjalan -= $kredit;
-                $tipe = 'pengeluaran';
-                $jumlah = $kredit;
-            }
-
-            $akunLawan = $this->getAkunLawan($jurnal, $usahaSelected);
-
-            $bukuKas[] = [
-                'tanggal' => $jurnal->tanggal_transaksi->format('d/m/Y'),
-                'deskripsi' => $jurnal->deskripsi,
-                'akun_lawan' => $akunLawan,
-                'debit' => $debit,
-                'kredit' => $kredit,
-                'saldo_berjalan' => $saldoBerjalan,
-                'tipe' => $tipe
-            ];
-        }
-
-        $totalPenerimaan = $transaksiKas->sum('debit');
-        $totalPengeluaran = $transaksiKas->sum('kredit');
-        $saldoAkhir = $saldoAwal + $totalPenerimaan - $totalPengeluaran;
-
-        return view('admin.laporan.buku_kas', compact(
-            'usaha',
-            'bukuKas',
-            'akunKasBank',
-            'akunSelected',
-            'saldoAwal',
-            'saldoAkhir',
-            'totalPenerimaan',
-            'totalPengeluaran',
-            'bulan',
-            'akun_id',
-            'usahas',
-            'usahaSelected'
-        ));
+    if (!$usahaSelected && $usahas->count() > 0) {
+        $usahaSelected = $usahas->first()->id;
     }
+
+    if (!$usahaSelected) {
+        return redirect()->route('admin.laporan.buku_kas')->with('error', 'Pilih usaha terlebih dahulu.');
+    }
+
+    $usaha = Usaha::find($usahaSelected);
+
+    if (!$usaha) {
+        return redirect()->route('admin.laporan.buku_kas')->with('error', 'Usaha tidak ditemukan.');
+    }
+
+    $akun_id = $request->input('akun_id');
+    $bulan = $request->input('bulan', now()->format('Y-m'));
+
+    $start_date = Carbon::parse($bulan)->startOfMonth()->startOfDay();
+    $end_date = Carbon::parse($bulan)->endOfMonth()->endOfDay();
+
+    $akunKasBank = Akun::where('usaha_id', $usahaSelected)
+        ->whereIn('klasifikasi', ['ASET'])
+        ->where(function ($query) {
+            $query->where('name', 'like', '%kas%')
+                ->orWhere('name', 'like', '%bank%')
+                ->orWhere('name', 'like', '%bca%')
+                ->orWhere('name', 'like', '%bri%')
+                ->orWhere('name', 'like', '%mandiri%');
+        })
+        ->get();
+
+    if (!$akun_id && $akunKasBank->count() > 0) {
+        $akun_id = $akunKasBank->first()->id;
+    }
+
+    $akunSelected = Akun::where('usaha_id', $usahaSelected)->find($akun_id);
+    $saldoAwal = $akunSelected ? $akunSelected->saldo : 0;
+
+    $transaksiKas = JurnalUmum::with(['akun', 'referensiTransaksi'])
+        ->where('akun_id', $akun_id)
+        ->where('usaha_id', $usahaSelected)
+        ->whereBetween('tanggal_transaksi', [$start_date, $end_date])
+        ->where('deskripsi', 'not like', '%Saldo Awal%')
+        ->orderBy('tanggal_transaksi')
+        ->orderBy('id')
+        ->get();
+
+    $saldoBerjalan = $saldoAwal;
+    $bukuKas = [];
+
+    foreach ($transaksiKas as $jurnal) {
+        $debit = $jurnal->debit;
+        $kredit = $jurnal->kredit;
+
+        if ($debit > 0) {
+            $saldoBerjalan += $debit;
+            $tipe = 'penerimaan';
+            $jumlah = $debit;
+        } else {
+            $saldoBerjalan -= $kredit;
+            $tipe = 'pengeluaran';
+            $jumlah = $kredit;
+        }
+
+        $akunLawan = $this->getAkunLawan($jurnal, $usahaSelected);
+
+        // ========== FIX DI SINI ==========
+        // Konversi tanggal ke Carbon sebelum format
+        $tanggal = $jurnal->tanggal_transaksi;
+        if ($tanggal instanceof \Carbon\Carbon) {
+            $tanggalFormatted = $tanggal->format('d/m/Y');
+        } else {
+            $tanggalFormatted = Carbon::parse($tanggal)->format('d/m/Y');
+        }
+        // =================================
+
+        $bukuKas[] = [
+            'tanggal' => $tanggalFormatted,
+            'deskripsi' => $jurnal->deskripsi,
+            'akun_lawan' => $akunLawan,
+            'debit' => $debit,
+            'kredit' => $kredit,
+            'saldo_berjalan' => $saldoBerjalan,
+            'tipe' => $tipe
+        ];
+    }
+
+    $totalPenerimaan = $transaksiKas->sum('debit');
+    $totalPengeluaran = $transaksiKas->sum('kredit');
+    $saldoAkhir = $saldoAwal + $totalPenerimaan - $totalPengeluaran;
+
+    return view('admin.laporan.buku_kas', compact(
+        'usaha',
+        'bukuKas',
+        'akunKasBank',
+        'akunSelected',
+        'saldoAwal',
+        'saldoAkhir',
+        'totalPenerimaan',
+        'totalPengeluaran',
+        'bulan',
+        'akun_id',
+        'usahas',
+        'usahaSelected'
+    ));
+}
 
     private function getAkunLawan($jurnal, $usaha_id)
     {

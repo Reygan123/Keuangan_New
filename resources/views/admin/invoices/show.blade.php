@@ -1,328 +1,186 @@
 @extends('layouts.admin.app')
 
 @section('content')
-    <div class="min-h-screen bg-slate-900 p-4 md:p-6">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-slate-50">Detail Invoice</h1>
-                    <p class="text-slate-400 text-sm mt-1">{{ $invoice->nomor_invoice }}</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('admin.invoices.edit', $invoice->id) }}"
-                        class="flex items-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7-4l7-7m0 0H9m7 0v7"></path>
-                        </svg>
-                        Edit
-                    </a>
-                    <a href="{{ route('admin.invoices.export', $invoice->id) }}"
-                        class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                        Export PDF
-                    </a>
-                    <a href="{{ route('admin.invoices.index') }}"
-                        class="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-medium rounded transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
-                            </path>
-                        </svg>
-                        Kembali
-                    </a>
-                </div>
-            </div>
-
-            @if (session('success'))
-                <div class="mb-4 p-3 bg-green-900/50 border border-green-700 rounded-lg text-green-200 text-sm">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <div class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                        <h3 class="text-lg font-semibold text-slate-50 mb-4">Informasi Invoice</h3>
-                        <div class="space-y-3 text-sm">
-                            <div>
-                                <p class="text-slate-400">Nomor Invoice</p>
-                                <p class="text-slate-200 font-medium">{{ $invoice->nomor_invoice }}</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-400">Tanggal Dibuat</p>
-                                <p class="text-slate-200 font-medium">
-                                    {{ \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y H:i') }}</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-400">Jatuh Tempo</p>
-                                <div class="flex items-center gap-2">
-                                    <p class="text-slate-200 font-medium">
-                                        {{ \Carbon\Carbon::parse($invoice->tanggal_jatuh_tempo)->format('d/m/Y') }}</p>
-                                    @php
-                                        $jatuhTempo = \Carbon\Carbon::parse($invoice->tanggal_jatuh_tempo);
-                                        $now = \Carbon\Carbon::now();
-                                        $diff = $now->diffInDays($jatuhTempo, false);
-                                    @endphp
-                                    @if ($diff < 0 && $invoice->status_invoice != 'paid')
-                                        <span
-                                            class="px-2 py-1 bg-red-900/50 text-red-200 rounded text-xs font-medium">Terlambat
-                                            {{ abs($diff) }} hari</span>
-                                    @elseif($diff >= 0 && $diff <= 7 && $invoice->status_invoice != 'paid')
-                                        <span
-                                            class="px-2 py-1 bg-amber-900/50 text-amber-200 rounded text-xs font-medium">{{ $diff }}
-                                            hari lagi</span>
-                                    @endif
-                                </div>
-                            </div>
-                            <div>
-                                <p class="text-slate-400">Status</p>
-                                @switch($invoice->status_invoice)
-                                    @case('pending')
-                                        <span
-                                            class="inline-block px-2 py-1 bg-amber-900/50 text-amber-200 rounded text-xs font-medium">Pending</span>
-                                    @break
-
-                                    @case('paid')
-                                        <span
-                                            class="inline-block px-2 py-1 bg-green-900/50 text-green-200 rounded text-xs font-medium">Paid</span>
-                                    @break
-
-                                    @case('cancelled')
-                                        <span
-                                            class="inline-block px-2 py-1 bg-red-900/50 text-red-200 rounded text-xs font-medium">Cancelled</span>
-                                    @break
-
-                                    @case('overdue')
-                                        <span
-                                            class="inline-block px-2 py-1 bg-slate-900 text-slate-200 rounded text-xs font-medium">Overdue</span>
-                                    @break
-                                @endswitch
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                        <h3 class="text-lg font-semibold text-slate-50 mb-4">Informasi Pihak</h3>
-                        <div class="space-y-3 text-sm">
-                            @if ($invoice->transaksi)
-                                @if ($invoice->transaksi->pelanggan)
-                                    <div>
-                                        <p class="text-slate-400 mb-1">Pelanggan</p>
-                                        <p class="text-slate-200 font-medium">{{ $invoice->transaksi->pelanggan->nama }}
-                                        </p>
-                                        @if ($invoice->transaksi->pelanggan->alamat)
-                                            <p class="text-slate-400 text-xs">{{ $invoice->transaksi->pelanggan->alamat }}
-                                            </p>
-                                        @endif
-                                        @if ($invoice->transaksi->pelanggan->telepon)
-                                            <p class="text-slate-400 text-xs">Tel:
-                                                {{ $invoice->transaksi->pelanggan->telepon }}</p>
-                                        @endif
-                                    </div>
-                                @elseif($invoice->transaksi->supplier)
-                                    <div>
-                                        <p class="text-slate-400 mb-1">Supplier</p>
-                                        <p class="text-slate-200 font-medium">{{ $invoice->transaksi->supplier->nama }}</p>
-                                        @if ($invoice->transaksi->supplier->alamat)
-                                            <p class="text-slate-400 text-xs">{{ $invoice->transaksi->supplier->alamat }}
-                                            </p>
-                                        @endif
-                                        @if ($invoice->transaksi->supplier->telepon)
-                                            <p class="text-slate-400 text-xs">Tel:
-                                                {{ $invoice->transaksi->supplier->telepon }}</p>
-                                        @endif
-                                    </div>
-                                @endif
-                                <div>
-                                    <p class="text-slate-400">Tanggal Transaksi</p>
-                                    <p class="text-slate-200 font-medium">
-                                        {{ \Carbon\Carbon::parse($invoice->transaksi->tanggal)->format('d/m/Y') }}</p>
-                                </div>
-                            @else
-                                <div>
-                                    <p class="text-slate-400 mb-1">Client</p>
-                                    <p class="text-slate-200 font-medium">{{ $invoice->to_client_name }}</p>
-                                    @if ($invoice->nama_bank)
-                                        <p class="text-slate-400 text-xs">Bank: {{ $invoice->nama_bank }}</p>
-                                    @endif
-                                    @if ($invoice->nomor_rekening)
-                                        <p class="text-slate-400 text-xs">No. Rek: {{ $invoice->nomor_rekening }}</p>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                @if ($invoice->transaksi)
-                    <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                        <h3 class="text-lg font-semibold text-slate-50 mb-4">Detail Transaksi</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-slate-700/50 border-b border-slate-600">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">Keterangan</th>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">Label</th>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">Akun Payment</th>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">Akun Lawan</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-700">
-                                    <tr class="hover:bg-slate-700/50 transition-colors">
-                                        <td class="px-3 py-2 text-slate-300">{{ $invoice->transaksi->keterangan ?? '-' }}
-                                        </td>
-                                        <td class="px-3 py-2 text-slate-300">{{ $invoice->transaksi->label->nama ?? '-' }}
-                                        </td>
-                                        <td class="px-3 py-2 text-slate-300">
-                                            {{ $invoice->transaksi->akunPayment->nama ?? '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-300">
-                                            {{ $invoice->transaksi->akunLawan->nama ?? '-' }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endif
-
-                @if ($invoice->transaksi && $invoice->transaksi->detailProduks->count() > 0)
-                    <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                        <h3 class="text-lg font-semibold text-slate-50 mb-4">Produk</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-slate-700/50 border-b border-slate-600">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">No</th>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">Produk</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-slate-200">Qty</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-slate-200">Harga</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-slate-200">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-700">
-                                    @foreach ($invoice->transaksi->detailProduks as $key => $detail)
-                                        <tr class="hover:bg-slate-700/50 transition-colors">
-                                            <td class="px-3 py-2 text-slate-300">{{ $key + 1 }}</td>
-                                            <td class="px-3 py-2 text-slate-300">{{ $detail->produk->nama ?? '-' }}</td>
-                                            <td class="px-3 py-2 text-right text-slate-300">{{ $detail->qty }}</td>
-                                            <td class="px-3 py-2 text-right text-slate-300">Rp
-                                                {{ number_format($detail->harga, 0, ',', '.') }}</td>
-                                            <td class="px-3 py-2 text-right text-slate-300">Rp
-                                                {{ number_format($detail->qty * $detail->harga, 0, ',', '.') }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endif
-
-                @if (!$invoice->transaksi && $invoice->invoiceItems->count() > 0)
-                    <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                        <h3 class="text-lg font-semibold text-slate-50 mb-4">Invoice Items</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-slate-700/50 border-b border-slate-600">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">No</th>
-                                        <th class="px-3 py-2 text-left font-semibold text-slate-200">Description</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-slate-200">Qty</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-slate-200">Harga</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-slate-200">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-700">
-                                    @foreach ($invoice->invoiceItems as $key => $item)
-                                        <tr class="hover:bg-slate-700/50 transition-colors">
-                                            <td class="px-3 py-2 text-slate-300">{{ $key + 1 }}</td>
-                                            <td class="px-3 py-2 text-slate-300">{{ $item->description }}</td>
-                                            <td class="px-3 py-2 text-right text-slate-300">{{ $item->qty }}</td>
-                                            <td class="px-3 py-2 text-right text-slate-300">Rp
-                                                {{ number_format($item->harga, 0, ',', '.') }}</td>
-                                            <td class="px-3 py-2 text-right text-slate-300">Rp
-                                                {{ number_format($item->total, 0, ',', '.') }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endif
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @if ($invoice->terms_pembayaran)
-                        <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                            <h3 class="text-lg font-semibold text-slate-50 mb-4">Terms Pembayaran</h3>
-                            <div class="bg-slate-700/50 rounded p-3 text-slate-300 text-sm">
-                                {{ $invoice->terms_pembayaran }}
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                        <h3 class="text-lg font-semibold text-slate-50 mb-4">Ringkasan</h3>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Subtotal</span>
-                                <span class="text-slate-200 font-medium">
-                                    @if ($invoice->transaksi)
-                                        Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}
-                                    @else
-                                        Rp {{ number_format($invoice->subtotal, 0, ',', '.') }}
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-400">Pajak</span>
-                                <span class="text-slate-200 font-medium">Rp
-                                    {{ number_format($invoice->jumlah_pajak ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="border-t border-slate-600 pt-2 mt-2">
-                                <div class="flex justify-between">
-                                    <span class="text-slate-200 font-semibold">Total</span>
-                                    <span class="text-blue-400 font-bold">
-                                        @if ($invoice->transaksi)
-                                            Rp
-                                            {{ number_format($invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
-                                        @else
-                                            Rp
-                                            {{ number_format($invoice->total + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- <div class="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6">
-                    <h3 class="text-lg font-semibold text-slate-50 mb-4">Update Status</h3>
-                    <form action="{{ route('admin.invoices.update-status', $invoice->id) }}" method="POST"
-                        class="flex flex-col md:flex-row md:items-end gap-3">
-                        @csrf
-                        @method('PATCH')
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Status Invoice</label>
-                            <select name="status_invoice"
-                                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:border-slate-500">
-                                <option value="pending" {{ $invoice->status_invoice == 'pending' ? 'selected' : '' }}>
-                                    Pending</option>
-                                <option value="paid" {{ $invoice->status_invoice == 'paid' ? 'selected' : '' }}>Paid
-                                </option>
-                                <option value="cancelled" {{ $invoice->status_invoice == 'cancelled' ? 'selected' : '' }}>
-                                    Cancelled</option>
-                                <option value="overdue" {{ $invoice->status_invoice == 'overdue' ? 'selected' : '' }}>
-                                    Overdue</option>
-                            </select>
-                        </div>
-                        <button type="submit"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition-colors">Update</button>
-                    </form>
-                </div> --}}
-            </div>
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Detail Invoice</h1>
+            <p class="text-[14px] text-[#64748B] mt-1">{{ $invoice->nomor_invoice }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            @switch($invoice->status_invoice)
+                @case('pending')
+                    <span class="inline-flex px-3 py-1.5 text-[12px] font-bold rounded-xl uppercase tracking-wide bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]">Pending</span>
+                    @break
+                @case('paid')
+                    <span class="inline-flex px-3 py-1.5 text-[12px] font-bold rounded-xl uppercase tracking-wide bg-[#ECFDF5] text-[#10B981] border border-[#A7F3D0]">Paid</span>
+                    @break
+                @case('cancelled')
+                    <span class="inline-flex px-3 py-1.5 text-[12px] font-bold rounded-xl uppercase tracking-wide bg-[#FEF2F2] text-[#E11D48] border border-[#FECDD3]">Cancelled</span>
+                    @break
+                @case('overdue')
+                    <span class="inline-flex px-3 py-1.5 text-[12px] font-bold rounded-xl uppercase tracking-wide bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0]">Overdue</span>
+                    @break
+            @endswitch
+            
+            <a href="{{ route('admin.invoices.export', $invoice->id) }}" class="px-4 py-2 bg-[#F8FAFC] hover:bg-[#EEF2F6] text-[#0F172A] text-[13px] font-semibold rounded-xl transition-colors border border-[#E2E8F0] flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download PDF
+            </a>
+            
+            <a href="{{ route('admin.invoices.edit', $invoice->id) }}" class="px-4 py-2 bg-[#3B41E3] hover:bg-[#343AC7] text-white text-[13px] font-semibold rounded-xl transition-colors shadow-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit
+            </a>
         </div>
     </div>
+
+    <!-- Invoice Card -->
+    <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_24px_rgba(15,23,42,0.03)] overflow-hidden">
+        <!-- Top Section -->
+        <div class="p-8 md:p-12 border-b border-[#EEF2F6]">
+            <div class="flex flex-col md:flex-row justify-between gap-8">
+                <!-- Company Info -->
+                <div class="space-y-2">
+                    <h2 class="text-[20px] font-bold text-[#0F172A]">{{ $invoice->usaha->nama }}</h2>
+                    @if($invoice->usaha->alamat)
+                        <p class="text-[13px] text-[#64748B] whitespace-pre-line max-w-xs">{{ $invoice->usaha->alamat }}</p>
+                    @endif
+                </div>
+
+                <!-- Invoice Details -->
+                <div class="space-y-4 md:text-right">
+                    <div>
+                        <p class="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-1">Nomor Invoice</p>
+                        <p class="text-[16px] font-bold text-[#0F172A]">{{ $invoice->nomor_invoice }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-1">Tanggal Terbit</p>
+                        <p class="text-[14px] font-medium text-[#0F172A]">{{ \Carbon\Carbon::parse($invoice->created_at)->translatedFormat('d F Y') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-1">Jatuh Tempo</p>
+                        <p class="text-[14px] font-medium text-[#E11D48]">{{ \Carbon\Carbon::parse($invoice->tanggal_jatuh_tempo)->translatedFormat('d F Y') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-[#EEF2F6]">
+                <p class="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-3">Tagihan Untuk:</p>
+                @if($invoice->transaksi)
+                    <h3 class="text-[16px] font-bold text-[#0F172A]">
+                        @if($invoice->transaksi->pelanggan)
+                            {{ $invoice->transaksi->pelanggan->nama }}
+                        @elseif($invoice->transaksi->supplier)
+                            {{ $invoice->transaksi->supplier->nama }}
+                        @else
+                            Tanpa Relasi
+                        @endif
+                    </h3>
+                @else
+                    <h3 class="text-[16px] font-bold text-[#0F172A]">{{ $invoice->to_client_name }}</h3>
+                @endif
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="p-8 md:p-12 bg-[#F8FAFC]">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b-2 border-[#E2E8F0]">
+                            <th class="py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Deskripsi</th>
+                            <th class="py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider text-center w-24">Qty</th>
+                            <th class="py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider text-right w-40">Harga</th>
+                            <th class="py-4 text-[12px] font-bold text-[#64748B] uppercase tracking-wider text-right w-48">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#E2E8F0]">
+                        @if($invoice->transaksi)
+                            <tr>
+                                <td class="py-5 text-[14px] font-medium text-[#0F172A]">
+                                    {{ $invoice->transaksi->keterangan ?? 'Transaksi' }}
+                                </td>
+                                <td class="py-5 text-[14px] text-[#64748B] text-center">1</td>
+                                <td class="py-5 text-[14px] text-[#64748B] text-right">Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}</td>
+                                <td class="py-5 text-[14px] font-bold text-[#0F172A] text-right">Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}</td>
+                            </tr>
+                        @else
+                            @foreach($invoice->invoiceItems as $item)
+                                <tr>
+                                    <td class="py-5 text-[14px] font-medium text-[#0F172A]">{{ $item->description }}</td>
+                                    <td class="py-5 text-[14px] text-[#64748B] text-center">{{ $item->qty }}</td>
+                                    <td class="py-5 text-[14px] text-[#64748B] text-right">Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
+                                    <td class="py-5 text-[14px] font-bold text-[#0F172A] text-right">Rp {{ number_format($item->qty * $item->harga, 0, ',', '.') }}</td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary -->
+            <div class="mt-8 flex justify-end">
+                <div class="w-full max-w-sm space-y-4">
+                    <div class="flex justify-between items-center text-[14px]">
+                        <span class="text-[#64748B] font-medium">Subtotal</span>
+                        <span class="text-[#0F172A] font-bold">
+                            @if($invoice->transaksi)
+                                Rp {{ number_format($invoice->transaksi->jumlah, 0, ',', '.') }}
+                            @else
+                                Rp {{ number_format($invoice->total, 0, ',', '.') }}
+                            @endif
+                        </span>
+                    </div>
+                    
+                    @if($invoice->jumlah_pajak > 0)
+                    <div class="flex justify-between items-center text-[14px]">
+                        <span class="text-[#64748B] font-medium">Pajak</span>
+                        <span class="text-[#0F172A] font-bold">Rp {{ number_format($invoice->jumlah_pajak, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+
+                    <div class="pt-4 border-t-2 border-[#E2E8F0] flex justify-between items-center">
+                        <span class="text-[16px] font-bold text-[#0F172A]">Total Akhir</span>
+                        <span class="text-[24px] font-bold text-[#3B82F6]">
+                            @if($invoice->transaksi)
+                                Rp {{ number_format($invoice->transaksi->jumlah + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
+                            @else
+                                Rp {{ number_format($invoice->total + ($invoice->jumlah_pajak ?? 0), 0, ',', '.') }}
+                            @endif
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Notes -->
+        <div class="p-8 md:p-12 border-t border-[#EEF2F6] grid grid-cols-1 md:grid-cols-2 gap-8">
+            @if(!$invoice->transaksi && ($invoice->nama_bank || $invoice->nomor_rekening))
+            <div>
+                <p class="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Informasi Pembayaran</p>
+                <div class="bg-[#F8FAFC] rounded-xl p-4 border border-[#E2E8F0]">
+                    @if($invoice->nama_bank)
+                        <p class="text-[13px] text-[#64748B] mb-1">Bank: <span class="font-semibold text-[#0F172A]">{{ $invoice->nama_bank }}</span></p>
+                    @endif
+                    @if($invoice->nomor_rekening)
+                        <p class="text-[13px] text-[#64748B]">No. Rekening: <span class="font-semibold text-[#0F172A]">{{ $invoice->nomor_rekening }}</span></p>
+                    @endif
+                </div>
+            </div>
+            @endif
+            
+            @if($invoice->terms_pembayaran)
+            <div class="{{ $invoice->transaksi || (!$invoice->nama_bank && !$invoice->nomor_rekening) ? 'md:col-span-2' : '' }}">
+                <p class="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Syarat & Ketentuan</p>
+                <p class="text-[13px] text-[#64748B] whitespace-pre-line">{{ $invoice->terms_pembayaran }}</p>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
 @endsection

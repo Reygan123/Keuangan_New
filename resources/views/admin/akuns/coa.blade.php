@@ -1,191 +1,204 @@
 @extends('layouts.admin.app')
 
 @section('content')
-    <div class="min-h-screen bg-slate-950 py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
-            <div class="mb-8">
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-100 mb-2">Chart of Accounts</h1>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <p class="text-slate-400 text-sm">
-                        Struktur akun lengkap. Untuk perubahan, kunjungi
-                        <a href="{{ route('admin.akuns.index') }}"
-                            class="text-blue-400 hover:text-blue-300 transition">Manajemen Akun</a>.
-                    </p>
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Chart of Accounts</h1>
+            <p class="text-[14px] text-[#64748B] mt-1">
+                Struktur akun lengkap. Untuk perubahan, kunjungi
+                <a href="{{ route('admin.akuns.index') }}" class="text-[#3B41E3] hover:text-[#343AC7] font-semibold transition-colors">Manajemen Akun</a>.
+            </p>
+        </div>
 
-                    @if (count($usahas) > 1)
-                        <div class="flex gap-3">
-                            <select id="usahaFilter"
-                                class="bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[180px]">
-                                <option value="">-- Pilih Usaha --</option>
-                                @foreach ($usahas as $usaha)
-                                    <option value="{{ $usaha->id }}"
-                                        {{ $usahaSelected == $usaha->id ? 'selected' : '' }}>{{ $usaha->nama }}</option>
-                                @endforeach
-                            </select>
-                            <button onclick="filterByUsaha()"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
-                                Filter
-                            </button>
-                        </div>
-                    @endif
-                </div>
+        @if (isset($usahas) && count($usahas) > 1)
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <select id="usahaFilter" class="appearance-none bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] font-medium focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all cursor-pointer min-w-[180px]">
+                    <option value="">-- Pilih Usaha --</option>
+                    @foreach ($usahas as $usaha)
+                        <option value="{{ $usaha->id }}" {{ (isset($usahaSelected) && $usahaSelected == $usaha->id) ? 'selected' : '' }}>{{ $usaha->nama }}</option>
+                    @endforeach
+                </select>
+                <button onclick="filterByUsaha()" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white rounded-xl text-[13px] font-semibold transition-colors duration-200 shadow-sm">
+                    Filter
+                </button>
+            </div>
+        @endif
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- NERACA -->
+        <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] p-6">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-1.5 h-6 bg-[#3B82F6] rounded-full"></div>
+                <h2 class="text-[18px] font-bold text-[#0F172A]">NERACA</h2>
+            </div>
+            
+            <div class="relative mb-6">
+                <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" placeholder="Cari akun neraca..." id="searchNeraca"
+                       class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl pl-11 pr-4 py-2.5 placeholder-[#94A3B8] text-[13px] font-medium focus:outline-none focus:border-[#BFDBFE] focus:ring-2 focus:ring-[#DBEAFE] focus:bg-white transition-all">
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-blue-500 rounded-full"></span>
-                            NERACA
-                        </h2>
-                        <div class="relative mb-4">
-                            <input type="text" placeholder="Cari akun..."
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 transition"
-                                id="searchNeraca">
-                        </div>
-                    </div>
-
-                    <div id="neracaContainer" class="space-y-4">
-                        @foreach ($neracaGroups as $klasifikasi => $kelompokGroups)
-                            <div class="neracaItem">
-                                <h3
-                                    class="text-sm font-semibold px-3 py-2 bg-slate-800 text-blue-400 rounded-t-lg border-l-3 border-blue-500">
-                                    {{ $klasifikasi }}
-                                </h3>
-
-                                @foreach ($kelompokGroups as $namaKelompok => $akuns)
-                                    @if (count($akuns) > 0)
-                                        <div class="bg-slate-850 border border-t-0 border-slate-700">
-                                            <h4
-                                                class="text-xs font-semibold px-3 py-2 bg-slate-800 text-slate-300 uppercase tracking-wide border-b border-slate-700">
-                                                {{ $namaKelompok }}
-                                            </h4>
-
-                                            <div class="divide-y divide-slate-700">
-                                                @foreach ($akuns as $akun)
-    <a href="{{ route('admin.laporan.grafik_transaksi', ['usaha_id' => $usahaSelected, 'akun_id' => $akun->id]) }}"
-        class="px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-800 transition duration-150 akunRow"
-        data-akun="{{ strtolower($akun->name) }}">
-        <span class="text-slate-400 font-mono w-16 flex-shrink-0">{{ $akun->kode ?? $akun->id }}</span>
-        <span class="text-slate-200 flex-1">{{ $akun->name }}</span>
-    </a>
-@endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-                                @endforeach
+            <div id="neracaContainer" class="space-y-5">
+                @if(isset($neracaGroups))
+                    @foreach ($neracaGroups as $klasifikasi => $kelompokGroups)
+                        <div class="neracaItem rounded-xl border border-[#EEF2F6] overflow-hidden">
+                            <div class="px-4 py-3 bg-[#F0F9FF] border-l-[3px] border-[#3B82F6]">
+                                <h3 class="text-[14px] font-bold text-[#0369A1] uppercase tracking-wide">{{ $klasifikasi }}</h3>
                             </div>
-                        @endforeach
-                    </div>
-                </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-amber-500 rounded-full"></span>
-                            LABA RUGI
-                        </h2>
-                        <div class="relative mb-4">
-                            <input type="text" placeholder="Cari akun..."
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500 transition"
-                                id="searchLabaRugi">
-                        </div>
-                    </div>
-
-                    <div id="labaRugiContainer" class="space-y-4">
-                        @foreach ($labaRugiGroups as $klasifikasi => $kelompokGroups)
-                            <div class="labaRugiItem">
-                                <h3
-                                    class="text-sm font-semibold px-3 py-2 bg-slate-800 text-amber-400 rounded-t-lg border-l-3 border-amber-500">
-                                    {{ $klasifikasi }}
-                                </h3>
-
-                                @foreach ($kelompokGroups as $namaKelompok => $akuns)
-                                    @if (count($akuns) > 0)
-                                        <div class="bg-slate-850 border border-t-0 border-slate-700">
-                                            <h4
-                                                class="text-xs font-semibold px-3 py-2 bg-slate-800 text-slate-300 uppercase tracking-wide border-b border-slate-700">
-                                                {{ $namaKelompok }}
-                                            </h4>
-
-                                            <div class="divide-y divide-slate-700">
-                                                @foreach ($akuns as $akun)
-                                                    <div class="px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-800 transition duration-150 akunRow"
-                                                        data-akun="{{ strtolower($akun->name) }}">
-                                                        <span
-                                                            class="text-slate-400 font-mono w-16 flex-shrink-0">{{ $akun->kode ?? $akun->id }}</span>
-                                                        <span class="text-slate-200 flex-1">{{ $akun->name }}</span>
-                                                    </div>
-                                                @endforeach
-                                            </div>
+                            @foreach ($kelompokGroups as $namaKelompok => $akuns)
+                                @if (count($akuns) > 0)
+                                    <div class="bg-white border-t border-[#EEF2F6]">
+                                        <div class="px-4 py-2 bg-[#F8FAFC] border-b border-[#EEF2F6]">
+                                            <h4 class="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">{{ $namaKelompok }}</h4>
                                         </div>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
+
+                                        <div class="divide-y divide-[#EEF2F6]">
+                                            @foreach ($akuns as $akun)
+                                                <a href="{{ route('admin.laporan.grafik_transaksi', ['usaha_id' => isset($usahaSelected) ? $usahaSelected : null, 'akun_id' => $akun->id]) }}"
+                                                    class="px-4 py-2.5 flex justify-between items-center hover:bg-[#F8FAFC] transition-colors duration-150 akunRow group"
+                                                    data-akun="{{ strtolower($akun->name) }}">
+                                                    <span class="text-[#64748B] font-mono text-[12px] w-16 flex-shrink-0 group-hover:text-[#3B82F6] transition-colors">{{ $akun->kode ?? $akun->id }}</span>
+                                                    <span class="text-[#0F172A] text-[13px] font-medium flex-1">{{ $akun->name }}</span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+
+        <!-- LABA RUGI -->
+        <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] p-6">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-1.5 h-6 bg-[#F59E0B] rounded-full"></div>
+                <h2 class="text-[18px] font-bold text-[#0F172A]">LABA RUGI</h2>
+            </div>
+            
+            <div class="relative mb-6">
+                <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" placeholder="Cari akun laba rugi..." id="searchLabaRugi"
+                       class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl pl-11 pr-4 py-2.5 placeholder-[#94A3B8] text-[13px] font-medium focus:outline-none focus:border-[#FDE68A] focus:ring-2 focus:ring-[#FEF3C7] focus:bg-white transition-all">
             </div>
 
-            <div class="mt-8 p-4 bg-slate-800 border border-slate-700 rounded-lg">
-                <h3 class="text-sm font-semibold text-slate-100 mb-3">Informasi COA</h3>
-                <ul class="text-xs text-slate-400 space-y-1">
-                    <li><span class="text-slate-300">Klasifikasi:</span> ASET, KEWAJIBAN, EKUITAS, PENDAPATAN, BEBAN</li>
-                    <li><span class="text-slate-300">Sub Klasifikasi:</span> LANCAR, TETAP, JANGKA PANJANG (Neraca)</li>
-                    <li><span class="text-slate-300">Aktivitas Kas:</span> OPERASI, INVESTASI, PENDANAAN, TIDAK BERLAKU</li>
-                    <li><span class="text-slate-300">Pengelompokan:</span> Aset/Kewajiban berdasarkan Sub Klasifikasi; yang
-                        lain menggunakan Nama Kelompok</li>
-                </ul>
+            <div id="labaRugiContainer" class="space-y-5">
+                @if(isset($labaRugiGroups))
+                    @foreach ($labaRugiGroups as $klasifikasi => $kelompokGroups)
+                        <div class="labaRugiItem rounded-xl border border-[#EEF2F6] overflow-hidden">
+                            <div class="px-4 py-3 bg-[#FFFBEB] border-l-[3px] border-[#F59E0B]">
+                                <h3 class="text-[14px] font-bold text-[#B45309] uppercase tracking-wide">{{ $klasifikasi }}</h3>
+                            </div>
+
+                            @foreach ($kelompokGroups as $namaKelompok => $akuns)
+                                @if (count($akuns) > 0)
+                                    <div class="bg-white border-t border-[#EEF2F6]">
+                                        <div class="px-4 py-2 bg-[#F8FAFC] border-b border-[#EEF2F6]">
+                                            <h4 class="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">{{ $namaKelompok }}</h4>
+                                        </div>
+
+                                        <div class="divide-y divide-[#EEF2F6]">
+                                            @foreach ($akuns as $akun)
+                                                <div class="px-4 py-2.5 flex justify-between items-center hover:bg-[#F8FAFC] transition-colors duration-150 akunRow"
+                                                    data-akun="{{ strtolower($akun->name) }}">
+                                                    <span class="text-[#64748B] font-mono text-[12px] w-16 flex-shrink-0">{{ $akun->kode ?? $akun->id }}</span>
+                                                    <span class="text-[#0F172A] text-[13px] font-medium flex-1">{{ $akun->name }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
 
-    <script>
-        function filterByUsaha() {
-            const usahaId = document.getElementById('usahaFilter').value;
-            window.location.href = '{{ route('admin.akuns.coa') }}' + (usahaId ? '?usaha_id=' + usahaId : '');
-        }
+    <!-- Informasi COA -->
+    <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[20px] p-6 shadow-sm">
+        <h3 class="text-[14px] font-bold text-[#0F172A] mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#3B41E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Informasi COA
+        </h3>
+        <ul class="text-[13px] text-[#64748B] space-y-2.5">
+            <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
+                <span><strong class="text-[#334155] font-semibold">Klasifikasi:</strong> ASET, KEWAJIBAN, EKUITAS, PENDAPATAN, BEBAN</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
+                <span><strong class="text-[#334155] font-semibold">Sub Klasifikasi:</strong> LANCAR, TETAP, JANGKA PANJANG (Neraca)</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
+                <span><strong class="text-[#334155] font-semibold">Aktivitas Kas:</strong> OPERASI, INVESTASI, PENDANAAN, TIDAK BERLAKU</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
+                <span><strong class="text-[#334155] font-semibold">Pengelompokan:</strong> Aset/Kewajiban berdasarkan Sub Klasifikasi; yang lain menggunakan Nama Kelompok</span>
+            </li>
+        </ul>
+    </div>
+</div>
 
-        const searchNeraca = document.getElementById('searchNeraca');
-        const searchLabaRugi = document.getElementById('searchLabaRugi');
-        const neracaContainer = document.getElementById('neracaContainer');
-        const labaRugiContainer = document.getElementById('labaRugiContainer');
+<script>
+    function filterByUsaha() {
+        const usahaId = document.getElementById('usahaFilter').value;
+        window.location.href = '{{ route('admin.akuns.coa') }}' + (usahaId ? '?usaha_id=' + usahaId : '');
+    }
 
-        function filterAkun(searchInput, container) {
-            const query = searchInput.value.toLowerCase().trim();
-            const items = container.querySelectorAll('.akunRow');
-            let visibleGroups = new Set();
+    const searchNeraca = document.getElementById('searchNeraca');
+    const searchLabaRugi = document.getElementById('searchLabaRugi');
+    const neracaContainer = document.getElementById('neracaContainer');
+    const labaRugiContainer = document.getElementById('labaRugiContainer');
 
-            items.forEach(row => {
-                const text = row.dataset.akun;
-                const isVisible = text.includes(query);
-                row.style.display = isVisible ? 'flex' : 'none';
+    function filterAkun(searchInput, container) {
+        if (!container) return;
+        const query = searchInput.value.toLowerCase().trim();
+        const items = container.querySelectorAll('.akunRow');
+        let visibleGroups = new Set();
 
-                if (isVisible) {
-                    let parent = row.closest('.bg-slate-850');
-                    if (parent) visibleGroups.add(parent);
-                    let section = row.closest('.neracaItem, .labaRugiItem');
-                    if (section) visibleGroups.add(section);
-                }
-            });
+        items.forEach(row => {
+            const text = row.dataset.akun;
+            const isVisible = text.includes(query);
+            row.style.display = isVisible ? 'flex' : 'none';
 
-            const sections = container.querySelectorAll('.neracaItem, .labaRugiItem, .bg-slate-850');
-            sections.forEach(section => {
-                const hasVisible = section.querySelector(
-                    '.akunRow[style*="display: flex"], .akunRow:not([style*="display: none"])');
-                section.style.display = visibleGroups.has(section) || (query === '' && !section.classList.contains(
-                    'bg-slate-850')) ? '' : 'none';
-            });
-        }
-
-        searchNeraca.addEventListener('input', () => filterAkun(searchNeraca, neracaContainer));
-        searchLabaRugi.addEventListener('input', () => filterAkun(searchLabaRugi, labaRugiContainer));
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const usahaFilter = document.getElementById('usahaFilter');
-            if (usahaFilter) {
-                usahaFilter.addEventListener('change', filterByUsaha);
+            if (isVisible) {
+                let parent = row.closest('.bg-white.border-t');
+                if (parent) visibleGroups.add(parent);
+                let section = row.closest('.neracaItem, .labaRugiItem');
+                if (section) visibleGroups.add(section);
             }
         });
-    </script>
+
+        const sections = container.querySelectorAll('.neracaItem, .labaRugiItem, .bg-white.border-t');
+        sections.forEach(section => {
+            const hasVisible = section.querySelector(
+                '.akunRow[style*="display: flex"], .akunRow:not([style*="display: none"])');
+            section.style.display = visibleGroups.has(section) || (query === '' && !section.classList.contains(
+                'bg-white')) ? '' : 'none';
+        });
+    }
+
+    if (searchNeraca) searchNeraca.addEventListener('input', () => filterAkun(searchNeraca, neracaContainer));
+    if (searchLabaRugi) searchLabaRugi.addEventListener('input', () => filterAkun(searchLabaRugi, labaRugiContainer));
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const usahaFilter = document.getElementById('usahaFilter');
+        if (usahaFilter) {
+            usahaFilter.addEventListener('change', filterByUsaha);
+        }
+    });
+</script>
 @endsection

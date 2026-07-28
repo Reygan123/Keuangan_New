@@ -4,287 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinanceHub - Smart Accounting Solution</title>
+    
+    <!-- Typography: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Navigation */
-        nav {
-            padding: 20px 0;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .btn-outline {
-            color: #e2e8f0;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-            background: transparent;
-        }
-
-        .btn-outline:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: #3b82f6;
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 150px 0 100px;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: 56px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #ffffff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.2;
-        }
-
-        .hero p {
-            font-size: 20px;
-            color: #94a3b8;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-large {
-            padding: 16px 40px;
-            font-size: 16px;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 80px 0;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 60px;
-            color: #f1f5f9;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .feature-card {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            border-radius: 16px;
-            padding: 35px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .feature-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        .feature-card h3 {
-            font-size: 22px;
-            margin-bottom: 12px;
-            color: #f1f5f9;
-        }
-
-        .feature-card p {
-            color: #94a3b8;
-            line-height: 1.6;
-        }
-
-        /* Stats Section */
-        .stats {
-            padding: 60px 0;
-            background: rgba(30, 41, 59, 0.3);
-            margin: 80px 0;
-            border-radius: 20px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
-            text-align: center;
-        }
-
-        .stat-item h4 {
-            font-size: 42px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .stat-item p {
-            color: #94a3b8;
-            font-size: 16px;
-        }
-
-        /* Footer */
-        footer {
-            padding: 40px 0;
-            text-align: center;
-            border-top: 1px solid rgba(148, 163, 184, 0.1);
-            color: #64748b;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 36px;
-            }
-
-            .hero p {
-                font-size: 16px;
-            }
-
-            .nav-buttons {
-                gap: 10px;
-            }
-
-            .btn {
-                padding: 8px 16px;
-                font-size: 13px;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero, .feature-card {
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .feature-card:nth-child(2) {
-            animation-delay: 0.1s;
-        }
-
-        .feature-card:nth-child(3) {
-            animation-delay: 0.2s;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-[#F5F7FA] text-[#0F172A] overflow-x-hidden selection:bg-[#3B41E3]/20 selection:text-[#3B41E3]">
+    
     <!-- Navigation -->
-    <nav>
-        <div class="container">
-            <div class="nav-content">
-                <div class="logo">FinanceHub</div>
-                <div class="nav-buttons">
+    <nav class="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#EEF2F6]">
+        <div class="max-w-[1200px] mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-[#3B41E3] rounded-lg flex items-center justify-center font-bold text-sm text-white shadow-sm">
+                        F
+                    </div>
+                    <span class="text-[20px] font-bold text-[#0F172A] tracking-tight">FinanceHub</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dashboard</a>
+                            <a href="{{ url('/admin/dashboard') }}" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-all duration-200 text-[14px] shadow-sm hover:shadow">
+                                Dashboard
+                            </a>
                         @else
-                            <a href="{{ route('login') }}" class="btn btn-outline">Login</a>
+                            <a href="{{ route('login') }}" class="px-5 py-2.5 text-[#64748B] hover:text-[#0F172A] font-semibold transition-colors duration-200 text-[14px]">
+                                Login
+                            </a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
+                                <a href="{{ route('register') }}" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-all duration-200 text-[14px] shadow-sm hover:shadow">
+                                    Register
+                                </a>
                             @endif
                         @endauth
                     @endif
@@ -294,89 +52,150 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h1>Smart Accounting<br>Made Simple</h1>
-            <p>Kelola keuangan bisnis Anda dengan sistem akuntansi modern yang powerful, mudah digunakan, dan terintegrasi penuh.</p>
-            <div class="hero-buttons">
+    <section class="pt-40 pb-24 text-center px-6">
+        <div class="max-w-[1000px] mx-auto">
+            <h1 class="text-[48px] md:text-[64px] font-extrabold text-[#0F172A] leading-[1.1] mb-6 tracking-tight">
+                Smart Accounting <br class="hidden md:block">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#3B41E3] to-[#8B5CF6]">Made Simple</span>
+            </h1>
+            <p class="text-[18px] md:text-[20px] text-[#64748B] mb-10 max-w-[600px] mx-auto leading-relaxed">
+                Kelola keuangan bisnis Anda dengan sistem akuntansi modern yang powerful, mudah digunakan, dan terintegrasi penuh.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                 @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-primary btn-large">Mulai Gratis</a>
+                    <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-3.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-all duration-200 text-[15px] shadow-lg shadow-[#3B41E3]/25 hover:shadow-xl hover:shadow-[#3B41E3]/20 hover:-translate-y-0.5">
+                        Mulai Gratis
+                    </a>
                 @endif
                 @if (Route::has('login'))
-                    <a href="{{ route('login') }}" class="btn btn-outline btn-large">Login</a>
+                    <a href="{{ route('login') }}" class="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-[#F8FAFC] text-[#0F172A] font-semibold rounded-xl transition-all duration-200 text-[15px] border border-[#EEF2F6] shadow-sm hover:-translate-y-0.5">
+                        Login ke Akun
+                    </a>
                 @endif
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="features">
-        <div class="container">
-            <h2 class="section-title">Fitur Lengkap untuk Bisnis Anda</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Laporan Keuangan</h3>
-                    <p>Laba rugi, neraca, arus kas, dan perubahan ekuitas tersedia secara real-time dengan visualisasi yang jelas.</p>
+    <section class="py-24 bg-white border-y border-[#EEF2F6]">
+        <div class="max-w-[1200px] mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-[32px] font-bold text-[#0F172A] mb-4 tracking-tight">Fitur Lengkap untuk Bisnis Anda</h2>
+                <p class="text-[16px] text-[#64748B]">Semua yang Anda butuhkan untuk mengelola keuangan dalam satu tempat.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-[#EFF6FF] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#BFDBFE]">
+                        📊
+                    </div>
+                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Laporan Keuangan</h3>
+                    <p class="text-[14px] text-[#64748B] leading-relaxed">
+                        Laba rugi, neraca, arus kas, dan perubahan ekuitas tersedia secara real-time dengan visualisasi yang jelas.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Manajemen Transaksi</h3>
-                    <p>Catat transaksi penjualan, pembelian, produksi, kas & bank dengan mudah dan otomatis terjurnal.</p>
+                
+                <!-- Feature 2 -->
+                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-[#FEF2F2] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#FECDD3]">
+                        💰
+                    </div>
+                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Manajemen Transaksi</h3>
+                    <p class="text-[14px] text-[#64748B] leading-relaxed">
+                        Catat transaksi penjualan, pembelian, produksi, kas & bank dengan mudah dan otomatis terjurnal.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <h3>Dashboard Analytics</h3>
-                    <p>Monitor performa bisnis dengan dashboard interaktif yang menampilkan KPI penting secara real-time.</p>
+                
+                <!-- Feature 3 -->
+                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-[#ECFDF5] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#A7F3D0]">
+                        📈
+                    </div>
+                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Dashboard Analytics</h3>
+                    <p class="text-[14px] text-[#64748B] leading-relaxed">
+                        Monitor performa bisnis dengan dashboard interaktif yang menampilkan KPI penting secara real-time.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔄</div>
-                    <h3>Automation Rules</h3>
-                    <p>Buat aturan otomatis untuk jurnal transaksi, hemat waktu dan kurangi kesalahan input manual.</p>
+                
+                <!-- Feature 4 -->
+                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-[#FFFBEB] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#FDE68A]">
+                        🔄
+                    </div>
+                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Automation Rules</h3>
+                    <p class="text-[14px] text-[#64748B] leading-relaxed">
+                        Buat aturan otomatis untuk jurnal transaksi, hemat waktu dan kurangi kesalahan input manual.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📄</div>
-                    <h3>Dokumen Digital</h3>
-                    <p>Generate invoice, nota, kuitansi, dan receipt profesional dalam sekejap dengan template yang dapat disesuaikan.</p>
+                
+                <!-- Feature 5 -->
+                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-[#F3E8FF] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#E9D5FF]">
+                        📄
+                    </div>
+                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Dokumen Digital</h3>
+                    <p class="text-[14px] text-[#64748B] leading-relaxed">
+                        Generate invoice, nota, kuitansi, dan receipt profesional dalam sekejap dengan template yang dapat disesuaikan.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔐</div>
-                    <h3>Aman & Terpercaya</h3>
-                    <p>Data Anda tersimpan dengan enkripsi tingkat enterprise dan backup otomatis setiap hari.</p>
+                
+                <!-- Feature 6 -->
+                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-[#F1F5F9] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#E2E8F0]">
+                        🔐
+                    </div>
+                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Aman & Terpercaya</h3>
+                    <p class="text-[14px] text-[#64748B] leading-relaxed">
+                        Data Anda tersimpan dengan enkripsi tingkat enterprise dan backup otomatis setiap hari.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Stats Section -->
-    <section class="stats">
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <h4>500+</h4>
-                    <p>Bisnis Terdaftar</p>
+    <section class="py-24">
+        <div class="max-w-[1200px] mx-auto px-6">
+            <div class="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-[32px] p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
+                <!-- Decorative background elements -->
+                <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+                    <div class="absolute -top-[50%] -left-[10%] w-[70%] h-[150%] rounded-full bg-gradient-to-r from-[#3B41E3] to-transparent blur-3xl transform rotate-12"></div>
+                    <div class="absolute -bottom-[50%] -right-[10%] w-[70%] h-[150%] rounded-full bg-gradient-to-l from-[#8B5CF6] to-transparent blur-3xl transform -rotate-12"></div>
                 </div>
-                <div class="stat-item">
-                    <h4>50K+</h4>
-                    <p>Transaksi/Bulan</p>
-                </div>
-                <div class="stat-item">
-                    <h4>99.9%</h4>
-                    <p>Uptime</p>
-                </div>
-                <div class="stat-item">
-                    <h4>24/7</h4>
-                    <p>Support</p>
+
+                <div class="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+                    <div>
+                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">500+</h4>
+                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Bisnis Terdaftar</p>
+                    </div>
+                    <div>
+                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">50K+</h4>
+                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Transaksi/Bulan</p>
+                    </div>
+                    <div>
+                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">99.9%</h4>
+                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Uptime</p>
+                    </div>
+                    <div>
+                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">24/7</h4>
+                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Support</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 Reygan Fadhilah. All rights reserved.</p>
+    <footer class="py-10 border-t border-[#EEF2F6] bg-white">
+        <div class="max-w-[1200px] mx-auto px-6 text-center">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <div class="w-6 h-6 bg-[#3B41E3] rounded-md flex items-center justify-center font-bold text-[10px] text-white">F</div>
+                <span class="text-[16px] font-bold text-[#0F172A] tracking-tight">FinanceHub</span>
+            </div>
+            <p class="text-[13px] text-[#64748B] font-medium">&copy; {{ date('Y') }} Reygan Fadhilah. All rights reserved.</p>
         </div>
     </footer>
+
 </body>
 </html>
