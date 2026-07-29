@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DokumenController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\JenisSuratController;
 use App\Http\Controllers\Admin\JurnalUmumController;
+use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KategoriHppController;
 use App\Http\Controllers\Admin\KategoriHppTambahanController;
 use App\Http\Controllers\Admin\KuitansiController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Admin\PembayaranDimukaController;
 use App\Http\Controllers\Admin\PenyusutanController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReceiptController;
+use App\Http\Controllers\Admin\SlipGajiController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\SuratController;
 use App\Http\Controllers\Admin\SuratPemberitahuanController;
@@ -195,6 +197,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('surat.export');
     Route::get('surat/export-pdf', [SuratController::class, 'exportPdf']) // Tambah route PDF
         ->name('surat.export-pdf');
+
+    Route::resource('karyawan', KaryawanController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    Route::resource('slip-gaji', SlipGajiController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('slip-gaji/{slipGaji}/preview-pdf', [SlipGajiController::class, 'previewPdf'])->name('slip-gaji.preview-pdf');
+    Route::get('slip-gaji/{slipGaji}/download-pdf', [SlipGajiController::class, 'downloadPdf'])->name('slip-gaji.download-pdf');
 });
 
 require __DIR__ . '/auth.php';

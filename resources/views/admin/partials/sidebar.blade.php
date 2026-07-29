@@ -58,7 +58,9 @@
                 ['route' => 'admin.suppliers.index', 'label' => 'Suppliers', 'icon' => 'M20 7l-8-4-8 4m0 0l8-4 8 4m0 0v10l-8 4-8-4V7m8 4v10m-8-4l8 4 8-4'],
                 ['route' => 'admin.products.index', 'label' => 'Produk', 'icon' => 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'],
                 ['route' => 'admin.kategori_hpps.index', 'label' => 'Kategori HPP', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'],
-                ['route' => 'admin.kategori_hpp_tambahan.index', 'label' => 'Kategori Tambahan', 'icon' => 'M12 6v6m0 0v6m0-6h6m-6 0H6']
+                ['route' => 'admin.kategori_hpp_tambahan.index', 'label' => 'Kategori Tambahan', 'icon' => 'M12 6v6m0 0v6m0-6h6m-6 0H6'],
+                ['route' => 'admin.karyawan.index', 'label' => 'Karyawan', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+        ['route' => 'admin.slip-gaji.index', 'label' => 'Slip Gaji', 'icon' => 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2']
                 ];
                 @endphp
                 @foreach($masterMenu as $menu)
