@@ -15,7 +15,7 @@
                 H
             </div>
             <h1 class="text-[18px] font-bold text-[#0F172A] whitespace-nowrap transition-opacity duration-300"
-                :class="(!sidebarExpanded && !sidebarHovered) ? 'opacity-0 hidden' : 'opacity-100'">Hexagon</h1>
+                :class="(!sidebarExpanded && !sidebarHovered) ? 'opacity-0 hidden' : 'opacity-100'">Hexagon Inc</h1>
         </div>
 
         <!-- Toggle Collapse Button -->
