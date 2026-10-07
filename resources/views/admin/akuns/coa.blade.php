@@ -1,25 +1,33 @@
 @extends('layouts.admin.app')
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h1 class="text-[24px] font-bold text-[#0F172A] leading-tight">Chart of Accounts</h1>
-            <p class="text-[14px] text-[#64748B] mt-1">
-                Struktur akun lengkap. Untuk perubahan, kunjungi
-                <a href="{{ route('admin.akuns.index') }}" class="text-[#3B41E3] hover:text-[#343AC7] font-semibold transition-colors">Manajemen Akun</a>.
-            </p>
+<div class="w-full space-y-6 pb-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
+        <div class="flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight leading-tight">Chart of Accounts (COA)</h1>
+                <p class="text-xs sm:text-[13px] text-slate-500 font-medium">
+                    Hierarki bagan akun standar. Untuk mengelola akun, buka
+                    <a href="{{ route('admin.akuns.index') }}" class="text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-2 transition-colors">Manajemen Akun</a>.
+                </p>
+            </div>
         </div>
 
         @if (isset($usahas) && count($usahas) > 1)
-            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <select id="usahaFilter" class="appearance-none bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl px-4 py-2.5 text-[13px] font-medium focus:outline-none focus:border-[#C7D2FE] focus:ring-2 focus:ring-[#E0E7FF] focus:bg-white transition-all cursor-pointer min-w-[180px]">
+            <div class="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
+                <select id="usahaFilter" class="appearance-none bg-slate-50/70 border border-slate-200/80 text-slate-800 rounded-xl px-3.5 py-2 text-xs sm:text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 focus:bg-white transition-all cursor-pointer min-w-[180px]">
                     <option value="">-- Pilih Usaha --</option>
                     @foreach ($usahas as $usaha)
                         <option value="{{ $usaha->id }}" {{ (isset($usahaSelected) && $usahaSelected == $usaha->id) ? 'selected' : '' }}>{{ $usaha->nama }}</option>
                     @endforeach
                 </select>
-                <button onclick="filterByUsaha()" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white rounded-xl text-[13px] font-semibold transition-colors duration-200 shadow-sm">
+                <button onclick="filterByUsaha()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs sm:text-[13px] font-semibold shadow-xs transition-all duration-150">
                     Filter
                 </button>
             </div>
@@ -28,42 +36,48 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- NERACA -->
-        <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] p-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-1.5 h-6 bg-[#3B82F6] rounded-full"></div>
-                <h2 class="text-[18px] font-bold text-[#0F172A]">NERACA</h2>
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-5 sm:p-6 flex flex-col">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-2.5 h-6 bg-sky-500 rounded-full"></div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900">NERACA (Balance Sheet)</h2>
+                    <p class="text-[11px] text-slate-400 font-medium">Aset, Kewajiban, dan Ekuitas</p>
+                </div>
             </div>
             
-            <div class="relative mb-6">
-                <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="relative mb-5">
+                <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" placeholder="Cari akun neraca..." id="searchNeraca"
-                       class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl pl-11 pr-4 py-2.5 placeholder-[#94A3B8] text-[13px] font-medium focus:outline-none focus:border-[#BFDBFE] focus:ring-2 focus:ring-[#DBEAFE] focus:bg-white transition-all">
+                       class="w-full bg-slate-50/70 border border-slate-200/80 text-slate-900 rounded-xl pl-10 pr-4 py-2 placeholder-slate-400 text-xs sm:text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500/40 focus:bg-white transition-all">
             </div>
 
-            <div id="neracaContainer" class="space-y-5">
+            <div id="neracaContainer" class="space-y-4">
                 @if(isset($neracaGroups))
                     @foreach ($neracaGroups as $klasifikasi => $kelompokGroups)
-                        <div class="neracaItem rounded-xl border border-[#EEF2F6] overflow-hidden">
-                            <div class="px-4 py-3 bg-[#F0F9FF] border-l-[3px] border-[#3B82F6]">
-                                <h3 class="text-[14px] font-bold text-[#0369A1] uppercase tracking-wide">{{ $klasifikasi }}</h3>
+                        <div class="neracaItem rounded-xl border border-slate-200/70 overflow-hidden shadow-2xs">
+                            <div class="px-4 py-2.5 bg-sky-50/80 border-b border-sky-100 flex items-center justify-between">
+                                <h3 class="text-xs sm:text-[13px] font-bold text-sky-800 uppercase tracking-wide">{{ $klasifikasi }}</h3>
                             </div>
 
                             @foreach ($kelompokGroups as $namaKelompok => $akuns)
                                 @if (count($akuns) > 0)
-                                    <div class="bg-white border-t border-[#EEF2F6]">
-                                        <div class="px-4 py-2 bg-[#F8FAFC] border-b border-[#EEF2F6]">
-                                            <h4 class="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">{{ $namaKelompok }}</h4>
+                                    <div class="bg-white border-t border-slate-100">
+                                        <div class="px-4 py-1.5 bg-slate-50/60 border-b border-slate-100">
+                                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $namaKelompok }}</h4>
                                         </div>
 
-                                        <div class="divide-y divide-[#EEF2F6]">
+                                        <div class="divide-y divide-slate-100">
                                             @foreach ($akuns as $akun)
                                                 <a href="{{ route('admin.laporan.grafik_transaksi', ['usaha_id' => isset($usahaSelected) ? $usahaSelected : null, 'akun_id' => $akun->id]) }}"
-                                                    class="px-4 py-2.5 flex justify-between items-center hover:bg-[#F8FAFC] transition-colors duration-150 akunRow group"
+                                                    class="px-4 py-2 flex justify-between items-center hover:bg-slate-50/70 transition-colors duration-150 akunRow group"
                                                     data-akun="{{ strtolower($akun->name) }}">
-                                                    <span class="text-[#64748B] font-mono text-[12px] w-16 flex-shrink-0 group-hover:text-[#3B82F6] transition-colors">{{ $akun->kode ?? $akun->id }}</span>
-                                                    <span class="text-[#0F172A] text-[13px] font-medium flex-1">{{ $akun->name }}</span>
+                                                    <span class="text-slate-400 font-mono text-xs w-16 flex-shrink-0 group-hover:text-sky-600 font-medium transition-colors">{{ $akun->kode ?? $akun->id }}</span>
+                                                    <span class="text-slate-800 text-xs sm:text-[13px] font-medium flex-1 group-hover:text-slate-900">{{ $akun->name }}</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-sky-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                    </svg>
                                                 </a>
                                             @endforeach
                                         </div>
@@ -77,42 +91,49 @@
         </div>
 
         <!-- LABA RUGI -->
-        <div class="bg-white rounded-[24px] border border-[#EEF2F6] shadow-[0_4px_16px_rgba(15,23,42,0.02)] p-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-1.5 h-6 bg-[#F59E0B] rounded-full"></div>
-                <h2 class="text-[18px] font-bold text-[#0F172A]">LABA RUGI</h2>
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-5 sm:p-6 flex flex-col">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-2.5 h-6 bg-amber-500 rounded-full"></div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900">LABA RUGI (Income Statement)</h2>
+                    <p class="text-[11px] text-slate-400 font-medium">Pendapatan dan Beban Operasional/Non-Operasional</p>
+                </div>
             </div>
             
-            <div class="relative mb-6">
-                <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="relative mb-5">
+                <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" placeholder="Cari akun laba rugi..." id="searchLabaRugi"
-                       class="w-full bg-[#F8FAFC] border border-[#EEF2F6] text-[#0F172A] rounded-xl pl-11 pr-4 py-2.5 placeholder-[#94A3B8] text-[13px] font-medium focus:outline-none focus:border-[#FDE68A] focus:ring-2 focus:ring-[#FEF3C7] focus:bg-white transition-all">
+                       class="w-full bg-slate-50/70 border border-slate-200/80 text-slate-900 rounded-xl pl-10 pr-4 py-2 placeholder-slate-400 text-xs sm:text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 focus:bg-white transition-all">
             </div>
 
-            <div id="labaRugiContainer" class="space-y-5">
+            <div id="labaRugiContainer" class="space-y-4">
                 @if(isset($labaRugiGroups))
                     @foreach ($labaRugiGroups as $klasifikasi => $kelompokGroups)
-                        <div class="labaRugiItem rounded-xl border border-[#EEF2F6] overflow-hidden">
-                            <div class="px-4 py-3 bg-[#FFFBEB] border-l-[3px] border-[#F59E0B]">
-                                <h3 class="text-[14px] font-bold text-[#B45309] uppercase tracking-wide">{{ $klasifikasi }}</h3>
+                        <div class="labaRugiItem rounded-xl border border-slate-200/70 overflow-hidden shadow-2xs">
+                            <div class="px-4 py-2.5 bg-amber-50/80 border-b border-amber-100 flex items-center justify-between">
+                                <h3 class="text-xs sm:text-[13px] font-bold text-amber-800 uppercase tracking-wide">{{ $klasifikasi }}</h3>
                             </div>
 
                             @foreach ($kelompokGroups as $namaKelompok => $akuns)
                                 @if (count($akuns) > 0)
-                                    <div class="bg-white border-t border-[#EEF2F6]">
-                                        <div class="px-4 py-2 bg-[#F8FAFC] border-b border-[#EEF2F6]">
-                                            <h4 class="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">{{ $namaKelompok }}</h4>
+                                    <div class="bg-white border-t border-slate-100">
+                                        <div class="px-4 py-1.5 bg-slate-50/60 border-b border-slate-100">
+                                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $namaKelompok }}</h4>
                                         </div>
 
-                                        <div class="divide-y divide-[#EEF2F6]">
+                                        <div class="divide-y divide-slate-100">
                                             @foreach ($akuns as $akun)
-                                                <div class="px-4 py-2.5 flex justify-between items-center hover:bg-[#F8FAFC] transition-colors duration-150 akunRow"
+                                                <a href="{{ route('admin.laporan.grafik_transaksi', ['usaha_id' => isset($usahaSelected) ? $usahaSelected : null, 'akun_id' => $akun->id]) }}"
+                                                    class="px-4 py-2 flex justify-between items-center hover:bg-slate-50/70 transition-colors duration-150 akunRow group"
                                                     data-akun="{{ strtolower($akun->name) }}">
-                                                    <span class="text-[#64748B] font-mono text-[12px] w-16 flex-shrink-0">{{ $akun->kode ?? $akun->id }}</span>
-                                                    <span class="text-[#0F172A] text-[13px] font-medium flex-1">{{ $akun->name }}</span>
-                                                </div>
+                                                    <span class="text-slate-400 font-mono text-xs w-16 flex-shrink-0 group-hover:text-amber-600 font-medium transition-colors">{{ $akun->kode ?? $akun->id }}</span>
+                                                    <span class="text-slate-800 text-xs sm:text-[13px] font-medium flex-1 group-hover:text-slate-900">{{ $akun->name }}</span>
+                                                    <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                    </svg>
+                                                </a>
                                             @endforeach
                                         </div>
                                     </div>
@@ -126,29 +147,29 @@
     </div>
 
     <!-- Informasi COA -->
-    <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[20px] p-6 shadow-sm">
-        <h3 class="text-[14px] font-bold text-[#0F172A] mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-[#3B41E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Informasi COA
+    <div class="bg-white rounded-2xl border border-slate-200/60 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <h3 class="text-xs sm:text-[13px] font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Petunjuk Standar Akuntansi COA
         </h3>
-        <ul class="text-[13px] text-[#64748B] space-y-2.5">
-            <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
-                <span><strong class="text-[#334155] font-semibold">Klasifikasi:</strong> ASET, KEWAJIBAN, EKUITAS, PENDAPATAN, BEBAN</span>
-            </li>
-            <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
-                <span><strong class="text-[#334155] font-semibold">Sub Klasifikasi:</strong> LANCAR, TETAP, JANGKA PANJANG (Neraca)</span>
-            </li>
-            <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
-                <span><strong class="text-[#334155] font-semibold">Aktivitas Kas:</strong> OPERASI, INVESTASI, PENDANAAN, TIDAK BERLAKU</span>
-            </li>
-            <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] mt-1.5 flex-shrink-0"></span>
-                <span><strong class="text-[#334155] font-semibold">Pengelompokan:</strong> Aset/Kewajiban berdasarkan Sub Klasifikasi; yang lain menggunakan Nama Kelompok</span>
-            </li>
-        </ul>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs sm:text-[13px] text-slate-600">
+            <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+                <strong class="text-slate-900 block mb-1">Klasifikasi</strong>
+                ASET, KEWAJIBAN, EKUITAS, PENDAPATAN, BEBAN
+            </div>
+            <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+                <strong class="text-slate-900 block mb-1">Sub Klasifikasi</strong>
+                LANCAR, TETAP, JANGKA PANJANG (Akun Neraca)
+            </div>
+            <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+                <strong class="text-slate-900 block mb-1">Aktivitas Kas</strong>
+                OPERASI, INVESTASI, PENDANAAN, TIDAK BERLAKU
+            </div>
+            <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
+                <strong class="text-slate-900 block mb-1">Pengelompokan</strong>
+                Otomatis dirangkai menurut sub klasifikasi & kelompok akun
+            </div>
+        </div>
     </div>
 </div>
 

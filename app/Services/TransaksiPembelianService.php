@@ -19,11 +19,11 @@ class TransaksiPembelianService
         private TransaksiPajakService $pajakService
     ) {}
 
-    private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi)
+    private function catatJurnal(Transaksi $transaksi, Akun $akun, float $jumlah, string $type, string $deskripsi): JurnalUmum
     {
         $isDebit = $type === 'DEBIT';
 
-        JurnalUmum::create([
+        $jurnal = JurnalUmum::create([
             'akun_id' => $akun->id,
             'tanggal_transaksi' => $transaksi->tanggal,
             'deskripsi' => $deskripsi,
@@ -52,6 +52,8 @@ class TransaksiPembelianService
 
         $akun->saldo = (float)$akun->saldo + ($jumlah * $multiplier);
         $akun->save();
+
+        return $jurnal;
     }
 
     public function reverseJurnal(Transaksi $transaksi): void

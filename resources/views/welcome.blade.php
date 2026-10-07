@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceHub - Smart Accounting Solution</title>
+    <title>Sistem Informasi Keuangan Internal - PT Hexagon Karyatama Indonesia</title>
     
-    <!-- Typography: Plus Jakarta Sans -->
+    <!-- Typography: Plus Jakarta Sans / Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,187 +13,319 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
     </style>
 </head>
-<body class="bg-[#F5F7FA] text-[#0F172A] overflow-x-hidden selection:bg-[#3B41E3]/20 selection:text-[#3B41E3]">
+<body class="bg-slate-50 text-slate-900 selection:bg-indigo-500/10 selection:text-indigo-600 min-h-screen flex flex-col">
     
-    <!-- Navigation -->
-    <nav class="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#EEF2F6]">
-        <div class="max-w-[1200px] mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-[#3B41E3] rounded-lg flex items-center justify-center font-bold text-sm text-white shadow-sm">
-                        F
-                    </div>
-                    <span class="text-[20px] font-bold text-[#0F172A] tracking-tight">FinanceHub</span>
+    <!-- Top Navigation (Apple Glass) -->
+    <header class="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <!-- Brand & Company Identifier -->
+            <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 2l8.5 4.9v9.8L12 21.5l-8.5-4.8V6.9L12 2z"/>
+                    </svg>
                 </div>
-                
-                <div class="flex items-center gap-4">
-                    @if (Route::has('login'))
-                        @auth
-                            <a href="{{ url('/admin/dashboard') }}" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-all duration-200 text-[14px] shadow-sm hover:shadow">
-                                Dashboard
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" class="px-5 py-2.5 text-[#64748B] hover:text-[#0F172A] font-semibold transition-colors duration-200 text-[14px]">
-                                Login
-                            </a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="px-5 py-2.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-all duration-200 text-[14px] shadow-sm hover:shadow">
-                                    Register
-                                </a>
-                            @endif
-                        @endauth
-                    @endif
+                <div class="flex flex-col">
+                    <span class="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">
+                        PT Hexagon Karyatama Indonesia
+                    </span>
+                    <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Sistem Informasi Keuangan Internal
+                    </span>
                 </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="pt-40 pb-24 text-center px-6">
-        <div class="max-w-[1000px] mx-auto">
-            <h1 class="text-[48px] md:text-[64px] font-extrabold text-[#0F172A] leading-[1.1] mb-6 tracking-tight">
-                Smart Accounting <br class="hidden md:block">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#3B41E3] to-[#8B5CF6]">Made Simple</span>
-            </h1>
-            <p class="text-[18px] md:text-[20px] text-[#64748B] mb-10 max-w-[600px] mx-auto leading-relaxed">
-                Kelola keuangan bisnis Anda dengan sistem akuntansi modern yang powerful, mudah digunakan, dan terintegrasi penuh.
-            </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-3.5 bg-[#3B41E3] hover:bg-[#343AC7] text-white font-semibold rounded-xl transition-all duration-200 text-[15px] shadow-lg shadow-[#3B41E3]/25 hover:shadow-xl hover:shadow-[#3B41E3]/20 hover:-translate-y-0.5">
-                        Mulai Gratis
-                    </a>
-                @endif
-                @if (Route::has('login'))
-                    <a href="{{ route('login') }}" class="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-[#F8FAFC] text-[#0F172A] font-semibold rounded-xl transition-all duration-200 text-[15px] border border-[#EEF2F6] shadow-sm hover:-translate-y-0.5">
-                        Login ke Akun
-                    </a>
-                @endif
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="py-24 bg-white border-y border-[#EEF2F6]">
-        <div class="max-w-[1200px] mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-[32px] font-bold text-[#0F172A] mb-4 tracking-tight">Fitur Lengkap untuk Bisnis Anda</h2>
-                <p class="text-[16px] text-[#64748B]">Semua yang Anda butuhkan untuk mengelola keuangan dalam satu tempat.</p>
-            </div>
+            </a>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="w-12 h-12 bg-[#EFF6FF] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#BFDBFE]">
-                        📊
-                    </div>
-                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Laporan Keuangan</h3>
-                    <p class="text-[14px] text-[#64748B] leading-relaxed">
-                        Laba rugi, neraca, arus kas, dan perubahan ekuitas tersedia secara real-time dengan visualisasi yang jelas.
-                    </p>
-                </div>
-                
-                <!-- Feature 2 -->
-                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="w-12 h-12 bg-[#FEF2F2] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#FECDD3]">
-                        💰
-                    </div>
-                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Manajemen Transaksi</h3>
-                    <p class="text-[14px] text-[#64748B] leading-relaxed">
-                        Catat transaksi penjualan, pembelian, produksi, kas & bank dengan mudah dan otomatis terjurnal.
-                    </p>
-                </div>
-                
-                <!-- Feature 3 -->
-                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="w-12 h-12 bg-[#ECFDF5] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#A7F3D0]">
-                        📈
-                    </div>
-                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Dashboard Analytics</h3>
-                    <p class="text-[14px] text-[#64748B] leading-relaxed">
-                        Monitor performa bisnis dengan dashboard interaktif yang menampilkan KPI penting secara real-time.
-                    </p>
-                </div>
-                
-                <!-- Feature 4 -->
-                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="w-12 h-12 bg-[#FFFBEB] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#FDE68A]">
-                        🔄
-                    </div>
-                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Automation Rules</h3>
-                    <p class="text-[14px] text-[#64748B] leading-relaxed">
-                        Buat aturan otomatis untuk jurnal transaksi, hemat waktu dan kurangi kesalahan input manual.
-                    </p>
-                </div>
-                
-                <!-- Feature 5 -->
-                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="w-12 h-12 bg-[#F3E8FF] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#E9D5FF]">
-                        📄
-                    </div>
-                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Dokumen Digital</h3>
-                    <p class="text-[14px] text-[#64748B] leading-relaxed">
-                        Generate invoice, nota, kuitansi, dan receipt profesional dalam sekejap dengan template yang dapat disesuaikan.
-                    </p>
-                </div>
-                
-                <!-- Feature 6 -->
-                <div class="bg-[#F8FAFC] border border-[#EEF2F6] rounded-[24px] p-8 hover:shadow-lg hover:shadow-[#0F172A]/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="w-12 h-12 bg-[#F1F5F9] rounded-xl flex items-center justify-center text-[24px] mb-6 border border-[#E2E8F0]">
-                        🔐
-                    </div>
-                    <h3 class="text-[18px] font-bold text-[#0F172A] mb-3">Aman & Terpercaya</h3>
-                    <p class="text-[14px] text-[#64748B] leading-relaxed">
-                        Data Anda tersimpan dengan enkripsi tingkat enterprise dan backup otomatis setiap hari.
-                    </p>
-                </div>
+            <!-- Quick Links & Auth CTA -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <nav class="hidden md:flex items-center gap-6 mr-2 text-xs sm:text-[13px] font-semibold text-slate-600">
+                    <a href="#fitur" class="hover:text-indigo-600 transition-colors">Modul Sistem</a>
+                    <a href="#tata-kelola" class="hover:text-indigo-600 transition-colors">Tata Kelola</a>
+                    <a href="#keamanan" class="hover:text-indigo-600 transition-colors">Keamanan</a>
+                </nav>
+
+                @if (Route::has('login'))
+                    @auth
+                        <a href="{{ url('/admin/dashboard') }}" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold rounded-xl text-xs sm:text-[13px] shadow-xs transition-all duration-150">
+                            <span>Buka Dashboard</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold rounded-xl text-xs sm:text-[13px] shadow-xs transition-all duration-150">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            <span>Masuk ke Portal</span>
+                        </a>
+                    @endauth
+                @endif
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Stats Section -->
-    <section class="py-24">
-        <div class="max-w-[1200px] mx-auto px-6">
-            <div class="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-[32px] p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
-                <!-- Decorative background elements -->
-                <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
-                    <div class="absolute -top-[50%] -left-[10%] w-[70%] h-[150%] rounded-full bg-gradient-to-r from-[#3B41E3] to-transparent blur-3xl transform rotate-12"></div>
-                    <div class="absolute -bottom-[50%] -right-[10%] w-[70%] h-[150%] rounded-full bg-gradient-to-l from-[#8B5CF6] to-transparent blur-3xl transform -rotate-12"></div>
+    <!-- Main Content -->
+    <main class="flex-1 pt-24 sm:pt-32">
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-16 sm:pb-24 text-center">
+            <!-- Subtle Radial Gradient Background Glow -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+            
+            <div class="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+                <!-- Status Pill Badge -->
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] text-xs font-semibold text-slate-700">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Portal Finansial Terintegrasi &bull; Internal Enterprise</span>
                 </div>
 
-                <div class="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-                    <div>
-                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">500+</h4>
-                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Bisnis Terdaftar</p>
-                    </div>
-                    <div>
-                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">50K+</h4>
-                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Transaksi/Bulan</p>
-                    </div>
-                    <div>
-                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">99.9%</h4>
-                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Uptime</p>
-                    </div>
-                    <div>
-                        <h4 class="text-[40px] md:text-[56px] font-bold mb-2">24/7</h4>
-                        <p class="text-[14px] md:text-[16px] text-[#94A3B8] font-medium">Support</p>
+                <!-- Main Headline -->
+                <div class="space-y-3">
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.12]">
+                        Sentralisasi Keuangan & Akuntansi <br class="hidden sm:inline"/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-600">
+                            PT Hexagon Karyatama Indonesia
+                        </span>
+                    </h1>
+                    <p class="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+                        Platform manajemen keuangan internal yang dirancang untuk otomasi pembukuan, pengawasan arus kas, kepatuhan perpajakan, dan penyusunan laporan keuangan standar SAK ETAP secara presisi.
+                    </p>
+                </div>
+
+                <!-- Action Button Group -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                    @auth
+                        <a href="{{ url('/admin/dashboard') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold rounded-2xl text-sm shadow-sm transition-all duration-150">
+                            <span>Buka Dashboard Utama</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold rounded-2xl text-sm shadow-sm transition-all duration-150">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            <span>Masuk ke Akun Pegawai</span>
+                        </a>
+                    @endauth
+                    
+                    <a href="#fitur" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-2xl text-sm border border-slate-200/80 active:scale-95 shadow-2xs transition-all duration-150">
+                        <span>Pelajari Modul Sistem</span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Interactive Snapshot Mockup -->
+                <div class="pt-6 sm:pt-10 max-w-5xl mx-auto">
+                    <div class="bg-white rounded-3xl border border-slate-200/80 p-4 sm:p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+                        <!-- macOS Window Header Bar -->
+                        <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100 text-left">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                                <span class="ml-2 text-xs font-semibold text-slate-400 hidden sm:inline">Hexagon Financial Dashboard &bull; Live Preview</span>
+                            </div>
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-[11px] font-semibold text-slate-600">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                <span>PT Hexagon Karyatama Indonesia</span>
+                            </div>
+                        </div>
+
+                        <!-- 4 Quick KPI Snapshot Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
+                            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                                <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status Neraca</p>
+                                <p class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">100% Seimbang</p>
+                                <p class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Terverifikasi Otomatis
+                                </p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                                <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Standar Akuntansi</p>
+                                <p class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">SAK ETAP</p>
+                                <p class="text-[11px] text-indigo-600 font-semibold mt-1">Laporan Siap Audit</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                                <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Multi-Entitas</p>
+                                <p class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">Terpadu</p>
+                                <p class="text-[11px] text-slate-500 font-medium mt-1">Konsolidasi Unit Bisnis</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                                <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kepatuhan Fiskal</p>
+                                <p class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">PPh & PPN</p>
+                                <p class="text-[11px] text-teal-600 font-semibold mt-1">Kalkulasi Otomatis</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+
+        <!-- Core Modules Section -->
+        <section id="fitur" class="py-16 sm:py-24 bg-white border-y border-slate-200/60 scroll-mt-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 block">Cakupan Fungsional</span>
+                    <h2 class="text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+                        Modul Keuangan Terintegrasi
+                    </h2>
+                    <p class="text-sm sm:text-base text-slate-500 mt-2">
+                        Dirancang khusus untuk mendukung alur kerja akuntan, tim operasional, serta manajemen PT Hexagon Karyatama Indonesia.
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <!-- Module 1: Laporan Finansial -->
+                    <div class="bg-slate-50/60 rounded-3xl border border-slate-200/70 p-6 sm:p-7 hover:bg-white hover:shadow-md transition-all duration-200 group">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-5 group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Laporan Finansial Lengkap</h3>
+                        <p class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                            Laba Rugi, Neraca, Arus Kas, Perubahan Ekuitas, serta Neraca Lajur (Worksheet) 10 kolom yang selalu terhitung secara akurat.
+                        </p>
+                    </div>
+                    
+                    <!-- Module 2: Automasi Jurnal -->
+                    <div class="bg-slate-50/60 rounded-3xl border border-slate-200/70 p-6 sm:p-7 hover:bg-white hover:shadow-md transition-all duration-200 group">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-5 group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Automasi & Jurnal Terpadu</h3>
+                        <p class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                            Pencatatan Jurnal Umum & Penyesuaian dengan aturan otomatisasi debit-kredit berdasarkan label transaksi tanpa risiko salah input.
+                        </p>
+                    </div>
+                    
+                    <!-- Module 3: Multi-Entitas & Master Data -->
+                    <div class="bg-slate-50/60 rounded-3xl border border-slate-200/70 p-6 sm:p-7 hover:bg-white hover:shadow-md transition-all duration-200 group">
+                        <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 mb-5 group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Multi-Usaha & Master Data</h3>
+                        <p class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                            Manajemen unit usaha terpisah, pelanggan, supplier, inventaris produk, serta kalkulasi HPP dan biaya produksi tambahan.
+                        </p>
+                    </div>
+                    
+                    <!-- Module 4: Kepatuhan Pajak -->
+                    <div class="bg-slate-50/60 rounded-3xl border border-slate-200/70 p-6 sm:p-7 hover:bg-white hover:shadow-md transition-all duration-200 group">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-5 group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Manajemen Pajak & Fiskal</h3>
+                        <p class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                            Penetapan aturan PPh & PPN otomatis pada setiap transaksi niaga, rekapitulasi pajak bulanan, dan kepatuhan administrasi fiskal.
+                        </p>
+                    </div>
+                    
+                    <!-- Module 5: Payroll & Slip Gaji -->
+                    <div class="bg-slate-50/60 rounded-3xl border border-slate-200/70 p-6 sm:p-7 hover:bg-white hover:shadow-md transition-all duration-200 group">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-5 group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Payroll & Slip Gaji Digital</h3>
+                        <p class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                            Database karyawan internal, perhitungan take home pay, tunjangan, potongan, serta pembuatan slip gaji digital siap cetak dan unduh.
+                        </p>
+                    </div>
+                    
+                    <!-- Module 6: Administrasi Dokumen Niaga -->
+                    <div class="bg-slate-50/60 rounded-3xl border border-slate-200/70 p-6 sm:p-7 hover:bg-white hover:shadow-md transition-all duration-200 group">
+                        <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mb-5 group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Dokumen Niaga & Surat Resmi</h3>
+                        <p class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                            Penerbitan Invoice, Receipt, Kuitansi, Nota, Surat Pernyataan, Surat Pemberitahuan, dan Berita Acara berformat resmi PT Hexagon.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Governance & Security Section -->
+        <section id="tata-kelola" class="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 rounded-3xl p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+                    <!-- Subtle Glow Shapes -->
+                    <div class="absolute -top-32 -right-32 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="relative z-10 max-w-3xl">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold mb-4">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            <span>Standar Keamanan Enterprise</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-white mb-4">
+                            Integritas Data, Audit Trail & Hak Akses Terlindungi
+                        </h2>
+                        <p class="text-xs sm:text-base text-slate-300 leading-relaxed mb-8">
+                            Akses sistem sepenuhnya dibatasi untuk pegawai, akuntan, dan jajaran direksi PT Hexagon Karyatama Indonesia. Setiap perubahan transaksi tersimpan dengan jejak audit yang dapat dipertanggungjawabkan demi transparansi tata kelola perusahaan.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-left" id="keamanan">
+                            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <p class="text-sm font-bold text-white mb-1">Enkripsi Data</p>
+                                <p class="text-xs text-slate-400">Proteksi kredensial dan rekaman saldo dengan standar perbankan modern.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <p class="text-sm font-bold text-white mb-1">Audit Trail Jurnal</p>
+                                <p class="text-xs text-slate-400">Riwayat penginputan dan penyesuaian tersinkronisasi otomatis.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <p class="text-sm font-bold text-white mb-1">Pemisahan Entitas</p>
+                                <p class="text-xs text-slate-400">Isolasi pembukuan antar unit usaha untuk independensi laporan.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="py-10 border-t border-[#EEF2F6] bg-white">
-        <div class="max-w-[1200px] mx-auto px-6 text-center">
-            <div class="flex items-center justify-center gap-2 mb-4">
-                <div class="w-6 h-6 bg-[#3B41E3] rounded-md flex items-center justify-center font-bold text-[10px] text-white">F</div>
-                <span class="text-[16px] font-bold text-[#0F172A] tracking-tight">FinanceHub</span>
+    <footer class="border-t border-slate-200/60 bg-white py-8 sm:py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-2xs">
+                    H
+                </div>
+                <div>
+                    <p class="text-xs sm:text-[13px] font-bold text-slate-900 leading-tight">
+                        PT Hexagon Karyatama Indonesia
+                    </p>
+                    <p class="text-[11px] text-slate-400">
+                        Sistem Informasi Manajemen Keuangan &bull; Internal Use Only
+                    </p>
+                </div>
             </div>
-            <p class="text-[13px] text-[#64748B] font-medium">&copy; {{ date('Y') }} Reygan Fadhilah. All rights reserved.</p>
+            <p class="text-xs text-slate-500">
+                &copy; {{ date('Y') }} PT Hexagon Karyatama Indonesia. Seluruh hak cipta dilindungi.
+            </p>
         </div>
     </footer>
 

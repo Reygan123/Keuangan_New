@@ -14,7 +14,13 @@ class Akun extends Model
         'aktivitas_kas',
         'nama_kelompok',
         'sub_klasifikasi',
-        'usaha_id'
+        'usaha_id',
+        'is_kas_bank',
+        'kategori_lr'
+    ];
+
+    protected $casts = [
+        'is_kas_bank' => 'boolean',
     ];
 
     // 27-3-2026

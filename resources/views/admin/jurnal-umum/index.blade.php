@@ -31,8 +31,7 @@
 </style>
 
 @section('content')
-    <div class="min-h-screen bg-slate-50 p-4 sm:p-6">
-        <div class="max-w-7xl mx-auto">
+    <div class="w-full space-y-6 pb-12">
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900 mb-1">Jurnal Umum</h1>
@@ -294,7 +293,6 @@
                 @endif
             </div>
         </div>
-    </div>
 
     <script>
         let tsFilter, tsModal;
