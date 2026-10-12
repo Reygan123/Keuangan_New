@@ -310,7 +310,7 @@
     <table class="header-table">
         <tr>
             <td class="header-left">
-                <img src="{{ storage_path('app/public/jd-text.png') }}" alt="Jatidiri">
+                <img src="{{ public_path('gambar/logojatidari.png') }}" alt="Jatidiri">
             </td>
 
             <td class="header-right">
@@ -326,14 +326,14 @@
 
     <!-- FOOTER FIXED - Akan berulang di setiap halaman -->
     <div class="page-footer">
-        <img src="{{ storage_path('app/public/sosmed-jd.png') }}" alt="">
+        <img src="{{ public_path('gambar/footer.png') }}" alt="">
         <div class="footer-text">© 2024 Jatidiri. All rights reserved.</div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="inv-container">
         <div class="logo-header">
-            <img src="{{ storage_path('app/public/jd-logo.png') }}" alt="" class="logo-img">
+            <img src="{{ public_path('gambar/transjatidiri.png') }}" alt="" class="logo-img">
         </div>
 
         <div class="body-address">
@@ -441,7 +441,7 @@
         </div>
 
         <div class="inv-sign">
-            <img src="{{ storage_path('app/public/sign.png') }}" alt="">
+            <img src="{{ public_path('gambar/ttd.JPG') }}" alt="">
             <div class="sign-name">{{ $user->name }}</div>
         </div>
     </div>

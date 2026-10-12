@@ -252,7 +252,7 @@
     <table class="header-table">
         <tr>
             <td class="header-left">
-                <img src="{{ storage_path('app/public/icon-text.png') }}">
+                <img src="{{ public_path('gambar/logohexagon.png') }}">
             </td>
             <td class="header-right">
                 <div class="title-number">Invoice</div>
@@ -264,14 +264,14 @@
 
 <!-- FOOTER -->
 <div class="page-footer">
-    <img src="{{ storage_path('app/public/sosmed.png') }}">
+    <img src="{{ public_path('gambar/footerhexagon.png') }}">
     <div class="footer-text">© 2024 Hexagon Inc</div>
 </div>
 
 <!-- CONTENT -->
 <div class="inv-container">
 
-    <img src="{{ storage_path('app/public/hexa.png') }}" class="logo-watermark">
+    <img src="{{ public_path('gambar/transhexagon.png') }}" class="logo-watermark">
 
     <h1>From</h1>
     <div class="body-company">
@@ -340,7 +340,7 @@
     </div>
 
     <div class="inv-sign">
-        <img src="{{ storage_path('app/public/sign.png') }}">
+        <img src="{{ public_path('gambar/ttd.JPG') }}">
         <div class="sign-name">{{ $user->name }}</div>
     </div>
 
