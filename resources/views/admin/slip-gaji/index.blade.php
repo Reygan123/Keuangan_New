@@ -55,7 +55,7 @@
                         <th class="px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nomor Slip</th>
                         <th class="px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Karyawan</th>
                         <th class="px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Periode</th>
-                        <th class="px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Take Home Pay</th>
+                        <th class="px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Bersih Diterima</th>
                         <th class="px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</th>
                     </tr>
                 </thead>

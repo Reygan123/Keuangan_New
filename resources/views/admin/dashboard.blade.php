@@ -95,7 +95,7 @@
     <!-- 2. Ringkasan Eksekutif (4 Kartu Finansial Apple Widgets) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Card 1: Pendapatan -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-xs transition-all duration-200">
+        <div data-animate-stagger class="apple-glass-card rounded-2xl p-5 border border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] transition-all duration-200">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pendapatan</span>
                 <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 shadow-2xs ring-1 ring-emerald-500/10">
@@ -112,7 +112,7 @@
         </div>
 
         <!-- Card 2: Pengeluaran -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-xs transition-all duration-200">
+        <div data-animate-stagger class="apple-glass-card rounded-2xl p-5 border border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] transition-all duration-200">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Beban</span>
                 <span class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 shadow-2xs ring-1 ring-rose-500/10">
@@ -129,7 +129,7 @@
         </div>
 
         <!-- Card 3: Laba Bersih -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-xs transition-all duration-200">
+        <div data-animate-stagger class="apple-glass-card rounded-2xl p-5 border border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] transition-all duration-200">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Laba / Rugi Bersih</span>
                 <span class="px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide {{ $labaRugi['labaBersih'] >= 0 ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500/15' : 'bg-rose-50 text-rose-700 ring-1 ring-rose-500/15' }}">
@@ -146,7 +146,7 @@
         </div>
 
         <!-- Card 4: Kas & Bank -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-xs transition-all duration-200">
+        <div data-animate-stagger class="apple-glass-card rounded-2xl p-5 border border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] transition-all duration-200">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kas & Bank Siap Pakai</span>
                 <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 shadow-2xs ring-1 ring-indigo-500/10">
@@ -167,7 +167,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" x-data="{ activeTab: 'laba_rugi' }">
         
         <!-- KOLOM 1 & 2: The Hero Chart (Dengan Segmented Switcher Apple) -->
-        <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+        <div data-animate-stagger class="lg:col-span-2 apple-glass-card rounded-2xl p-6 border border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] flex flex-col justify-between">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 tracking-tight">Tren Performa Finansial</h2>
@@ -223,7 +223,7 @@
         </div>
 
         <!-- KOLOM 3: Komposisi Beban Pengeluaran (Donut Bersih dengan Center Total) -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+        <div data-animate-stagger class="apple-glass-card rounded-2xl p-6 border border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] flex flex-col justify-between">
             <div class="mb-2">
                 <h2 class="text-base font-bold text-slate-900 tracking-tight">Alokasi Beban</h2>
                 <p class="text-xs text-slate-400 mt-0.5">Top pos pengeluaran dalam periode ini</p>

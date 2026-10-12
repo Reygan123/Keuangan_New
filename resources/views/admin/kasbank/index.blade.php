@@ -8,10 +8,18 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-slate-900">{{ $title }}</h1>
             @if($selectedUsahaId)
-            <a href="{{ route('admin.kasbank.create', ['tipe' => $tipe, 'usaha_id' => $selectedUsahaId]) }}" class="inline-flex items-center px-4 py-2.5 bg-[#005198] hover:bg-[#003d73] text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200">
-                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Tambah {{ $tipe == 'PENERIMAAN' ? 'Penerimaan' : 'Pengeluaran' }}
-            </a>
+            <div class="flex items-center gap-2">
+                @if($tipe === 'PENGELUARAN')
+                <a href="{{ route('admin.quick-expense.index', ['usaha_id' => $selectedUsahaId]) }}" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold rounded-xl shadow-xs transition-all duration-150">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Pengeluaran Kilat</span>
+                </a>
+                @endif
+                <a href="{{ route('admin.kasbank.create', ['tipe' => $tipe, 'usaha_id' => $selectedUsahaId]) }}" class="inline-flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-xs transition-all duration-150">
+                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah {{ $tipe == 'PENERIMAAN' ? 'Penerimaan' : 'Pengeluaran Manual' }}
+                </a>
+            </div>
             @endif
         </div>
 

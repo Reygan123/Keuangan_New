@@ -3,9 +3,8 @@
 @section('title', $title)
 
 @section('content')
-    <div class="min-h-screen bg-slate-50 py-6">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center gap-3 mb-6">
+<div class="w-full space-y-6 pb-12">
+    <div class="flex items-center gap-3">
                 <a href="{{ route('admin.kasbank.index', $tipe) }}"
                     class="p-2 hover:bg-slate-200/60 rounded-xl text-slate-500 hover:text-slate-800 transition-colors duration-200">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -79,6 +78,47 @@
                             {{ $kasbank->keterangan ?? 'Tidak ada keterangan.' }}
                         </dd>
                     </div>
+
+                    @if($kasbank->bukti_transfer || $kasbank->gdrive_view_link)
+                    <div class="md:col-span-2 border-b border-slate-200/80 pb-4">
+                        <dt class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Lampiran Bukti Transfer & Arsip Google Drive</dt>
+                        <dd class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                @if($kasbank->bukti_transfer)
+                                    <img src="{{ asset('storage/' . $kasbank->bukti_transfer) }}" alt="Bukti Transfer" class="w-14 h-14 object-cover rounded-xl border border-slate-200 shadow-2xs">
+                                @else
+                                    <div class="w-14 h-14 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
+                                        📄
+                                    </div>
+                                @endif
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">
+                                        {{ $kasbank->kode_transaksi ?: ('Transaksi #' . $kasbank->id) }}
+                                    </p>
+                                    <p class="text-xs text-slate-500 mt-0.5">
+                                        Status Arsip: 
+                                        <span class="font-semibold {{ $kasbank->gdrive_status === 'SYNCED' ? 'text-emerald-600' : 'text-slate-600' }}">
+                                            {{ $kasbank->gdrive_status === 'SYNCED' ? '✓ Tersimpan di Google Drive' : 'Penyimpanan Lokal' }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if($kasbank->bukti_transfer)
+                                    <a href="{{ asset('storage/' . $kasbank->bukti_transfer) }}" target="_blank" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 shadow-2xs transition-all">
+                                        Lihat File
+                                    </a>
+                                @endif
+                                @if($kasbank->gdrive_view_link)
+                                    <a href="{{ $kasbank->gdrive_view_link }}" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        <span>Buka di Google Drive</span>
+                                    </a>
+                                @endif
+                            </div>
+                        </dd>
+                    </div>
+                    @endif
                 </dl>
             </div>
 
@@ -106,6 +146,5 @@
                     </button>
                 </form>
             </div>
-        </div>
     </div>
 @endsection

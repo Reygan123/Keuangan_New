@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "skills/apple-ui-designer/SKILL.md",
       "computedHash": "0610e28a1965eeb565cdef1a5f12def084e80551aa7704aa6c4c378acbc60c46"
+    },
+    "hyperframes-animation": {
+      "source": "heygen-com/hyperframes",
+      "sourceType": "github",
+      "skillPath": "skills/hyperframes-animation/SKILL.md",
+      "computedHash": "1fca72d17a4202929b3b99ec0078120e8eb10c2f6741b9ddc25802dfc49568e1"
     }
   }
 }

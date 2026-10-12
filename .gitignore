@@ -1,2 +1,6 @@
 node_modules
 .git-credentials-reygan
+# .env
+*.json
+# atau lebih spesifik untuk file kredensial service account:
+finance-hexa-*.json

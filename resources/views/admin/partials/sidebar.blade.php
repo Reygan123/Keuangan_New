@@ -7,11 +7,11 @@
      x-transition:leave-start="opacity-100"
      x-transition:leave-end="opacity-0"
      @click="sidebarExpanded = false" 
-     class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden"></div>
+     class="fixed inset-0 bg-slate-900/30 backdrop-blur-md z-40 lg:hidden"></div>
 
-<!-- Sidebar Aside Container -->
+<!-- Sidebar Aside Container (Apple Translucent Material & Depth) -->
 <aside :class="sidebarExpanded ? 'translate-x-0 w-72' : (sidebarHovered ? 'translate-x-0 w-72 shadow-2xl ring-1 ring-slate-900/5' : '-translate-x-full lg:translate-x-0 lg:w-20')"
-    class="bg-white/95 backdrop-blur-xl backdrop-saturate-150 border-r border-slate-200/70 flex flex-col h-[100dvh] fixed left-0 top-0 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] z-50 select-none"
+    class="apple-glass-sidebar flex flex-col h-[100dvh] fixed left-0 top-0 -translate-x-full lg:translate-x-0 w-72 lg:w-72 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] z-50 select-none shadow-[1px_0_10px_0_rgba(15,23,42,0.03)]"
     @mouseenter="if(window.innerWidth >= 1024) sidebarHovered = true"
     @mouseleave="if(window.innerWidth >= 1024) sidebarHovered = false">
 
@@ -20,13 +20,11 @@
         <!-- Expanded / Hovered View: Brand + Collapse Icon Button -->
         <div class="flex items-center justify-between w-full min-w-0"
              :class="(!sidebarExpanded && !sidebarHovered) ? 'hidden' : 'flex'">
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center font-bold text-sm text-white shadow-xs ring-1 ring-white/20 flex-shrink-0">
-                    H
-                </div>
+            <div class="flex items-center gap-2.5 min-w-0">
+                <img src="{{ asset('images/hexagon-icon.png') }}" class="w-8 h-8 object-contain flex-shrink-0" alt="Hexagon Inc.">
                 <div class="flex flex-col min-w-0">
-                    <span class="text-[14px] font-bold text-slate-900 tracking-tight leading-none">Hexagon</span>
-                    <span class="text-[10.5px] font-medium text-slate-400 mt-1 leading-none tracking-wide">Keuangan & Akuntansi</span>
+                    <span class="text-[14px] font-bold text-slate-900 tracking-tight leading-none">Hexagon Inc.</span>
+                    <span class="text-[10px] font-medium text-slate-400 mt-1 leading-none tracking-wide">PT Hexagon Karyatama</span>
                 </div>
             </div>
             <!-- macOS / iPadOS Style Sidebar Toggle Button -->
@@ -41,17 +39,14 @@
             </button>
         </div>
 
-        <!-- Collapsed View (Desktop Icon Bar): Centered Expand Button -->
+        <!-- Collapsed View (Desktop Icon Bar): Centered Expand Button with Hexagon Logo -->
         <div class="w-full flex items-center justify-center"
              :class="(!sidebarExpanded && !sidebarHovered) ? 'flex' : 'hidden'">
             <button @click="sidebarExpanded = true; sidebarHovered = false;" 
                 type="button"
                 title="Perluas Sidebar"
-                class="w-8 h-8 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/80 active:scale-95 flex items-center justify-center transition-all duration-150">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="4" width="18" height="16" rx="3" stroke-width="1.8" />
-                    <path d="M9 4v16" stroke-width="1.8" />
-                </svg>
+                class="w-9 h-9 rounded-xl text-slate-500 hover:bg-slate-100 active:scale-95 flex items-center justify-center transition-all duration-150">
+                <img src="{{ asset('images/hexagon-icon.png') }}" class="w-6 h-6 object-contain" alt="Hexagon Inc.">
             </button>
         </div>
     </div>
@@ -285,7 +280,7 @@
 
                 <!-- Dropdown Kas & Bank -->
                 @php
-                $isKasBankActive = request()->routeIs('admin.kasbank.*');
+                $isKasBankActive = request()->routeIs(['admin.kasbank.*', 'admin.quick-expense.*']);
                 @endphp
                 <div x-data="{ open: {{ $isKasBankActive ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(window.innerWidth >= 1024) { sidebarExpanded = true; sidebarHovered = false; }"
@@ -314,6 +309,11 @@
                         x-transition:leave-end="opacity-0 -translate-y-1"
                         class="pl-8 pr-1 space-y-0.5 mt-0.5" 
                         :class="(!sidebarExpanded && !sidebarHovered) ? 'hidden' : ''">
+                        <a href="{{ route('admin.quick-expense.index') }}" 
+                            class="flex items-center justify-between px-2.5 py-1 text-[12.5px] rounded-lg transition-all duration-150 active:scale-[0.98] {{ request()->routeIs('admin.quick-expense.*') ? 'text-indigo-600 font-semibold bg-indigo-50/80' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 font-medium' }}">
+                            <span>Pengeluaran Kilat</span>
+                            <span class="px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-700 text-[10px] font-extrabold">⚡ Cepat</span>
+                        </a>
                         <a href="{{ route('admin.kasbank.index', 'penerimaan') }}" 
                             class="block px-2.5 py-1 text-[12.5px] rounded-lg transition-all duration-150 active:scale-[0.98] {{ (request()->routeIs('admin.kasbank.*') && request()->route('jenis') == 'penerimaan') ? 'text-indigo-600 font-semibold bg-indigo-50/80' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 font-medium' }}">Penerimaan Kas</a>
                         <a href="{{ route('admin.kasbank.index', 'pengeluaran') }}" 
@@ -383,7 +383,7 @@
     </nav>
 
     <!-- User Account Footer (Apple macOS System Settings style) -->
-    <div class="p-2.5 border-t border-slate-200/60 flex-shrink-0 bg-white/80">
+    <div class="p-2.5 border-t border-slate-200/60 flex-shrink-0 bg-white/70 backdrop-blur-lg">
         <div class="flex items-center gap-2.5 p-2 rounded-xl transition-all duration-150 hover:bg-slate-100/70"
             :class="(!sidebarExpanded && !sidebarHovered) ? 'justify-center p-1.5' : ''">
             <!-- Avatar Squircle -->

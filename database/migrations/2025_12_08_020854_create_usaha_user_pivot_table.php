@@ -13,7 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('usaha_user', function (Blueprint $table) {
+        if (!Schema::hasTable('usaha_user')) {
+            Schema::create('usaha_user', function (Blueprint $table) {
             $table->id();
 
             // 1. Kunci Asing ke Users
@@ -39,6 +40,7 @@ return new class extends Migration
 
             $table->timestamps();
         });
+        }
     }
 
     /**

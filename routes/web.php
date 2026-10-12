@@ -34,12 +34,17 @@ use App\Http\Controllers\Admin\TransaksiPembelianController;
 use App\Http\Controllers\Admin\TransaksiPenjualanController;
 use App\Http\Controllers\Admin\UsahaController;
 use App\Http\Controllers\Admin\TransaksiProduksiController;
+use App\Http\Controllers\Admin\QuickExpenseController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Mobile QR Upload Endpoints (Diakses langsung via Smartphone saat scan QR)
+Route::get('quick-expense/mobile/{token}', [QuickExpenseController::class, 'mobileForm'])->name('quick-expense.mobile');
+Route::post('quick-expense/mobile/{token}', [QuickExpenseController::class, 'mobileUpload'])->name('quick-expense.mobile.upload');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -76,6 +81,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('penjualans', TransaksiPenjualanController::class);
     Route::resource('pembelians', TransaksiPembelianController::class);
     Route::resource('produksi', TransaksiProduksiController::class)->only(['create', 'store']);
+
+    // Pengeluaran Cepat (Quick Expense) with QR, Kode COA & Google Drive
+    Route::get('quick-expense', [QuickExpenseController::class, 'index'])->name('quick-expense.index');
+    Route::post('quick-expense', [QuickExpenseController::class, 'store'])->name('quick-expense.store');
+    Route::get('quick-expense/generate-token', [QuickExpenseController::class, 'generateToken'])->name('quick-expense.generate-token');
+    Route::get('quick-expense/check-token/{token}', [QuickExpenseController::class, 'checkToken'])->name('quick-expense.check-token');
+    Route::post('quick-expense/gdrive-settings', [QuickExpenseController::class, 'saveGdriveSettings'])->name('quick-expense.gdrive-settings');
+    Route::get('quick-expense/google/redirect', [QuickExpenseController::class, 'googleRedirect'])->name('quick-expense.google.redirect');
+    Route::get('quick-expense/google/callback', [QuickExpenseController::class, 'googleCallback'])->name('quick-expense.google.callback');
 
     Route::prefix('kasbank/{tipe}')->name('kasbank.')->group(function () {
         Route::get('/', [TransaksiKasBankController::class, 'index'])->name('index');

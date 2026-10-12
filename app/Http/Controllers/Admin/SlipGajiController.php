@@ -55,6 +55,7 @@ class SlipGajiController extends Controller
         $validated = $request->validate([
             'karyawan_id' => 'required|exists:karyawans,id',
             'periode' => 'required|date',
+            // Upah & Penghasilan
             'gaji_pokok' => 'required|numeric|min:0',
             'tunjangan_jabatan' => 'nullable|numeric|min:0',
             'tunjangan_transport' => 'nullable|numeric|min:0',
@@ -64,17 +65,47 @@ class SlipGajiController extends Controller
             'lembur' => 'nullable|numeric|min:0',
             'bonus' => 'nullable|numeric|min:0',
             'insentif' => 'nullable|numeric|min:0',
+            'reimbursement' => 'nullable|numeric|min:0',
+            // Potongan Karyawan
             'pph21' => 'nullable|numeric|min:0',
             'bpjs_kesehatan' => 'nullable|numeric|min:0',
             'bpjs_jht' => 'nullable|numeric|min:0',
             'bpjs_jp' => 'nullable|numeric|min:0',
             'potongan_lainnya' => 'nullable|numeric|min:0',
             'keterangan_potongan_lainnya' => 'nullable|string|max:255',
+            // Kontribusi Perusahaan
+            'jht_perusahaan' => 'nullable|numeric|min:0',
+            'jkk_perusahaan' => 'nullable|numeric|min:0',
+            'jkm_perusahaan' => 'nullable|numeric|min:0',
+            'jp_perusahaan' => 'nullable|numeric|min:0',
+            'jkp_perusahaan' => 'nullable|numeric|min:0',
+            'bpjs_kesehatan_perusahaan' => 'nullable|numeric|min:0',
+            // Info Payroll Tambahan
+            'tanggal_insentif_kpi' => 'nullable|date',
+            'tanggal_lembur_reimburse' => 'nullable|date',
+            'cutoff_lembur' => 'nullable|date',
+            'status_kpi' => 'nullable|string|max:100',
+            'laporan_finance' => 'nullable|string|max:255',
+            // Tanda Tangan
             'tempat_ttd' => 'nullable|string|max:255',
             'tanggal_ttd' => 'nullable|date',
             'nama_penandatangan' => 'nullable|string|max:255',
             'jabatan_penandatangan' => 'nullable|string|max:255',
+            'nama_penerima_ttd' => 'nullable|string|max:255',
         ]);
+
+        $numericFields = [
+            'gaji_pokok', 'tunjangan_jabatan', 'tunjangan_transport', 'tunjangan_makan',
+            'tunjangan_komunikasi', 'tunjangan_lainnya', 'lembur', 'bonus', 'insentif',
+            'reimbursement', 'pph21', 'bpjs_kesehatan', 'bpjs_jht', 'bpjs_jp',
+            'potongan_lainnya', 'jht_perusahaan', 'jkk_perusahaan', 'jkm_perusahaan',
+            'jp_perusahaan', 'jkp_perusahaan', 'bpjs_kesehatan_perusahaan'
+        ];
+        foreach ($numericFields as $field) {
+            if (!isset($validated[$field]) || $validated[$field] === null || $validated[$field] === '') {
+                $validated[$field] = 0;
+            }
+        }
 
         $validated['usaha_id'] = $usahaId;
         $validated['nomor_slip'] = $this->generateNomorSlip($usahaId, $validated['periode']);
@@ -109,6 +140,7 @@ class SlipGajiController extends Controller
         $validated = $request->validate([
             'karyawan_id' => 'required|exists:karyawans,id',
             'periode' => 'required|date',
+            // Upah & Penghasilan
             'gaji_pokok' => 'required|numeric|min:0',
             'tunjangan_jabatan' => 'nullable|numeric|min:0',
             'tunjangan_transport' => 'nullable|numeric|min:0',
@@ -118,18 +150,48 @@ class SlipGajiController extends Controller
             'lembur' => 'nullable|numeric|min:0',
             'bonus' => 'nullable|numeric|min:0',
             'insentif' => 'nullable|numeric|min:0',
+            'reimbursement' => 'nullable|numeric|min:0',
+            // Potongan Karyawan
             'pph21' => 'nullable|numeric|min:0',
             'bpjs_kesehatan' => 'nullable|numeric|min:0',
             'bpjs_jht' => 'nullable|numeric|min:0',
             'bpjs_jp' => 'nullable|numeric|min:0',
             'potongan_lainnya' => 'nullable|numeric|min:0',
             'keterangan_potongan_lainnya' => 'nullable|string|max:255',
+            // Kontribusi Perusahaan
+            'jht_perusahaan' => 'nullable|numeric|min:0',
+            'jkk_perusahaan' => 'nullable|numeric|min:0',
+            'jkm_perusahaan' => 'nullable|numeric|min:0',
+            'jp_perusahaan' => 'nullable|numeric|min:0',
+            'jkp_perusahaan' => 'nullable|numeric|min:0',
+            'bpjs_kesehatan_perusahaan' => 'nullable|numeric|min:0',
+            // Info Payroll Tambahan
+            'tanggal_insentif_kpi' => 'nullable|date',
+            'tanggal_lembur_reimburse' => 'nullable|date',
+            'cutoff_lembur' => 'nullable|date',
+            'status_kpi' => 'nullable|string|max:100',
+            'laporan_finance' => 'nullable|string|max:255',
+            // Tanda Tangan
             'tempat_ttd' => 'nullable|string|max:255',
             'tanggal_ttd' => 'nullable|date',
             'nama_penandatangan' => 'nullable|string|max:255',
             'jabatan_penandatangan' => 'nullable|string|max:255',
+            'nama_penerima_ttd' => 'nullable|string|max:255',
             'status' => 'nullable|in:draft,final',
         ]);
+
+        $numericFields = [
+            'gaji_pokok', 'tunjangan_jabatan', 'tunjangan_transport', 'tunjangan_makan',
+            'tunjangan_komunikasi', 'tunjangan_lainnya', 'lembur', 'bonus', 'insentif',
+            'reimbursement', 'pph21', 'bpjs_kesehatan', 'bpjs_jht', 'bpjs_jp',
+            'potongan_lainnya', 'jht_perusahaan', 'jkk_perusahaan', 'jkm_perusahaan',
+            'jp_perusahaan', 'jkp_perusahaan', 'bpjs_kesehatan_perusahaan'
+        ];
+        foreach ($numericFields as $field) {
+            if (!isset($validated[$field]) || $validated[$field] === null || $validated[$field] === '') {
+                $validated[$field] = 0;
+            }
+        }
 
         $slipGaji->update($validated);
 
